@@ -5,6 +5,42 @@ import BannerImage from './BannerImage';
 
 const AUTO_SCROLL_INTERVAL_MS = 5000;
 const SCROLL_SYNC_THROTTLE_MS = 120;
+const SCROLL_SETTLE_THRESHOLD_PX = 4;
+const SCROLL_SETTLE_MAX_FRAMES = 120; // ~2초 후 강제 해제
+
+/** scrollend 지원 시 사용, 미지원 시 rAF로 목표 위치 근접 시 해제 */
+function releaseProgrammaticScrollWhenSettled(
+    el: HTMLElement,
+    targetLeft: number,
+    programmaticRef: React.MutableRefObject<boolean>,
+    releaseRafRef: React.MutableRefObject<number | null>
+) {
+    const release = () => {
+        programmaticRef.current = false;
+        if (releaseRafRef.current != null) {
+            cancelAnimationFrame(releaseRafRef.current);
+            releaseRafRef.current = null;
+        }
+    };
+
+    if (typeof (el as HTMLElement & { onscrollend?: () => void }).onscrollend !== 'undefined') {
+        el.addEventListener('scrollend', release, { once: true });
+        return;
+    }
+
+    let frames = 0;
+    const loop = () => {
+        if (!el) return;
+        const diff = Math.abs(el.scrollLeft - targetLeft);
+        if (diff <= SCROLL_SETTLE_THRESHOLD_PX || frames >= SCROLL_SETTLE_MAX_FRAMES) {
+            release();
+            return;
+        }
+        frames += 1;
+        releaseRafRef.current = requestAnimationFrame(loop);
+    };
+    releaseRafRef.current = requestAnimationFrame(loop);
+}
 
 export default function Banner() {
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -12,9 +48,11 @@ export default function Banner() {
     const programmaticScrollRef = useRef(false);
     const throttleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const rafRef = useRef<number | null>(null);
+    const releaseRafRef = useRef<number | null>(null);
 
     useEffect(() => {
         const el = scrollRef.current;
+        const releaseRaf = releaseRafRef;
         if (!el) return;
 
         const intervalId = setInterval(() => {
@@ -24,19 +62,20 @@ export default function Banner() {
                 const container = scrollRef.current;
                 if (container) {
                     const width = container.clientWidth;
-                    container.scrollTo({ left: width * next, behavior: 'smooth' });
+                    const targetLeft = width * next;
+                    container.scrollTo({ left: targetLeft, behavior: 'smooth' });
+                    releaseProgrammaticScrollWhenSettled(container, targetLeft, programmaticScrollRef, releaseRafRef);
                 }
                 return next;
             });
-            setTimeout(() => {
-                programmaticScrollRef.current = false;
-            }, 600);
         }, AUTO_SCROLL_INTERVAL_MS);
 
         return () => {
             clearInterval(intervalId);
             if (throttleRef.current) clearTimeout(throttleRef.current);
             if (rafRef.current) cancelAnimationFrame(rafRef.current);
+            const releaseRafId = releaseRaf.current;
+            if (releaseRafId != null) cancelAnimationFrame(releaseRafId);
         };
     }, []);
 
@@ -65,11 +104,10 @@ export default function Banner() {
         if (!el) return;
         programmaticScrollRef.current = true;
         const width = el.clientWidth;
-        el.scrollTo({ left: width * index, behavior: 'smooth' });
+        const targetLeft = width * index;
+        el.scrollTo({ left: targetLeft, behavior: 'smooth' });
         setCurrentIndex(index);
-        setTimeout(() => {
-            programmaticScrollRef.current = false;
-        }, 500);
+        releaseProgrammaticScrollWhenSettled(el, targetLeft, programmaticScrollRef, releaseRafRef);
     }, []);
 
     const goPrev = () => {

@@ -1,12 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPineconeIndex } from '@/lib/pinecone';
+import { sidoLocation } from '@/static/data/sidoLocation';
 
-/** POST: 벡터로 유사 검색 (이미지 임베딩 등) */
+/** 시도 코드로 SIDO_NAME 조회 (sido_data와 동일한 목록 기준) */
+function getSidoNameByCode(sidoCd: string | null | undefined): string | null {
+  if (!sidoCd || typeof sidoCd !== 'string') return null;
+  const item = sidoLocation.items.find((i) => i.SIDO_CD === sidoCd);
+  return item?.SIDO_NAME ?? null;
+}
+
+/** 축종 코드: 개 417000, 고양이 422400, 기타 429900. 빈 문자열이면 필터 없음 */
+const UPKIND_CODES = ['417000', '422400', '429900'] as const;
+
+/** POST: 벡터로 유사 검색. sidoCd 있으면 orgNm으로, upKindCd 있으면 metadata.upKindCd로 필터 */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const vector = body?.vector as number[] | undefined;
-    const topK = Math.min(Math.max(Number(body?.topK) || 10, 1), 100);
+    const requestedTopK = Math.min(Math.max(Number(body?.topK) || 10, 1), 100);
+    const sidoCd = body?.sidoCd as string | null | undefined;
+    const upKindCd = body?.upKindCd as string | null | undefined;
 
     if (!Array.isArray(vector) || vector.length === 0) {
       return NextResponse.json(
@@ -14,6 +27,11 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
+
+    const sidoName = getSidoNameByCode(sidoCd);
+    const filterByUpKind = upKindCd && UPKIND_CODES.includes(upKindCd as (typeof UPKIND_CODES)[number]);
+    const needsExtraResults = sidoName || filterByUpKind;
+    const topK = needsExtraResults ? Math.min(requestedTopK * 4, 100) : requestedTopK;
 
     const index = getPineconeIndex();
     const result = await index.query({
@@ -23,13 +41,33 @@ export async function POST(request: NextRequest) {
       includeValues: false,
     });
 
-    return NextResponse.json({
-      matches: (result.matches ?? []).map((m) => ({
-        id: m.id,
-        score: m.score,
-        metadata: m.metadata,
-      })),
-    });
+    let matches = (result.matches ?? []).map((m) => ({
+      id: m.id,
+      score: m.score,
+      metadata: m.metadata,
+    }));
+
+    if (sidoName) {
+      matches = matches.filter((m) => {
+        const orgNm = m.metadata?.orgNm;
+        if (orgNm == null) return false;
+        const name = typeof orgNm === 'string' ? orgNm : String(orgNm);
+        return name.includes(sidoName);
+      });
+    }
+
+    if (filterByUpKind) {
+      matches = matches.filter((m) => {
+        const val = m.metadata?.upKindCd;
+        if (val == null) return false;
+        const code = typeof val === 'string' ? val : String(val);
+        return code === upKindCd;
+      });
+    }
+
+    matches = matches.slice(0, requestedTopK);
+
+    return NextResponse.json({ matches });
   } catch (error) {
     console.error('[search-animal] Pinecone query 오류:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';

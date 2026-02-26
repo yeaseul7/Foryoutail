@@ -11,9 +11,43 @@ import {
 } from '@/lib/search-animal';
 import { useAuth } from '@/lib/firebase/auth';
 import { firestore } from '@/lib/firebase/firebase';
+import type { AiSearchFiltersValues } from '@/packages/ui/components/search-animals/AiSearchFilters';
 
 const DAILY_LIMIT = 5;
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+const SEARCH_CACHE_KEY = 'kkosunnae_search_animal_cache';
+
+interface SearchCache {
+  searchMatches: SimilarMatch[];
+  filters: AiSearchFiltersValues;
+}
+
+function readSearchCache(): SearchCache | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(SEARCH_CACHE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw) as SearchCache;
+    if (!Array.isArray(data?.searchMatches)) return null;
+    return {
+      searchMatches: data.searchMatches,
+      filters: data.filters && typeof data.filters === 'object'
+        ? { sidoCd: data.filters.sidoCd ?? null, petType: data.filters.petType ?? '' }
+        : { sidoCd: null, petType: '' },
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeSearchCache(searchMatches: SimilarMatch[], filters: AiSearchFiltersValues) {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(SEARCH_CACHE_KEY, JSON.stringify({ searchMatches, filters }));
+  } catch {
+    // ignore
+  }
+}
 
 /** lastAi 이후 24시간 지났거나 lastAi가 없으면 count 0, 아니면 todayAi 반환. lastAi는 횟수 업데이트 시에만 수정됨. */
 async function getDailyAiUsage(uid: string): Promise<{ count: number }> {
@@ -52,6 +86,18 @@ export function useSearchAnimal() {
   const [searchMatches, setSearchMatches] = useState<SimilarMatch[] | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [dailyAiUsed, setDailyAiUsed] = useState<number | null>(null);
+  const [filters, setFilters] = useState<AiSearchFiltersValues>({
+    sidoCd: null,
+    petType: '',
+  });
+
+  useEffect(() => {
+    const cache = readSearchCache();
+    if (cache && cache.searchMatches.length > 0) {
+      setSearchMatches(cache.searchMatches);
+      setFilters(cache.filters);
+    }
+  }, []);
 
   const loadModel = useCallback(async () => {
     try {
@@ -113,7 +159,12 @@ export function useSearchAnimal() {
       const res = await fetch('/api/search-animal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ vector, topK: 24 }),
+        body: JSON.stringify({
+          vector,
+          topK: 24,
+          sidoCd: filters.sidoCd ?? undefined,
+          upKindCd: filters.petType || undefined,
+        }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -121,13 +172,15 @@ export function useSearchAnimal() {
         setSearchLoading(false);
         return;
       }
-      setSearchMatches(json.matches ?? []);
+      const matches = json.matches ?? [];
+      setSearchMatches(matches);
+      writeSearchCache(matches, filters);
     } catch (e) {
       setSearchError(e instanceof Error ? e.message : '검색 중 오류가 발생했습니다.');
     } finally {
       setSearchLoading(false);
     }
-  }, [user, selectedFile, previewUrl]);
+  }, [user, selectedFile, previewUrl, filters]);
 
   useEffect(() => {
     return () => {
@@ -152,6 +205,8 @@ export function useSearchAnimal() {
     searchError,
     dailyAiUsed,
     dailyLimit: DAILY_LIMIT,
+    filters,
+    setFilters,
     loadModel,
     onFileChange,
     runSearch,

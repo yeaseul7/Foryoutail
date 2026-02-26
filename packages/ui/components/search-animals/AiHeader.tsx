@@ -1,7 +1,9 @@
 'use client';
 
-import { useRef } from 'react';
-import { MdPhotoCamera, MdSearch, MdFavorite, MdAutoAwesome } from 'react-icons/md';
+import { useRef, useState } from 'react';
+import { MdPhotoCamera, MdSearch, MdAutoAwesome, MdOutlineSchedule } from 'react-icons/md';
+import AiSearchFilterSelects from './AiSearchFilterSelects';
+import type { AiSearchFiltersValues } from './AiSearchFilters';
 
 export interface AiHeaderProps {
     previewUrl: string | null;
@@ -9,10 +11,18 @@ export interface AiHeaderProps {
     modelReady?: boolean;
     dailyAiUsed?: number | null;
     dailyLimit?: number;
+    /** 지역·동물 필터 (선택) */
+    filters?: AiSearchFiltersValues;
+    onFiltersChange?: (value: AiSearchFiltersValues) => void;
     onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onSearch: () => void;
     onLoadModel?: () => void;
 }
+
+const defaultFilters: AiSearchFiltersValues = {
+    sidoCd: null,
+    petType: '',
+};
 
 export default function AiHeader({
     previewUrl,
@@ -20,32 +30,47 @@ export default function AiHeader({
     modelReady = false,
     dailyAiUsed = null,
     dailyLimit = 3,
+    filters = defaultFilters,
+    onFiltersChange,
     onFileChange,
     onSearch,
     onLoadModel,
 }: AiHeaderProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [internalFilters, setInternalFilters] = useState<AiSearchFiltersValues>(filters ?? defaultFilters);
+    const isControlled = onFiltersChange != null;
+    const currentFilters = isControlled ? (filters ?? defaultFilters) : internalFilters;
+    const handleFiltersChange = isControlled ? onFiltersChange : setInternalFilters;
 
     return (
         <div className="w-full px-4 py-6 sm:px-6 lg:px-8 max-w-4xl mx-auto">
-            {/* 헤더: AI 친구 찾기 + 설명 */}
+            {/* 헤더: AI 친구 찾기 + 사용 횟수(눈에 띄게) + 설명 */}
             <header className="text-center mb-8">
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
                     AI 스마트 검색
                 </h1>
                 {dailyAiUsed != null && (
-                    <p className="text-xs text-gray-500 mb-2">
-                        오늘 <span className="font-semibold text-primary1">{dailyAiUsed}</span>/{dailyLimit}회 사용
-                    </p>
+                    <div
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-primary1 bg-primary1/10 mb-3"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        <MdOutlineSchedule className="w-5 h-5 text-primary1 shrink-0" />
+                        <span className="text-sm font-bold text-gray-800">
+                            오늘 <span className="text-primary1">{dailyAiUsed}</span>
+                            <span className="text-gray-500 font-normal"> / {dailyLimit}회</span>
+                            <span className="text-gray-500 font-normal ml-0.5">사용 가능</span>
+                        </span>
+                    </div>
                 )}
                 <p className="text-xs sm:text-sm text-gray-500 leading-relaxed max-w-xl mx-auto">
-                    AI가 보호소 공고를 분석하여 우리 아이와 가장 닮은 친구를 찾아드립니다.
+                    AI가 보호소 공고 사진을 기반으로 분석하여 가장 닮은 공고를 찾아드립니다.
                     <br className="hidden sm:block" />
-                    <span className="text-primary1 font-medium">2026년 2월 5일</span>, 소중한 인연을 위한 데이터 업데이트를 시작했습니다.
+                    <span className="text-primary1 font-medium">2026년 2월 5일</span> 이후 업데이트된 공고 데이터를 기반으로 분석합니다.
                 </p>
             </header>
 
-            {/* 메인 카드: 업로드 영역 + 가이드 + 검색 버튼 */}
+            {/* 메인 카드: 업로드 영역 + 가이드 + 검색 조건(select) + 검색 버튼 */}
             <div className="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="flex flex-col md:flex-row md:min-h-[320px]">
                     {/* 왼쪽: 이미지 업로드 */}
@@ -96,7 +121,7 @@ export default function AiHeader({
                         </div>
                     </div>
 
-                    <div className="flex-1 p-8 md:p-10 flex flex-col justify-between">
+                    <div className="flex-1 p-7 md:p-8 flex flex-col justify-between">
                         <div>
                             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 text-sm font-medium w-fit mb-6">
                                 <MdAutoAwesome className="w-4 h-4 shrink-0" />
@@ -138,7 +163,8 @@ export default function AiHeader({
                                 </li>
                             </ol>
                         </div>
-                        <div className="mt-6 flex flex-col gap-2">
+                        <div className="mt-3 flex flex-col gap-3">
+                            <AiSearchFilterSelects value={currentFilters} onChange={handleFiltersChange} />
                             <button
                                 type="button"
                                 onClick={onSearch}

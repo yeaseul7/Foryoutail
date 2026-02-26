@@ -24,6 +24,8 @@ export default function SearchAnimalPage() {
         searchError,
         dailyAiUsed,
         dailyLimit,
+        filters,
+        setFilters,
         loadModel,
         onFileChange,
         runSearch,
@@ -39,6 +41,8 @@ export default function SearchAnimalPage() {
                         modelReady={modelReady}
                         dailyAiUsed={dailyAiUsed}
                         dailyLimit={dailyLimit}
+                        filters={filters}
+                        onFiltersChange={setFilters}
                         onFileChange={onFileChange}
                         onSearch={runSearch}
                         onLoadModel={loadModel}

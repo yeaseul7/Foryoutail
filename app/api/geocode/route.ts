@@ -1,5 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+/** coord2jibun API 응답을 getAddress와 동일한 형식으로 변환 (프론트 호환) */
+function normalizeCoord2JibunResponse(addr: string): { response: { status: string; result: Array<{ structure: { level1: string } }> } } {
+  // 지번주소 첫 토큰이 시/도 (예: 서울특별시, 경기도, 세종특별자치시)
+  const level1 = addr?.split(/\s+/)[0]?.trim() || '';
+  return {
+    response: {
+      status: 'OK',
+      result: [{ structure: { level1 } }],
+    },
+  };
+}
+
+/** 502/503 시 대안 API (coord2jibun) 호출 */
+async function tryCoord2JibunFallback(
+  apiKey: string,
+  longitude: string,
+  latitude: string,
+  fetchOptions: { headers: Record<string, string> }
+): Promise<{ response: { status: string; result: Array<{ structure: { level1: string } }> } } | null> {
+  const url = `https://apis.vworld.kr/coord2jibun.do?x=${longitude}&y=${latitude}&apiKey=${apiKey}&output=json&epsg=EPSG:4326`;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const res = await fetch(url, { ...fetchOptions, signal: controller.signal });
+    clearTimeout(timeoutId);
+    const text = await res.text();
+    if (!res.ok) return null;
+    const data = JSON.parse(text);
+    const addr = data?.result?.jibun?.addr ?? data?.addr ?? data?.ADDR ?? (typeof data === 'string' ? data : '');
+    if (!addr || typeof addr !== 'string') return null;
+    return normalizeCoord2JibunResponse(addr);
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const longitude = searchParams.get('longitude');
@@ -22,6 +58,13 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const fetchOptions = {
+    headers: {
+      'Content-Type': 'application/json',
+      'User-Agent': 'Kkosunnae/1.0 (Address Lookup)',
+    },
+  };
+
   try {
     const apiUrl = `https://api.vworld.kr/req/address?service=address&request=getAddress&key=${apiKey}&point=${longitude},${latitude}&type=both&format=json`;
 
@@ -32,37 +75,47 @@ export async function GET(request: NextRequest) {
 
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        // 타임아웃을 위한 AbortController (호환성 개선)
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15초 타임아웃
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
 
         response = await fetch(apiUrl, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          ...fetchOptions,
           signal: controller.signal,
         });
 
         clearTimeout(timeoutId);
         responseText = await response.text();
-        break; // 성공하면 루프 종료
+        break;
       } catch (fetchError) {
         lastError = fetchError instanceof Error ? fetchError : new Error(String(fetchError));
-
-        // 마지막 시도가 아니면 잠시 대기 후 재시도
         if (attempt < 3) {
           console.warn(`VWorld API 호출 실패 (시도 ${attempt}/3), 재시도 중...`, lastError.message);
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // 1초, 2초 대기
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
           continue;
         }
-
-        // 모든 시도 실패
         throw lastError;
       }
     }
 
     if (!response) {
       throw new Error('API 응답을 받지 못했습니다.');
+    }
+
+    // 502/503 등 업스트림 오류 시 coord2jibun 대안 API 시도
+    const isUpstreamError = response.status === 502 || response.status === 503;
+    const isHtmlResponse = responseText.trimStart().toLowerCase().startsWith('<!DOCTYPE') || responseText.trimStart().toLowerCase().startsWith('<html');
+    if (isUpstreamError && isHtmlResponse) {
+      const fallbackData = await tryCoord2JibunFallback(apiKey, longitude, latitude, fetchOptions);
+      if (fallbackData) {
+        return NextResponse.json(fallbackData);
+      }
+      return NextResponse.json(
+        {
+          error: '주소 변환 서비스를 일시적으로 사용할 수 없습니다.',
+          message: 'VWorld 서버에 일시적인 문제가 있습니다. 잠시 후 다시 시도해주세요.',
+        },
+        { status: 503 }
+      );
     }
 
     if (!response.ok) {
