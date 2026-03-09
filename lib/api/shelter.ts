@@ -37,42 +37,57 @@ export async function fetchShelterAnimalData(
   }
 
   const shelterAnimalResponse = (await response.json()) as {
-    response: ShelterAnimalData;
+    response?: {
+      header?: { resultCode?: string };
+      body?: ShelterAnimalData['body'] & { items?: { item?: unknown } | string };
+    };
   };
 
-  const items = shelterAnimalResponse?.response?.body?.items?.item;
-
-  if (items) {
-    let itemsArray = Array.isArray(items) ? items : [items];
-    const originalItemsLength = itemsArray.length;
-
-    // 검색어 필터링
-    if (filters.searchQuery) {
-      const searchLower = filters.searchQuery.toLowerCase();
-      itemsArray = itemsArray.filter((item) => {
-        const rfidCd = item.rfidCd?.toLowerCase() || '';
-        const happenPlace = item.happenPlace?.toLowerCase() || '';
-        const careAddr = item.careAddr?.toLowerCase() || '';
-        const careNm = item.careNm?.toLowerCase() || '';
-        return (
-          rfidCd.includes(searchLower) ||
-          happenPlace.includes(searchLower) ||
-          careAddr.includes(searchLower) ||
-          careNm.includes(searchLower)
-        );
-      });
-    }
-
-    const hasMore = originalItemsLength === 30;
-
-    return {
-      items: itemsArray,
-      hasMore,
-    };
+  const resultCode = shelterAnimalResponse?.response?.header?.resultCode;
+  if (resultCode && resultCode !== '00' && resultCode !== '0') {
+    return { items: [], hasMore: false };
   }
 
+  const rawItems = shelterAnimalResponse?.response?.body?.items;
+  const itemData =
+    rawItems != null && typeof rawItems === 'object' && !Array.isArray(rawItems)
+      ? (rawItems as { item?: unknown }).item
+      : undefined;
+
+  if (itemData == null || itemData === '') {
+    return { items: [], hasMore: false };
+  }
+
+  const itemsArray: ShelterAnimalItem[] = Array.isArray(itemData)
+    ? itemData.filter((x): x is ShelterAnimalItem => x != null && typeof x === 'object')
+    : typeof itemData === 'object' && itemData !== null
+      ? [itemData as ShelterAnimalItem]
+      : [];
+
+  const originalItemsLength = itemsArray.length;
+
+  let resultItems = itemsArray;
+
+  if (filters.searchQuery) {
+    const searchLower = filters.searchQuery.toLowerCase();
+    resultItems = itemsArray.filter((item) => {
+      const rfidCd = item.rfidCd?.toLowerCase() || '';
+      const happenPlace = item.happenPlace?.toLowerCase() || '';
+      const careAddr = item.careAddr?.toLowerCase() || '';
+      const careNm = item.careNm?.toLowerCase() || '';
+      return (
+        rfidCd.includes(searchLower) ||
+        happenPlace.includes(searchLower) ||
+        careAddr.includes(searchLower) ||
+        careNm.includes(searchLower)
+      );
+    });
+  }
+
+  const hasMore = originalItemsLength === 30;
+
   return {
-    items: [],
-    hasMore: false,
+    items: resultItems,
+    hasMore,
   };
 }

@@ -84,7 +84,7 @@ export default function Banner() {
         if (!el || programmaticScrollRef.current) return;
         const width = el.clientWidth;
         const index = Math.round(el.scrollLeft / width);
-        setCurrentIndex(Math.min(index, 2));
+        setCurrentIndex(Math.min(index, 3));
     }, []);
 
     const handleScroll = useCallback(() => {
@@ -111,34 +111,42 @@ export default function Banner() {
     }, []);
 
     const goPrev = () => {
-        const prev = currentIndex <= 0 ? 2 : currentIndex - 1;
+        const prev = currentIndex <= 0 ? 3 : currentIndex - 1;
         goToSlide(prev);
     };
 
     const goNext = () => {
-        const next = currentIndex >= 2 ? 0 : currentIndex + 1;
+        const next = currentIndex >= 3 ? 0 : currentIndex + 1;
         goToSlide(next);
     };
 
-    const TOTAL_SLIDES = 3;
+    const TOTAL_SLIDES = 4;
 
     return (
-        <div className="mt-4 w-full max-w-7xl px-4 sm:px-6" aria-label="배너 캐러셀">
-            <div className="relative w-full overflow-hidden rounded-2xl">
+        <div className="mt-4 w-full max-w-6xl mx-auto px-4 sm:px-6" aria-label="배너 캐러셀">
+            <div className="relative w-full overflow-hidden rounded-xl shadow-sm">
                 <div
                     ref={scrollRef}
                     onScroll={handleScroll}
-                    className="flex w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden rounded-2xl scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                    className="flex w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden rounded-xl scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
                     style={{ scrollSnapType: 'x mandatory' }}
                 >
                     <div className="min-w-full w-full shrink-0 snap-center snap-always flex-[0_0_100%]">
-                        <BannerImage imageUrl={'/static/images/banner1.png'} link={'/animalShelter'} title={'보호소 정보 확인하기'} priority={true} />
+                        <BannerImage imageUrl={'/static/images/shelter_banner.png'} link={'/animalShelter'} title={'보호소 정보 확인하기'} priority={true} />
                     </div>
                     <div className="min-w-full w-full shrink-0 snap-center snap-always flex-[0_0_100%]">
-                        <BannerImage imageUrl={'/static/images/banner2.png'} link={'/notice'} title={'공지사항 보기'} />
+                        <BannerImage imageUrl={'/static/images/notice_banner.png'} link={'/notice'} title={'공지사항 보기'} />
                     </div>
                     <div className="min-w-full w-full shrink-0 snap-center snap-always flex-[0_0_100%]">
-                        <BannerImage imageUrl={'/static/images/banner3.jpeg'} link={'/search-animal'} title={'기능 사용해보기'} />
+                        <BannerImage imageUrl={'/static/images/ai_banner.png'} link={'/search-animal'} title={'기능 사용해보기'} />
+                    </div>
+                    <div className="min-w-full w-full shrink-0 snap-center snap-always flex-[0_0_100%]">
+                        <BannerImage
+                            imageUrl={'/static/images/google_form.png'}
+                            link={'https://docs.google.com/forms/d/e/1FAIpQLSe0EPUnUZbQzBSz9d3LXxnalra_3fGgflnBJTerlquCdbZOZA/viewform?usp=header'}
+                            title={'꼬순내 서비스 평가 설문'}
+                            openInNewTab
+                        />
                     </div>
                 </div>
 

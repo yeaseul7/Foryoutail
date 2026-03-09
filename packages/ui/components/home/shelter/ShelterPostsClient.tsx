@@ -139,10 +139,12 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
 
       try {
         const result = await fetchShelterAnimalData(1, newFilters);
-        setShelterAnimalData(result.items);
-        setHasMore(result.hasMore);
+        const items = Array.isArray(result.items) ? result.items : [];
+        setShelterAnimalData(items);
+        setHasMore(result.hasMore ?? false);
       } catch (e) {
         console.error('유기견 보호소 데이터 조회 중 오류 발생:', e);
+        setShelterAnimalData([]);
         setHasMore(false);
       } finally {
         setLoading(false);
@@ -234,26 +236,28 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
             <div className="py-12 text-center text-gray-500">
               유기동물 데이터가 없습니다.
             </div>
-          ) : loading && shelterAnimalData.length === 0 ? (
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 justify-items-center">
-              {Array.from({ length: 12 }).map((_, index) => (
-                <AbandonedCardSkeleton key={`skeleton-${index}`} />
-              ))}
-            </div>
           ) : (
             <>
+              {/* 컨테이너를 항상 마운트해 ref/ResizeObserver가 유지되도록 함 (필터 적용 후 그리드가 다시 보이도록) */}
               <div
                 ref={gridContainerRef}
                 className="w-full h-[65vh] min-h-[400px] overflow-hidden"
               >
-                {gridSize.width > 0 && gridSize.height > 0 && (
+                {loading && shelterAnimalData.length === 0 ? (
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 justify-items-center h-full content-start">
+                    {Array.from({ length: 12 }).map((_, index) => (
+                      <AbandonedCardSkeleton key={`skeleton-${index}`} />
+                    ))}
+                  </div>
+                ) : gridSize.width > 0 && gridSize.height > 0 && shelterAnimalData.length > 0 ? (
                   <VirtualizedShelterGrid
+                    key={`grid-${filters.upr_cd ?? ''}-${filters.upKindCd ?? ''}-${filters.sexCd ?? ''}-${filters.state ?? ''}`}
                     items={shelterAnimalData}
                     width={gridSize.width}
                     height={gridSize.height}
                     onScrollNearEnd={handleScrollNearEnd}
                   />
-                )}
+                ) : null}
               </div>
               {isLoadingMore && (
                 <div className="flex justify-center py-4 text-sm text-gray-500">

@@ -9,28 +9,33 @@ type BannerImageProps = {
     title: string;
     priority?: boolean;
     /**
-     * true면 블러 배경을 CSS 그라디언트로 대체해 동일 이미지 2회 디코딩을 피합니다.
-     * WebView/저사양 기기에서 프레임 드랍이 있을 때 사용 권장.
+     * true면 블러 배경 대신 그라디언트 사용(깔끔한 노출, 디코딩 1회).
+     * false면 블러 배경 레이어 사용(letterbox 여백 채움).
      */
     lightweightBlur?: boolean;
+    /** true면 새 창에서 열기 (target="_blank") */
+    openInNewTab?: boolean;
 };
 
 const SIZES = '(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1280px';
 
-export default function BannerImage({ imageUrl, link, title, priority = false, lightweightBlur = false }: BannerImageProps) {
+/** 배너: 2000x300 비율(20:3). 컨테이너와 이미지 비율을 맞춰 공백 없음 */
+const BANNER_ASPECT = 'aspect-[20/3]';
+
+export default function BannerImage({ imageUrl, link, title, priority = false, lightweightBlur = true, openInNewTab = false }: BannerImageProps) {
     return (
         <section
-            className="relative flex w-full shrink-0 overflow-hidden rounded-2xl min-h-[160px] sm:min-h-[200px] md:min-h-[240px] lg:min-h-[293px]"
+            className={`relative flex w-full shrink-0 overflow-hidden rounded-xl ${BANNER_ASPECT} bg-gray-100`}
             aria-label={title}
         >
-            {/* 여백(letterbox) 채움: lightweightBlur 시 그라디언트만 사용(디코딩 1회), 아니면 동일 이미지 블러 레이어(2회 디코딩) */}
+            {/* 배경: 블러 없이 그라디언트만 사용해 선명하게 (기본값) */}
             {lightweightBlur ? (
                 <div
-                    className="absolute inset-0 rounded-2xl bg-gradient-to-br from-gray-200 to-gray-300"
+                    className="absolute inset-0 rounded-xl bg-gradient-to-br from-gray-200 to-gray-300"
                     aria-hidden
                 />
             ) : (
-                <div className="absolute inset-0 overflow-hidden rounded-2xl">
+                <div className="absolute inset-0 overflow-hidden rounded-xl">
                     <Image
                         src={imageUrl}
                         alt=""
@@ -43,23 +48,33 @@ export default function BannerImage({ imageUrl, link, title, priority = false, l
                     />
                 </div>
             )}
-            {/* 선명한 이미지: contain으로 전체 노출 */}
-            <div className="absolute inset-0 rounded-2xl">
+            {/* 영역을 꽉 채워 위아래 회색 공백 없음 (object-cover) */}
+            <div className="absolute inset-0 rounded-xl">
                 <Image
                     src={imageUrl}
                     alt={title}
                     fill
                     sizes={SIZES}
-                    className="object-contain object-center"
+                    className="object-cover object-center"
                     priority={priority}
                     loading={priority ? undefined : 'lazy'}
                 />
             </div>
-            <Link
-                href={link}
-                className="absolute inset-0 z-10"
-                aria-label={title}
-            />
+            {openInNewTab ? (
+                <a
+                    href={link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute inset-0 z-10"
+                    aria-label={title}
+                />
+            ) : (
+                <Link
+                    href={link}
+                    className="absolute inset-0 z-10"
+                    aria-label={title}
+                />
+            )}
         </section>
     );
 }
