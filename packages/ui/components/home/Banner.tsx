@@ -58,7 +58,7 @@ export default function Banner() {
         const intervalId = setInterval(() => {
             programmaticScrollRef.current = true;
             setCurrentIndex((prev) => {
-                const next = prev + 1 >= 3 ? 0 : prev + 1;
+                const next = (prev + 1) % 4;
                 const container = scrollRef.current;
                 if (container) {
                     const width = container.clientWidth;
@@ -111,7 +111,7 @@ export default function Banner() {
     }, []);
 
     const goPrev = () => {
-        const prev = currentIndex <= 0 ? 3 : currentIndex - 1;
+        const prev = currentIndex <= 0 ? TOTAL_SLIDES - 1 : currentIndex - 1;
         goToSlide(prev);
     };
 

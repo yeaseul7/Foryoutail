@@ -110,6 +110,11 @@ export default function RootLayout({
             strategy="afterInteractive"
           />
         )}
+        <Script
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6471129158350904"
+          strategy="afterInteractive"
+          crossOrigin="anonymous"
+        />
         <AuthProvider>
           <LocationDataProvider />
           {children}

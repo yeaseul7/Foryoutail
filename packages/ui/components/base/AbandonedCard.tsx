@@ -167,17 +167,17 @@ export default function AbandonedCard({
           loading="lazy"
           onError={handleImageError}
         />
-        {/* 뱃지: 사진 오른쪽 상단 - D-n(빨강+시계 아이콘) 또는 공고 종료(회색) */}
+        {/* 뱃지: 사진 오른쪽 상단 - D-n(빨강+시계) 또는 공고 종료. 화면 크기에 맞춰 반응형 */}
         {noticeEndBadge && (
           <div
-            className="absolute top-1.5 right-1.5 z-10 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold whitespace-nowrap shadow-sm"
+            className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 z-10 flex items-center gap-0.5 sm:gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold whitespace-nowrap shadow-sm min-w-0"
             style={{
               backgroundColor: noticeEndBadge.bgColor,
               color: noticeEndBadge.textColor,
             }}
           >
             {noticeEndBadge.text.startsWith('D-') && (
-              <HiClock className="w-3.5 h-3.5 flex-shrink-0" aria-hidden />
+              <HiClock className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" aria-hidden />
             )}
             <span>{noticeEndBadge.text}</span>
           </div>
@@ -191,7 +191,7 @@ export default function AbandonedCard({
           </h3>
           {shelterAnimal?.processState && (
             <div
-              className="flex-shrink-0 px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold whitespace-nowrap"
+              className="flex-shrink-0 px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-full text-[9px] sm:text-[10px] md:text-xs font-semibold whitespace-nowrap min-w-0"
               style={{
                 backgroundColor: statusBadge.bgColor,
                 color: statusBadge.textColor,

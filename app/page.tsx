@@ -14,44 +14,29 @@ const PageFooter = dynamic(
   { ssr: true }
 );
 
-const HomeTab = dynamic(
-  () => import('@/packages/ui/components/home/HomeTab'),
-  {
-    ssr: true,
-    loading: () => <HomeTabSkeleton />
-  }
-);
 
-const TrendingPosts = dynamic(
-  () => import('@/packages/ui/components/home/trending/TrendingPosts'),
-  { ssr: true }
-);
-
-const RecentPosts = dynamic(
-  () => import('@/packages/ui/components/home/recent/RecentPosts'),
-  { ssr: true }
-);
 
 const SummaryCardNews = dynamic(
   () => import('@/packages/ui/components/home/SummaryCardNews'),
   { ssr: true }
 );
 
+const HorizontalAnimalList = dynamic(
+  () => import('@/packages/ui/components/home/shelter/HorizontalAnimalList'),
+  { ssr: true }
+);
 const Banner = dynamic(
   () => import('@/packages/ui/components/home/Banner'),
   { ssr: true }
 );
 
 export default function Home() {
-  const [mode, setMode] = useState<'trending' | 'adoption'>('trending');
   return (
     <main className="page-container-full">
       <PageTemplate visibleHomeTab={false}>
         <div className="w-full">
           <Banner />
-          <Suspense fallback={<HomeTabSkeleton />}>
-            <HomeTab mode={mode} setMode={setMode} />
-          </Suspense>
+
           <Suspense fallback={
             <div className="w-full">
               <div className="grid grid-cols-1 gap-4 px-4 pt-8 w-full sm:px-0 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -61,7 +46,7 @@ export default function Home() {
               </div>
             </div>
           }>
-            {mode === 'trending' ? <TrendingPosts pageSize={4} fromMain /> : <RecentPosts pageSize={4} fromMain />}
+            <HorizontalAnimalList />
           </Suspense>
         </div>
         <Suspense fallback={
@@ -74,7 +59,7 @@ export default function Home() {
             </div>
           </div>
         }>
-          <div className="w-full pt-8 sm:pt-10">
+          <div className="w-full pt-8 sm:pt-10 mb-10">
             <SummaryCardNews />
           </div>
         </Suspense>
