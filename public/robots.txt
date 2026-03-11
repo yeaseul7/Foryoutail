@@ -1,9 +1,16 @@
-# *
+# 모든 크롤러
 User-agent: *
 Allow: /
-Disallow: /api/*
+Disallow: /api/
 Disallow: /write
-Disallow: /edit/*
+Disallow: /edit/
+
+# Google (검색 + 애드센스) 명시 허용
+User-agent: Googlebot
+Allow: /
+
+User-agent: Mediapartners-Google
+Allow: /
 
 # Host
 Host: https://www.kkosunnae.com/
