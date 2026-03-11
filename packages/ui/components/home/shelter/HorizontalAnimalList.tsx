@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { fetchShelterAnimalData, type AnimalFilterState } from '@/lib/api/shelter';
 import type { ShelterAnimalItem } from '@/packages/type/postType';
 import getOptimizedCloudinaryUrl from '@/packages/utils/optimization';
+import HorizontalAnimalCardSkeleton from '@/packages/ui/components/base/HorizontalAnimalCardSkeleton';
 
 const DISPLAY_COUNT = 15;
 const DEFAULT_FILTERS: AnimalFilterState = {
@@ -124,12 +125,11 @@ export default function HorizontalAnimalList() {
           <span className="h-5 w-0.5 shrink-0 rounded-full bg-primary1" aria-hidden />
           최근 입양 공고
         </h2>
-        <div className="flex gap-3 overflow-x-auto pb-2 px-1 snap-x snap-mandatory">
+        <div className="flex gap-3 overflow-x-auto pb-2 px-1 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div
-              key={i}
-              className="flex-shrink-0 w-[160px] sm:w-[180px] h-[220px] rounded-xl bg-gray-100 animate-pulse snap-center"
-            />
+            <div key={i} className="snap-center">
+              <HorizontalAnimalCardSkeleton />
+            </div>
           ))}
         </div>
       </section>

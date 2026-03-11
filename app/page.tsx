@@ -1,8 +1,7 @@
 'use client';
-import { useState, Suspense } from 'react';
+import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
-import HomeTabSkeleton from '@/packages/ui/components/base/HomeTabSkeleton';
-import PostCardSkeleton from '@/packages/ui/components/base/PostCardSkeleton';
+import HorizontalAnimalCardSkeleton from '@/packages/ui/components/base/HorizontalAnimalCardSkeleton';
 
 const PageTemplate = dynamic(
   () => import('@/packages/ui/components/base/PageTemplate'),
@@ -35,20 +34,26 @@ export default function Home() {
     <main className="page-container-full">
       <PageTemplate visibleHomeTab={false}>
         <div className="w-full">
-          <Banner />
 
           <Suspense fallback={
-            <div className="w-full">
-              <div className="grid grid-cols-1 gap-4 px-4 pt-8 w-full sm:px-0 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                {Array.from({ length: 12 }).map((_, index) => (
-                  <PostCardSkeleton key={`skeleton-${index}`} />
+            <section className="w-full py-4">
+              <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+                <span className="h-5 w-0.5 shrink-0 rounded-full bg-primary1" aria-hidden />
+                최근 입양 공고
+              </h2>
+              <div className="flex gap-3 overflow-x-auto pb-2 px-1 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="snap-center">
+                    <HorizontalAnimalCardSkeleton />
+                  </div>
                 ))}
               </div>
-            </div>
+            </section>
           }>
             <HorizontalAnimalList />
           </Suspense>
         </div>
+        <Banner />
         <Suspense fallback={
           <div className="w-full px-4 pt-8 sm:px-0 sm:pt-10">
             <div className="h-6 bg-gray-200 rounded w-32 mb-4 animate-pulse" />

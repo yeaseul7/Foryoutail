@@ -78,7 +78,7 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
   }, [user]);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200">
+    <header className="sticky top-0 z-50 w-full bg-main border-b border-gray-200">
       <div className="flex justify-between items-center px-4 mx-auto w-full max-w-7xl h-16 sm:px-6">
         <div className="flex items-center gap-4 md:gap-10">
           <Link
