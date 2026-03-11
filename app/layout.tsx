@@ -89,6 +89,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="google-adsense-account" content="ca-pub-6471129158350904" />
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6471129158350904"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${cafe24SsurroundAir.variable} antialiased w-full min-h-screen font-sans bg-white`}
       >
@@ -110,11 +118,6 @@ export default function RootLayout({
             strategy="afterInteractive"
           />
         )}
-        <Script
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6471129158350904"
-          strategy="afterInteractive"
-          crossOrigin="anonymous"
-        />
         <AuthProvider>
           <LocationDataProvider />
           {children}
