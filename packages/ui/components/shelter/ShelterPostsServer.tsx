@@ -1,34 +1,11 @@
 import { Suspense } from 'react';
-import { cookies } from 'next/headers';
 import AbandonedCardSkeleton from '../base/AbandonedCardSkeleton';
 import ShelterPostsClient from './ShelterPostsClient';
-import { sidoLocation } from '@/static/data/sidoLocation';
 import { ShelterAnimalItem } from '@/packages/type/postType';
 
 const API_BASE_URL = 'https://apis.data.go.kr/1543061/abandonmentPublicService_v2';
 
 async function ShelterPostsContent() {
-  const cookieStore = await cookies();
-  const matchedAddressCookie = cookieStore.get('matched_address');
-
-  let targetSidoCd: string | null = null;
-
-  if (matchedAddressCookie) {
-    try {
-      const decodedValue = decodeURIComponent(matchedAddressCookie.value);
-      const matchedAddress = JSON.parse(decodedValue);
-      targetSidoCd = matchedAddress.sidoCd || null;
-    } catch (e) {
-      console.error('쿠키 파싱 오류:', e);
-    }
-  }
-
-  if (!targetSidoCd) {
-    const seoulSido = sidoLocation.items.find(item => item.SIDO_NAME === '서울특별시');
-    targetSidoCd = seoulSido?.SIDO_CD || '6110000';
-    console.log('시도 코드가 없어 기본값(서울)을 사용합니다:', targetSidoCd);
-  }
-
   try {
     const serviceKey = process.env.NEXT_PUBLIC_ANIMALS_OPENAPI;
 
@@ -42,10 +19,6 @@ async function ShelterPostsContent() {
     urlParams.append('pageNo', '1');
     urlParams.append('numOfRows', '30');
     urlParams.append('_type', 'json');
-
-    if (targetSidoCd) {
-      urlParams.append('upr_cd', targetSidoCd);
-    }
 
     const apiUrl = `${API_BASE_URL}/abandonmentPublic_v2?${urlParams.toString()}`;
     console.log('Fetching from API (serviceKey hidden)');

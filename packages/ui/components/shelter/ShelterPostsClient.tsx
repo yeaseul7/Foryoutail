@@ -13,6 +13,31 @@ interface ShelterPostsClientProps {
   initialData: FetchShelterAnimalDataResult;
 }
 
+const QUICK_FILTER_LABEL: Record<
+  NonNullable<AnimalFilterState['quickFilter']>,
+  string
+> = {
+  humanDog: '사람 좋아하는 강아지',
+  humanCat: '사람 좋아하는 고양이',
+  gentleCat: '순한 고양이',
+  nearby: '근처 지역',
+  gentleDog: '순한 강아지',
+  young: '어린 동물',
+};
+
+function getLoadingKeyword(filters: AnimalFilterState): string {
+  if (filters.searchQuery.trim()) return filters.searchQuery.trim();
+  if (filters.quickFilter) return QUICK_FILTER_LABEL[filters.quickFilter];
+  if (filters.upKindCd === '417000') return '강아지';
+  if (filters.upKindCd === '422400') return '고양이';
+  if (filters.upKindCd === '429900') return '기타 동물';
+  if (filters.sexCd === 'F') return '암컷';
+  if (filters.sexCd === 'M') return '수컷';
+  if (filters.state === 'notice') return '공고중 아이';
+  if (filters.state === 'protect') return '보호중 아이';
+  return '아이들';
+}
+
 export default function ShelterPostsClient({ initialData }: ShelterPostsClientProps) {
   const searchParams = useSearchParams();
   const appliedUrlQueryRef = useRef(false);
@@ -23,15 +48,17 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
   const [pageNo, setPageNo] = useState(1);
   const [hasMore, setHasMore] = useState(initialData.hasMore);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  /** 지역 기본값: 서울 (서버 초기 조회와 동일) */
+  /** 기본값은 전체 조회 */
   const [filters, setFilters] = useState<AnimalFilterState>({
     sexCd: null,
     state: null,
     upKindCd: null,
+    neuterYn: null,
+    quickFilter: null,
     searchQuery: '',
     bgnde: null,
     endde: null,
-    upr_cd: '6110000', // 서울특별시
+    upr_cd: null,
   });
   const filtersRef = useRef<AnimalFilterState>(filters);
   const isLoadingMoreRef = useRef(false);
@@ -117,6 +144,8 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
       prevFilters.sexCd !== newFilters.sexCd ||
       prevFilters.state !== newFilters.state ||
       prevFilters.upKindCd !== newFilters.upKindCd ||
+      prevFilters.neuterYn !== newFilters.neuterYn ||
+      prevFilters.quickFilter !== newFilters.quickFilter ||
       prevFilters.bgnde !== newFilters.bgnde ||
       prevFilters.endde !== newFilters.endde ||
       prevFilters.upr_cd !== newFilters.upr_cd;
@@ -166,9 +195,35 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
   useEffect(() => {
     if (appliedUrlQueryRef.current) return;
     const q = searchParams.get('q')?.trim();
-    if (!q) return;
+    const sex = searchParams.get('sex');
+    const upkind = searchParams.get('upkind');
+    const neuter = searchParams.get('neuter');
+    const state = searchParams.get('state');
+    const quickFilter = searchParams.get('quickFilter');
+    const hasFilterParams = Boolean(q || sex || upkind || neuter || state || quickFilter);
+    if (!hasFilterParams) return;
     appliedUrlQueryRef.current = true;
-    handleFilterChange({ ...filtersRef.current, searchQuery: q });
+    handleFilterChange({
+      ...filtersRef.current,
+      searchQuery: q ?? '',
+      sexCd: sex === 'M' || sex === 'F' || sex === 'Q' ? sex : null,
+      upKindCd:
+        upkind === '417000' || upkind === '422400' || upkind === '429900'
+          ? upkind
+          : null,
+      neuterYn:
+        neuter === 'Y' || neuter === 'N' || neuter === 'U' ? neuter : null,
+      state: state === 'notice' || state === 'protect' ? state : null,
+      quickFilter:
+        quickFilter === 'humanDog' ||
+        quickFilter === 'humanCat' ||
+        quickFilter === 'gentleCat' ||
+        quickFilter === 'nearby' ||
+        quickFilter === 'gentleDog' ||
+        quickFilter === 'young'
+          ? quickFilter
+          : null as AnimalFilterState['quickFilter'],
+    });
   }, [searchParams, handleFilterChange]);
 
   const handleScrollNearEnd = useCallback(() => {
@@ -196,7 +251,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
               onSidoSelect={(sidoCd) =>
                 handleFilterChange({ ...filters, upr_cd: sidoCd })
               }
-              initialSidoCd="6110000"
+              initialSidoCd={null}
             />
 
           </div>
@@ -255,10 +310,15 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
                 className="w-full h-[65vh] min-h-[400px] overflow-hidden"
               >
                 {loading && shelterAnimalData.length === 0 ? (
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 justify-items-center h-full content-start">
-                    {Array.from({ length: 12 }).map((_, index) => (
-                      <AbandonedCardSkeleton key={`skeleton-${index}`} />
-                    ))}
+                  <div className="h-full content-start">
+                    <p className="text-sm text-gray-600 px-1 py-2">
+                      {`${getLoadingKeyword(filtersRef.current)} 열심히 찾는중입니다...`}
+                    </p>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 justify-items-center">
+                      {Array.from({ length: 12 }).map((_, index) => (
+                        <AbandonedCardSkeleton key={`skeleton-${index}`} />
+                      ))}
+                    </div>
                   </div>
                 ) : gridSize.width > 0 && gridSize.height > 0 && shelterAnimalData.length > 0 ? (
                   <VirtualizedShelterGrid

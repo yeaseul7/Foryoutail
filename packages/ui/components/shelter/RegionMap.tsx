@@ -132,7 +132,7 @@ export default function RegionMap({
   height = '320px',
   selectedSidoCd,
   onSidoSelect,
-  initialSidoCd = '6110000',
+  initialSidoCd = null,
 }: RegionMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const dataLayerRef = useRef<NaverData | null>(null);

@@ -58,6 +58,8 @@ const BASE_FILTERS: Omit<AnimalFilterState, 'upr_cd'> = {
   sexCd: null,
   state: null,
   upKindCd: null,
+  neuterYn: null,
+  quickFilter: null,
   searchQuery: '',
   bgnde: null,
   endde: null,

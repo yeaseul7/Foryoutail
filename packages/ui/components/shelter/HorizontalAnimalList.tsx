@@ -13,6 +13,8 @@ const DEFAULT_FILTERS: AnimalFilterState = {
   sexCd: null,
   state: null,
   upKindCd: null,
+  neuterYn: null,
+  quickFilter: null,
   searchQuery: '',
   bgnde: null,
   endde: null,

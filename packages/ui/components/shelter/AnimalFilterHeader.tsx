@@ -35,6 +35,8 @@ export interface AnimalFilterState {
   sexCd: string | null;
   state: string | null;
   upKindCd: string | null;
+  neuterYn: string | null;
+  quickFilter: 'humanDog' | 'humanCat' | 'gentleCat' | 'nearby' | 'gentleDog' | 'young' | null;
   searchQuery: string;
   bgnde: string | null;
   endde: string | null;
@@ -262,10 +264,10 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
             </div>
 
             {/* 필터 초기화 */}
-            {(filters.sexCd !== null || filters.state !== null || filters.upKindCd !== null || filters.searchQuery || filters.bgnde || filters.endde || filters.upr_cd) && (
+            {(filters.sexCd !== null || filters.state !== null || filters.upKindCd !== null || filters.neuterYn !== null || filters.quickFilter !== null || filters.searchQuery || filters.bgnde || filters.endde || filters.upr_cd) && (
               <button
                 onClick={() => {
-                  const resetFilters = { sexCd: null, state: null, upKindCd: null, searchQuery: '', bgnde: null, endde: null, upr_cd: null };
+                  const resetFilters = { sexCd: null, state: null, upKindCd: null, neuterYn: null, quickFilter: null, searchQuery: '', bgnde: null, endde: null, upr_cd: null };
                   onFilterChange(resetFilters);
                   setStartDate('');
                   setEndDate('');
