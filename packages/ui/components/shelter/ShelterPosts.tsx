@@ -1,8 +1,8 @@
 'use client';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { ShelterAnimalItem } from '@/packages/type/postType';
-import AbandonedCard from '../../base/AbandonedCard';
-import AbandonedCardSkeleton from '../../base/AbandonedCardSkeleton';
+import AbandonedCard from '../base/AbandonedCard';
+import AbandonedCardSkeleton from '../base/AbandonedCardSkeleton';
 import AnimalFilterHeader, { AnimalFilterState } from './AnimalFilterHeader';
 import { fetchShelterAnimalData } from '@/lib/api/shelter';
 
@@ -18,6 +18,8 @@ export default function ShelterPosts() {
     sexCd: null,
     state: null,
     upKindCd: null,
+    neuterYn: null,
+    quickFilter: null,
     searchQuery: '',
     bgnde: null,
     endde: null,
@@ -89,8 +91,11 @@ export default function ShelterPosts() {
       prevFilters.sexCd !== newFilters.sexCd ||
       prevFilters.state !== newFilters.state ||
       prevFilters.upKindCd !== newFilters.upKindCd ||
+      prevFilters.neuterYn !== newFilters.neuterYn ||
+      prevFilters.quickFilter !== newFilters.quickFilter ||
       prevFilters.bgnde !== newFilters.bgnde ||
-      prevFilters.endde !== newFilters.endde;
+      prevFilters.endde !== newFilters.endde ||
+      prevFilters.upr_cd !== newFilters.upr_cd;
 
     if (!isSearchQueryChanged && !isOtherFilterChanged) {
       return;

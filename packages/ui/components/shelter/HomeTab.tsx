@@ -1,6 +1,6 @@
 'use client';
 
-import NavLink from '../../common/NavLink';
+import NavLink from '../common/NavLink';
 import { MdMap, MdViewModule } from 'react-icons/md';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useCallback } from 'react';

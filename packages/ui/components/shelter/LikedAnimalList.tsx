@@ -3,9 +3,9 @@ import { useAuth } from '@/lib/firebase/auth';
 import { firestore } from '@/lib/firebase/firebase';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import Loading from '../../base/Loading';
+import Loading from '../base/Loading';
 import { ShelterAnimalItem } from '@/packages/type/postType';
-import AbandonedCard from '../../base/AbandonedCard';
+import AbandonedCard from '../base/AbandonedCard';
 
 export default function LikedAnimalList({ userId }: { userId?: string }) {
   const { user } = useAuth();
