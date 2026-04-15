@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     // Convert buffer to base64 string (Cloudinary prefers base64 over stream for server-side)
     const base64 = buffer.toString('base64');
 
-    // Upload to Cloudinary using base64 (folder 예: 'unleashed' | 'kkosunnae_cardNews/{firebaseId}')
+    // Upload to Cloudinary using base64
     const result = await cloudinary.uploader.upload(
       `data:${file.type};base64,${base64}`,
       {

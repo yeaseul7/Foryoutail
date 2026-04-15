@@ -1,9 +1,8 @@
 /**
- * 카드뉴스 이미지들을 Cloudinary에 업로드하고 URL 목록을 반환합니다.
+ * 이미지들을 Cloudinary에 업로드하고 URL 목록을 반환합니다.
  * 기존 /api/upload API를 호출합니다.
  * @param files - 업로드할 파일 배열
  * @param folder - Cloudinary 폴더 경로. 미지정 시 API 기본값('unleashed') 사용.
- *                 카드뉴스는 Firebase 문서 id 기준으로 예: `kkosunnae_cardNews/{firebaseId}`
  */
 export async function uploadCardImages(
     files: File[],

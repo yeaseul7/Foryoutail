@@ -1,6 +1,6 @@
 'use client';
 
-export type ProfileCategory = 'posts' | 'cardNews' | 'shelter';
+export type ProfileCategory = 'posts' | 'shelter';
 
 interface ProfileSwitchTagProps {
   category: ProfileCategory;
@@ -10,16 +10,14 @@ interface ProfileSwitchTagProps {
 
 export default function ProfileSwitchTag({ category, setCategory, isOwnProfile = false }: ProfileSwitchTagProps) {
   const isPostsActive = category === 'posts';
-  const isCardNewsActive = category === 'cardNews';
   const isShelterActive = category === 'shelter';
 
-  const pillWidth = 'calc((100% - 8px) / 3)';
+  const pillWidth = 'calc((100% - 8px) / 2)';
   const pillLeft = {
     posts: '4px',
-    cardNews: 'calc(4px + (100% - 8px) / 3)',
-    shelter: 'calc(4px + (100% - 8px) / 3 * 2)',
+    shelter: 'calc(4px + (100% - 8px) / 2)',
   };
-  const activeLeft = isPostsActive ? pillLeft.posts : isCardNewsActive ? pillLeft.cardNews : pillLeft.shelter;
+  const activeLeft = isPostsActive ? pillLeft.posts : pillLeft.shelter;
 
   if (!isOwnProfile) {
     return (
@@ -52,15 +50,6 @@ export default function ProfileSwitchTag({ category, setCategory, isOwnProfile =
           }`}
         >
           게시글
-        </button>
-
-        <button
-          onClick={() => setCategory('cardNews')}
-          className={`relative z-10 px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-colors duration-300 whitespace-nowrap ${
-            isCardNewsActive ? 'text-primary1' : 'text-gray-600'
-          }`}
-        >
-          카드뉴스
         </button>
 
         <button

@@ -1,18 +1,8 @@
 import { ShelterAnimalItem } from '@/packages/type/postType';
 import { formatDateToKorean } from '@/packages/utils/dateFormatting';
-import {
-  doc,
-  getDoc,
-  collection,
-  setDoc,
-  deleteDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { useEffect, useState } from 'react';
+import { useShelterLike } from '@/hooks/useShelterLike';
 import { FaBuilding, FaLeaf, FaPaw } from 'react-icons/fa';
 import { HiHeart, HiOutlineHeart, HiShare } from 'react-icons/hi2';
-import { firestore } from '@/lib/firebase/firebase';
-import { useAuth } from '@/lib/firebase/auth';
 
 interface AnimalInfoCardProps {
   animalData: ShelterAnimalItem;
@@ -28,84 +18,7 @@ export default function AnimalInfoCard({
   breedText,
   desertionNo,
 }: AnimalInfoCardProps) {
-  const { user } = useAuth();
-  const [isLiked, setIsLiked] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  useEffect(() => {
-    const checkAbandonment = async () => {
-      if (!desertionNo || !user) {
-        setIsLiked(false);
-        return;
-      }
-
-      try {
-        // users/{userId}/abandonment 서브컬렉션에서 해당 desertionNo 문서 확인
-        const abandonmentRef = collection(
-          firestore,
-          'users',
-          user.uid,
-          'abandonment'
-        );
-        const abandonmentDoc = doc(abandonmentRef, desertionNo);
-        const docSnapshot = await getDoc(abandonmentDoc);
-        setIsLiked(docSnapshot.exists());
-      } catch (error) {
-        console.error('abandonment 정보 가져오기 실패:', error);
-        setIsLiked(false);
-      }
-    };
-
-    checkAbandonment();
-  }, [desertionNo, user]);
-
-  const handleLike = async () => {
-    if (!user) {
-      alert('좋아요를 누르려면 로그인이 필요합니다.');
-      return;
-    }
-
-    if (!desertionNo || isUpdating) return;
-
-    setIsUpdating(true);
-
-    try {
-      // users/{userId}/abandonment 서브컬렉션 경로
-      const abandonmentRef = collection(
-        firestore,
-        'users',
-        user.uid,
-        'abandonment'
-      );
-      const abandonmentDoc = doc(abandonmentRef, desertionNo);
-
-      if (isLiked) {
-        await deleteDoc(abandonmentDoc);
-        setIsLiked(false);
-      } else {
-        let firstImage: string | undefined;
-        for (let i = 1; i <= 8; i++) {
-          const popfile = animalData[`popfile${i}` as keyof ShelterAnimalItem] as string | undefined;
-          if (popfile && typeof popfile === 'string' && popfile.trim() !== '') {
-            firstImage = popfile;
-            break;
-          }
-        }
-
-        await setDoc(abandonmentDoc, {
-          ...animalData,
-          image: firstImage || null,
-          createdAt: serverTimestamp(),
-        });
-        setIsLiked(true);
-      }
-    } catch (error) {
-      console.error('abandonment 저장 실패:', error);
-      alert('처리 중 오류가 발생했습니다.');
-    } finally {
-      setIsUpdating(false);
-    }
-  };
+  const { isLiked, isUpdating, handleLike } = useShelterLike(desertionNo, animalData);
   const handleShare = async () => {
     if (!desertionNo) return;
     const url = `${window.location.origin}/shelter/${desertionNo}`;

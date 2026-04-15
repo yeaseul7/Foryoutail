@@ -8,8 +8,8 @@ import { ShelterAnimalItem, ShelterAnimalData } from '@/packages/type/postType';
 import { ShelterInfoResponse, ShelterInfoItem } from '@/app/api/shelter-info/route';
 import { IoIosArrowBack } from 'react-icons/io';
 import Notfound_ad_animal from '@/packages/ui/components/base/Notfound_ad_animal';
-import AnimalImgCard from '@/packages/ui/components/home/shelter/AnimalImgCard';
-import AnimalInfoCard from '@/packages/ui/components/home/shelter/AnimalInfoCard';
+import AnimalImgCard from '@/packages/ui/components/shelter/AnimalImgCard';
+import AnimalInfoCard from '@/packages/ui/components/shelter/AnimalInfoCard';
 import AnimalNotice from '@/packages/ui/components/common/AnimalNotice';
 import PageFooter from '@/packages/ui/components/base/PageFooter';
 

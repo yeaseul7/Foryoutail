@@ -133,6 +133,19 @@ export async function enrichPostsWithAuthorInfo(
   });
 }
 
+export async function getAllBoardsData(
+  limitCount: number = 60,
+): Promise<PostData[]> {
+  const boardsCol = collection(firestore, 'boards');
+  const q = query(boardsCol, orderBy('createdAt', 'desc'), limit(limitCount));
+  const snapshot = await getDocs(q);
+  const posts = snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as PostData[];
+  return await enrichPostsWithAuthorInfo(posts);
+}
+
 export async function getBoardsData(): Promise<PostData[]> {
   const boardsCol = collection(firestore, 'boards');
   const boardsSnapshot = await getDocs(boardsCol);

@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { cookies } from 'next/headers';
-import AbandonedCardSkeleton from '../../base/AbandonedCardSkeleton';
+import AbandonedCardSkeleton from '../base/AbandonedCardSkeleton';
 import ShelterPostsClient from './ShelterPostsClient';
 import { sidoLocation } from '@/static/data/sidoLocation';
 import { ShelterAnimalItem } from '@/packages/type/postType';

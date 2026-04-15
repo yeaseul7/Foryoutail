@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { ShelterAnimalItem } from '@/packages/type/postType';
-import AbandonedCardSkeleton from '../../base/AbandonedCardSkeleton';
+import AbandonedCardSkeleton from '../base/AbandonedCardSkeleton';
 import AnimalFilterHeader, { AnimalFilterState } from './AnimalFilterHeader';
 import { fetchShelterAnimalData, FetchShelterAnimalDataResult } from '@/lib/api/shelter';
 import SearchAi from './SearchAi';

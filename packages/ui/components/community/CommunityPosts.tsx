@@ -1,16 +1,16 @@
 'use client';
-import { getTrendingBoardsData } from '@/lib/api/post';
+import { getAllBoardsData } from '@/lib/api/post';
 import { useEffect, useState } from 'react';
-import PostCard from '../../base/PostCard';
-import PostCardSkeleton from '../../base/PostCardSkeleton';
+import PostCard from '../base/PostCard';
+import PostCardSkeleton from '../base/PostCardSkeleton';
 import { PostData } from '@/packages/type/postType';
 
-interface TrendingPostsProps {
+interface CommunityPostsProps {
   pageSize?: number;
   fromMain?: boolean;
 }
 
-export default function TrendingPosts({ pageSize = 12, fromMain = false }: TrendingPostsProps) {
+export default function CommunityPosts({ pageSize = 12, fromMain = false }: CommunityPostsProps) {
   const [allPosts, setAllPosts] = useState<PostData[]>([]);
   const [displayedPosts, setDisplayedPosts] = useState<PostData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,9 +20,9 @@ export default function TrendingPosts({ pageSize = 12, fromMain = false }: Trend
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const postsData = await getTrendingBoardsData();
-        setAllPosts(postsData);
-        setDisplayedPosts(postsData.slice(0, pageSize));
+        const data = await getAllBoardsData();
+        setAllPosts(data);
+        setDisplayedPosts(data.slice(0, pageSize));
         setDisplayCount(pageSize);
       } catch (e) {
         console.error('게시물 조회 중 오류 발생:', e);
@@ -40,7 +40,6 @@ export default function TrendingPosts({ pageSize = 12, fromMain = false }: Trend
 
   const handleLoadMore = () => {
     setLoadingMore(true);
-
     setTimeout(() => {
       const nextCount = displayCount + pageSize;
       setDisplayedPosts(allPosts.slice(0, nextCount));
@@ -74,11 +73,10 @@ export default function TrendingPosts({ pageSize = 12, fromMain = false }: Trend
                 highQuality={index < pageSize}
               />
             ))}
-            {loadingMore && (
+            {loadingMore &&
               Array.from({ length: pageSize }).map((_, index) => (
                 <PostCardSkeleton key={`skeleton-more-${index}`} />
-              ))
-            )}
+              ))}
           </>
         )}
       </div>
@@ -88,17 +86,17 @@ export default function TrendingPosts({ pageSize = 12, fromMain = false }: Trend
           <button
             onClick={handleLoadMore}
             disabled={loadingMore}
-            className="text-primary1 hover:text-primary2 font-semibold 
+            className="text-primary1 hover:text-primary2 font-semibold
                        transition-colors duration-200
                        disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loadingMore ? (
               <span className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                 로딩중...
               </span>
             ) : (
-              `더보기`
+              '더보기'
             )}
           </button>
         </div>

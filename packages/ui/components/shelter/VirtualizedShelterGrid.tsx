@@ -3,7 +3,7 @@
 import { useRef, useCallback, useEffect } from 'react';
 import { FixedSizeGrid as Grid } from 'react-window';
 import { ShelterAnimalItem } from '@/packages/type/postType';
-import AbandonedCard from '../../base/AbandonedCard';
+import AbandonedCard from '../base/AbandonedCard';
 
 const ROW_HEIGHT = 360;
 const GAP = 8;

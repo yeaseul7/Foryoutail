@@ -22,7 +22,7 @@ export type UseViewCountOptions = {
 /**
  * 특정 문서의 조회수 로드 + IP 기준 1회 조회 기록.
  * Firestore 경로: {collectionName}/{documentId}/view/{viewerId}
- * @param collectionName 상위 컬렉션 (예: 'notice', 'cardNews')
+ * @param collectionName 상위 컬렉션 (예: 'notice')
  * @param documentId 문서 id (없으면 동작 안 함)
  * @returns viewCount, setViewCount
  */
