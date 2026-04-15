@@ -99,6 +99,7 @@ export async function fetchShelterAnimalData(
   page: number,
   filters: AnimalFilterState,
 ): Promise<FetchShelterAnimalDataResult> {
+  const isNearbyQuickFilter = filters.quickFilter === 'nearby';
   const isFilteredRequest = Boolean(
     filters.sexCd ||
       filters.state ||
@@ -110,7 +111,7 @@ export async function fetchShelterAnimalData(
       filters.endde ||
       filters.upr_cd,
   );
-  const numOfRows = isFilteredRequest ? 1000 : 30;
+  const numOfRows = isNearbyQuickFilter ? 30 : isFilteredRequest ? 1000 : 30;
 
   const params = new URLSearchParams();
   params.append('pageNo', page.toString());

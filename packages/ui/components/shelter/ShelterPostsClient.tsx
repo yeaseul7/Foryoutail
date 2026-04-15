@@ -200,7 +200,10 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
     const neuter = searchParams.get('neuter');
     const state = searchParams.get('state');
     const quickFilter = searchParams.get('quickFilter');
-    const hasFilterParams = Boolean(q || sex || upkind || neuter || state || quickFilter);
+    const uprCd = searchParams.get('upr_cd');
+    const hasFilterParams = Boolean(
+      q || sex || upkind || neuter || state || quickFilter || uprCd,
+    );
     if (!hasFilterParams) return;
     appliedUrlQueryRef.current = true;
     handleFilterChange({
@@ -223,6 +226,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
         quickFilter === 'young'
           ? quickFilter
           : null as AnimalFilterState['quickFilter'],
+      upr_cd: uprCd && /^\d{7}$/.test(uprCd) ? uprCd : null,
     });
   }, [searchParams, handleFilterChange]);
 
