@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ShelterAnimalItem } from '@/packages/type/postType';
 import AbandonedCardSkeleton from '../base/AbandonedCardSkeleton';
 import AnimalFilterHeader, { AnimalFilterState } from './AnimalFilterHeader';
@@ -13,6 +14,8 @@ interface ShelterPostsClientProps {
 }
 
 export default function ShelterPostsClient({ initialData }: ShelterPostsClientProps) {
+  const searchParams = useSearchParams();
+  const appliedUrlQueryRef = useRef(false);
   const [shelterAnimalData, setShelterAnimalData] = useState<ShelterAnimalItem[]>(
     initialData.items
   );
@@ -159,6 +162,14 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
       applyFilters();
     }
   }, []);
+
+  useEffect(() => {
+    if (appliedUrlQueryRef.current) return;
+    const q = searchParams.get('q')?.trim();
+    if (!q) return;
+    appliedUrlQueryRef.current = true;
+    handleFilterChange({ ...filtersRef.current, searchQuery: q });
+  }, [searchParams, handleFilterChange]);
 
   const handleScrollNearEnd = useCallback(() => {
     if (!hasMoreRef.current || isLoadingMoreRef.current || isFilterRequestInProgress.current) return;
