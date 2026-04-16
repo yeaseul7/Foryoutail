@@ -17,7 +17,8 @@ async function ShelterPostsContent() {
     const urlParams = new URLSearchParams();
     urlParams.append('serviceKey', serviceKey);
     urlParams.append('pageNo', '1');
-    urlParams.append('numOfRows', '30');
+    urlParams.append('numOfRows', '100');
+    urlParams.append('upkind', '417000');
     urlParams.append('_type', 'json');
 
     const apiUrl = `${API_BASE_URL}/abandonmentPublic_v2?${urlParams.toString()}`;
@@ -57,7 +58,7 @@ async function ShelterPostsContent() {
 
     const items = shelterAnimalResponse?.response?.body?.items?.item;
     const itemsArray = items ? (Array.isArray(items) ? items : [items]) : [];
-    const hasMore = itemsArray.length === 30;
+    const hasMore = itemsArray.length === 100;
 
     const initialData = {
       items: itemsArray as ShelterAnimalItem[],

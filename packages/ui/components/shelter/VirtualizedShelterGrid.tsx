@@ -5,8 +5,10 @@ import { FixedSizeGrid as Grid } from 'react-window';
 import { ShelterAnimalItem } from '@/packages/type/postType';
 import AbandonedCard from '../base/AbandonedCard';
 
-const ROW_HEIGHT = 360;
-const GAP = 8;
+/** 행 간격을 열 간격보다 넓게 (react-window 행 높이는 고정) */
+const ROW_HEIGHT = 488;
+const COL_GAP = 16;
+const ROW_GAP = 36;
 const LOAD_MORE_THRESHOLD = 400;
 
 interface VirtualizedShelterGridProps {
@@ -23,9 +25,10 @@ export default function VirtualizedShelterGrid({
   onScrollNearEnd,
 }: VirtualizedShelterGridProps) {
   const gridRef = useRef<Grid>(null);
-  const columnCount = width < 640 ? 1 : 3;
+  const columnCount =
+    width < 640 ? 1 : width < 768 ? 2 : width < 1024 ? 3 : 4;
   const rowCount = Math.ceil(Math.max(items.length, 1) / columnCount);
-  const columnWidth = (width - GAP * (columnCount - 1)) / columnCount;
+  const columnWidth = (width - COL_GAP * (columnCount - 1)) / columnCount;
   const onScrollNearEndRef = useRef(onScrollNearEnd);
   useEffect(() => {
     onScrollNearEndRef.current = onScrollNearEnd;
@@ -52,12 +55,12 @@ export default function VirtualizedShelterGrid({
         <div
           style={{
             ...style,
-            left: num(style.left as number) + (columnIndex > 0 ? GAP / 2 : 0),
-            top: num(style.top as number) + (rowIndex > 0 ? GAP / 2 : 0),
-            width: num(style.width as number) - (columnIndex < columnCount - 1 ? GAP / 2 : 0),
-            height: num(style.height as number) - (rowIndex < rowCount - 1 ? GAP / 2 : 0),
+            left: num(style.left as number) + (columnIndex > 0 ? COL_GAP / 2 : 0),
+            top: num(style.top as number) + (rowIndex > 0 ? ROW_GAP / 2 : 0),
+            width: num(style.width as number) - (columnIndex < columnCount - 1 ? COL_GAP / 2 : 0),
+            height: num(style.height as number) - (rowIndex < rowCount - 1 ? ROW_GAP / 2 : 0),
           }}
-          className="flex justify-center"
+          className="flex h-full w-full min-w-0"
         >
           <AbandonedCard shelterAnimal={item} />
         </div>

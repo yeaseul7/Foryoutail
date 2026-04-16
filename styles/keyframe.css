@@ -9,25 +9,3 @@
   .dog-jump-animation {
     animation: dog-jump 0.5s ease-in-out;
   }
-
-/* AI 카드 무지개 배경 흐름 애니메이션 */
-@keyframes rainbow-flow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-.search-ai-rainbow {
-  background: linear-gradient(
-    120deg,
-    #fef3f2 0%,
-    #fff7ed 15%,
-    #fefce8 30%,
-    #ecfdf5 45%,
-    #ecfeff 60%,
-    #eef2ff 75%,
-    #f5f3ff 90%,
-    #fef3f2 100%
-  );
-  background-size: 300% 300%;
-  animation: rainbow-flow 10s ease infinite;
-}

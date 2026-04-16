@@ -4,7 +4,16 @@ import Image from 'next/image';
 import { useState, useMemo, useCallback } from 'react';
 import { ShelterAnimalItem } from '@/packages/type/postType';
 import getOptimizedCloudinaryUrl from '@/packages/utils/optimization';
-import { HiCalendar, HiClock } from 'react-icons/hi2';
+import {
+  HiCalendar,
+  HiCalendarDays,
+  HiClock,
+  HiHeart,
+  HiOutlineHeart,
+  HiQuestionMarkCircle,
+} from 'react-icons/hi2';
+import { FaMars, FaPaw, FaVenus } from 'react-icons/fa';
+import { useShelterLike } from '@/hooks/useShelterLike';
 
 export default function AbandonedCard({
   shelterAnimal,
@@ -12,6 +21,11 @@ export default function AbandonedCard({
   shelterAnimal: ShelterAnimalItem;
 }) {
   const router = useRouter();
+  const desertionNo = shelterAnimal.desertionNo;
+  const { isLiked, isUpdating, handleLike } = useShelterLike(
+    desertionNo,
+    shelterAnimal,
+  );
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [prevDesertionNo, setPrevDesertionNo] = useState(shelterAnimal.desertionNo);
 
@@ -84,6 +98,12 @@ export default function AbandonedCard({
     return false;
   }, [currentImageUrl, displayImage, defaultImage]);
 
+  /** 공고종료·입양완료 등 processState에 '종료'가 포함된 경우 */
+  const isProcessEnded = useMemo(() => {
+    const s = shelterAnimal.processState?.trim();
+    return Boolean(s && s.includes('종료'));
+  }, [shelterAnimal.processState]);
+
   const statusBadge = useMemo(() => {
     const state = shelterAnimal?.processState || '상태 미확인';
     const isProtecting = state === '보호중';
@@ -102,6 +122,7 @@ export default function AbandonedCard({
     };
   }, [shelterAnimal]);
 
+  /** D-n은 공고 종료까지 7일 이하일 때만 표시. 그 외(보호중이나 8일 이상 남음)는 null */
   const noticeEndBadge = useMemo(() => {
     if (!shelterAnimal?.noticeEdt) return null;
 
@@ -118,29 +139,42 @@ export default function AbandonedCard({
     const diffTime = endDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    // 보호중이고 남은 일수가 0 이상일 때 D-n (빨간 뱃지), 그 외에는 공고 종료 (회색)
     const isProtecting = shelterAnimal?.processState === '보호중';
-    if (isProtecting && diffDays >= 0) {
+    if (isProtecting && diffDays >= 0 && diffDays <= 7) {
       return {
         text: `D-${diffDays}`,
-        bgColor: '#e54c41', // 빨간 배경 (디데이 뱃지)
-        textColor: '#ffffff', // 흰색 텍스트·아이콘
+        bgColor: '#e54c41',
+        textColor: '#ffffff',
       };
+    }
+    if (isProtecting && diffDays > 7) {
+      return null;
     }
     return {
       text: '공고 종료',
-      bgColor: '#E5E5E5', // 연한 회색
-      textColor: '#6B6B6B', // 어두운 회색 텍스트
+      bgColor: '#E5E5E5',
+      textColor: '#6B6B6B',
     };
   }, [shelterAnimal]);
 
-  const basicInfoLine = useMemo(() => {
-    const parts: string[] = [];
-    if (shelterAnimal.kindNm) parts.push(shelterAnimal.kindNm);
-    if (shelterAnimal.age) parts.push(shelterAnimal.age.includes('살') ? shelterAnimal.age : `${shelterAnimal.age}살`);
-    if (shelterAnimal.sexCd) parts.push(shelterAnimal.sexCd === 'M' ? '수컷' : shelterAnimal.sexCd === 'F' ? '암컷' : shelterAnimal.sexCd);
-    return parts.join(' · ');
-  }, [shelterAnimal.kindNm, shelterAnimal.age, shelterAnimal.sexCd]);
+  const headlineSpecialMark = useMemo(() => {
+    const raw = shelterAnimal.specialMark?.trim();
+    if (!raw || raw === '-') return '특징 없음';
+    return raw;
+  }, [shelterAnimal.specialMark]);
+
+  const ageLabel = useMemo(() => {
+    if (!shelterAnimal.age?.trim()) return '';
+    const a = shelterAnimal.age.trim();
+    return a.includes('살') ? a : `${a}살`;
+  }, [shelterAnimal.age]);
+
+  const sexLabel = useMemo(() => {
+    if (!shelterAnimal.sexCd) return '';
+    if (shelterAnimal.sexCd === 'M') return '수컷';
+    if (shelterAnimal.sexCd === 'F') return '암컷';
+    return shelterAnimal.sexCd;
+  }, [shelterAnimal.sexCd]);
 
   const rescueDateStr = useMemo(() => {
     const dt = shelterAnimal.happenDt;
@@ -152,14 +186,14 @@ export default function AbandonedCard({
     <article
       key={shelterAnimal.desertionNo}
       onClick={() => router.push(`/shelter/${shelterAnimal.desertionNo}`)}
-      className=" p-2 sm:p-3 flex overflow-hidden flex-col bg-white rounded-2xl shadow-sm transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] active:scale-[0.98] w-full max-w-full sm:max-w-[260px] border border-gray-100"
+      className="flex h-full w-full max-w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-gray-100 border-b-0 bg-white shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98]"
     >
-      <div className="relative w-full bg-gray-100 aspect-square overflow-hidden rounded-2xl">
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-t-2xl bg-gray-100">
         <Image
           src={displayImage}
           alt={shelterAnimal?.desertionNo || '유기동물 이미지'}
           fill
-          className="object-contain "
+          className="object-cover"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 20vw"
           unoptimized={
             isExternalImage || displayImage === defaultImage || undefined
@@ -167,52 +201,116 @@ export default function AbandonedCard({
           loading="lazy"
           onError={handleImageError}
         />
-        {/* 뱃지: 사진 오른쪽 상단 - D-n(빨강+시계) 또는 공고 종료. 화면 크기에 맞춰 반응형 */}
-        {noticeEndBadge && (
-          <div
-            className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 z-10 flex items-center gap-0.5 sm:gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold whitespace-nowrap shadow-sm min-w-0"
-            style={{
-              backgroundColor: noticeEndBadge.bgColor,
-              color: noticeEndBadge.textColor,
-            }}
-          >
-            {noticeEndBadge.text.startsWith('D-') && (
-              <HiClock className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" aria-hidden />
+        {isProcessEnded && (
+          <>
+            <div
+              className="pointer-events-none absolute inset-0 z-[1] bg-gray-900/45"
+              aria-hidden
+            />
+            <div
+              className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center"
+              role="img"
+              aria-label="공고 종료"
+            >
+              <FaPaw className="h-12 w-12 text-gray-300 drop-shadow-md sm:h-14 sm:w-14" />
+            </div>
+          </>
+        )}
+        {/* 사진 오른쪽 상단: D-n(7일 이하만) 또는 공고 종료 → 그 오른쪽에 processState 뱃지 */}
+        {(noticeEndBadge || shelterAnimal?.processState) && (
+          <div className="absolute top-1 right-1 z-10 flex max-w-[calc(100%-0.5rem)] flex-row items-center justify-end gap-1 sm:top-1.5 sm:right-1.5 sm:gap-1.5">
+            {noticeEndBadge && (
+              <div
+                className="flex min-w-0 shrink items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold shadow-sm sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs whitespace-nowrap"
+                style={{
+                  backgroundColor: noticeEndBadge.bgColor,
+                  color: noticeEndBadge.textColor,
+                }}
+              >
+                {noticeEndBadge.text.startsWith('D-') && (
+                  <HiClock className="h-4 w-4 shrink-0 sm:h-[18px] sm:w-[18px]" aria-hidden />
+                )}
+                <span>{noticeEndBadge.text}</span>
+              </div>
             )}
-            <span>{noticeEndBadge.text}</span>
+            {shelterAnimal?.processState && (
+              <div
+                className="min-w-0 shrink rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap sm:px-3 sm:py-1.5 sm:text-xs"
+                style={{
+                  backgroundColor: statusBadge.bgColor,
+                  color: statusBadge.textColor,
+                }}
+              >
+                {statusBadge.text}
+              </div>
+            )}
           </div>
         )}
       </div>
-      <div className="flex flex-col flex-1 pt-3 sm:pt-4 gap-3 relative ">
-        {/* 이름 + 보호중 뱃지 */}
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="text-sm sm:text-base font-bold text-gray-900 truncate flex-1 min-w-0">
-            {shelterAnimal?.kindNm || '이름 없음'}
+      <div className="relative flex flex-1 flex-col gap-2 px-3 pb-3 pt-3 sm:px-4 sm:pb-4 sm:pt-4">
+        {/* 특징(specialMark) + 찜 — 상태 뱃지는 사진 영역 상단 */}
+        <div className="flex min-w-0 items-start justify-between gap-2">
+          <h3 className="min-w-0 flex-1 truncate text-sm font-bold text-gray-900 sm:text-base">
+            {headlineSpecialMark}
           </h3>
-          {shelterAnimal?.processState && (
-            <div
-              className="flex-shrink-0 px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-full text-[9px] sm:text-[10px] md:text-xs font-semibold whitespace-nowrap min-w-0"
-              style={{
-                backgroundColor: statusBadge.bgColor,
-                color: statusBadge.textColor,
-              }}
-            >
-              {statusBadge.text}
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={(e) => void handleLike(e)}
+            disabled={isUpdating || !desertionNo}
+            aria-label={isLiked ? '찜 해제' : '찜하기'}
+            className={`shrink-0 rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary1/30 ${isUpdating || !desertionNo ? 'cursor-not-allowed opacity-50' : ''
+              }`}
+          >
+            {isLiked ? (
+              <HiHeart className="h-5 w-5 text-red-500" aria-hidden />
+            ) : (
+              <HiOutlineHeart className="h-5 w-5" aria-hidden />
+            )}
+          </button>
         </div>
-        {/* 품종 · 나이 · 성별 */}
-        {basicInfoLine && (
-          <p className="text-xs text-gray-700">
-            {basicInfoLine}
-          </p>
-        )}
-        {/* 구조일 */}
-        {rescueDateStr && (
-          <div className="flex items-center gap-1.5 text-xs text-gray-600">
-            <HiCalendar className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" />
-            <span>{rescueDateStr}</span>
-          </div>
+        {/* 생년월일 → 성별 → 구조일 (위에서 아래로 세로 나열) */}
+        {(ageLabel || sexLabel || rescueDateStr) && (
+          <ul
+            className="flex min-w-0 list-none flex-col gap-1.5 p-0"
+            aria-label="생년월일·성별·구조일"
+          >
+            <li className="flex min-w-0 flex-col gap-1">
+              <div className="flex min-w-0 items-center gap-2">
+                <HiCalendarDays
+                  className="h-5 w-5 shrink-0 text-gray-400"
+                  aria-hidden
+                />
+                <span className="min-w-0 truncate text-sm text-gray-700">
+                  {ageLabel || '—'}
+                </span>
+              </div>
+            </li>
+            <li className="flex min-w-0 flex-col gap-1">
+              <div className="flex min-w-0 items-center gap-2">
+                {shelterAnimal.sexCd === 'M' ? (
+                  <FaMars className="h-5 w-5 shrink-0 text-sky-600" aria-hidden />
+                ) : shelterAnimal.sexCd === 'F' ? (
+                  <FaVenus className="h-5 w-5 shrink-0 text-rose-500" aria-hidden />
+                ) : (
+                  <HiQuestionMarkCircle
+                    className="h-5 w-5 shrink-0 text-gray-400"
+                    aria-hidden
+                  />
+                )}
+                <span className="min-w-0 truncate text-sm text-gray-700">
+                  {sexLabel || '—'}
+                </span>
+              </div>
+            </li>
+            <li className="flex min-w-0 flex-col gap-1">
+              <div className="flex min-w-0 items-center gap-2">
+                <HiCalendar className="h-5 w-5 shrink-0 text-gray-400" aria-hidden />
+                <span className="min-w-0 truncate text-sm text-gray-700">
+                  {rescueDateStr || '—'}
+                </span>
+              </div>
+            </li>
+          </ul>
         )}
         {/* 자세히 보기 버튼 - 항상 노출, 보라 톤 */}
         <button
@@ -221,7 +319,7 @@ export default function AbandonedCard({
             e.stopPropagation();
             router.push(`/shelter/${shelterAnimal.desertionNo}`);
           }}
-          className="w-full flex justify-center items-center py-1.5 rounded-2xl text-xs font-semibold transition-colors mt-2 bg-primary1/10 text-primary1 hover:bg-primary1/20"
+          className="flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition-colors sm:py-2.5 bg-primary1/10 text-primary1 hover:bg-primary1/20"
         >
           자세히 보기
         </button>

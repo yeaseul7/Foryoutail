@@ -130,47 +130,18 @@ export interface FetchShelterAnimalDataResult {
   hasMore: boolean;
 }
 
-/** specialMark·검색어 필터 시 한 번에 가져올 최대 건수 (1000이면 공공 API·JSON 파싱이 너무 무거움) */
-const CLIENT_FILTER_PAGE_SIZE = 300;
+/** 공공 API·프록시 한 번에 가져오는 행 수 (검색·특징 필터는 이후 클라이언트에서 적용) */
+export const SHELTER_API_PAGE_SIZE = 100;
 
-export async function fetchShelterAnimalData(
-  page: number,
-  filters: AnimalFilterState,
-): Promise<FetchShelterAnimalDataResult> {
-  // specialMark / 검색어는 클라이언트(또는 route에서 search만)에서 다시 거름 → 페이지당 CLIENT_FILTER_PAGE_SIZE씩만 요청하고, 부족하면 스크롤로 다음 pageNo
-  const needsLargeClientBatch =
-    Boolean(filters.searchQuery?.trim()) ||
-    (Boolean(filters.quickFilter) && filters.quickFilter !== 'nearby');
-  const numOfRows = needsLargeClientBatch ? CLIENT_FILTER_PAGE_SIZE : 30;
-
-  const params = new URLSearchParams();
-  params.append('pageNo', page.toString());
-  params.append('numOfRows', numOfRows.toString());
-
-  if (filters.sexCd) params.append('sex_cd', filters.sexCd);
-  if (filters.state) params.append('state', filters.state);
-  if (filters.upKindCd) params.append('upkind', filters.upKindCd);
-  if (filters.neuterYn) params.append('neuter_yn', filters.neuterYn);
-  if (filters.bgnde) params.append('bgnde', filters.bgnde);
-  if (filters.endde) params.append('endde', filters.endde);
-  if (filters.searchQuery) params.append('searchQuery', filters.searchQuery);
-  if (filters.upr_cd) params.append('upr_cd', filters.upr_cd);
-
-  const response = await fetch(`/api/shelter-data?${params.toString()}`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch shelter data');
-  }
-
-  const shelterAnimalResponse = (await response.json()) as {
-    response?: {
-      header?: { resultCode?: string };
-      body?: ShelterAnimalData['body'] & { items?: { item?: unknown } | string };
-    };
+function parseShelterItemsFromResponse(shelterAnimalResponse: {
+  response?: {
+    header?: { resultCode?: string };
+    body?: ShelterAnimalData['body'] & { items?: { item?: unknown } | string };
   };
-
+}): ShelterAnimalItem[] {
   const resultCode = shelterAnimalResponse?.response?.header?.resultCode;
   if (resultCode && resultCode !== '00' && resultCode !== '0') {
-    return { items: [], hasMore: false };
+    return [];
   }
 
   const rawItems = shelterAnimalResponse?.response?.body?.items;
@@ -180,22 +151,26 @@ export async function fetchShelterAnimalData(
       : undefined;
 
   if (itemData == null || itemData === '') {
-    return { items: [], hasMore: false };
+    return [];
   }
 
-  const itemsArray: ShelterAnimalItem[] = Array.isArray(itemData)
+  return Array.isArray(itemData)
     ? itemData.filter((x): x is ShelterAnimalItem => x != null && typeof x === 'object')
     : typeof itemData === 'object' && itemData !== null
       ? [itemData as ShelterAnimalItem]
       : [];
+}
 
-  const originalItemsLength = itemsArray.length;
-
-  let resultItems = itemsArray;
-
-  if (filters.searchQuery) {
-    const searchLower = filters.searchQuery.toLowerCase();
-    resultItems = itemsArray.filter((item) => {
+/** 검색어·specialMark quick만 클라이언트에서 거름 (API에는 구조 필터만 전달) */
+export function applyShelterClientFilters(
+  items: ShelterAnimalItem[],
+  filters: AnimalFilterState,
+): ShelterAnimalItem[] {
+  let resultItems = items;
+  const q = filters.searchQuery?.trim();
+  if (q) {
+    const searchLower = q.toLowerCase();
+    resultItems = resultItems.filter((item) => {
       const rfidCd = item.rfidCd?.toLowerCase() || '';
       const happenPlace = item.happenPlace?.toLowerCase() || '';
       const careAddr = item.careAddr?.toLowerCase() || '';
@@ -208,14 +183,48 @@ export async function fetchShelterAnimalData(
       );
     });
   }
+  return applyQuickFilterBySpecialMark(resultItems, filters.quickFilter);
+}
 
-  resultItems = applyQuickFilterBySpecialMark(resultItems, filters.quickFilter);
+/** 구조 필터만 반영한 원시 목록 (항상 `SHELTER_API_PAGE_SIZE`건 단위 요청) */
+async function fetchShelterAnimalDataFromApi(
+  page: number,
+  filters: AnimalFilterState,
+): Promise<FetchShelterAnimalDataResult> {
+  const params = new URLSearchParams();
+  params.append('pageNo', page.toString());
+  params.append('numOfRows', String(SHELTER_API_PAGE_SIZE));
 
-  const hasMore = originalItemsLength === numOfRows;
+  if (filters.sexCd) params.append('sex_cd', filters.sexCd);
+  if (filters.state) params.append('state', filters.state);
+  if (filters.upKindCd) params.append('upkind', filters.upKindCd);
+  if (filters.neuterYn) params.append('neuter_yn', filters.neuterYn);
+  if (filters.bgnde) params.append('bgnde', filters.bgnde);
+  if (filters.endde) params.append('endde', filters.endde);
+  if (filters.upr_cd) params.append('upr_cd', filters.upr_cd);
 
+  const response = await fetch(`/api/shelter-data?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch shelter data');
+  }
+
+  const shelterAnimalResponse = (await response.json()) as Parameters<
+    typeof parseShelterItemsFromResponse
+  >[0];
+  const itemsArray = parseShelterItemsFromResponse(shelterAnimalResponse);
+  const hasMore = itemsArray.length === SHELTER_API_PAGE_SIZE;
+
+  return { items: itemsArray, hasMore };
+}
+
+export async function fetchShelterAnimalData(
+  page: number,
+  filters: AnimalFilterState,
+): Promise<FetchShelterAnimalDataResult> {
+  const raw = await fetchShelterAnimalDataFromApi(page, filters);
   return {
-    items: resultItems,
-    hasMore,
+    items: applyShelterClientFilters(raw.items, filters),
+    hasMore: raw.hasMore,
   };
 }
 

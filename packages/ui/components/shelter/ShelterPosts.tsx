@@ -17,7 +17,7 @@ export default function ShelterPosts() {
   const [filters, setFilters] = useState<AnimalFilterState>({
     sexCd: null,
     state: null,
-    upKindCd: null,
+    upKindCd: '417000',
     neuterYn: null,
     quickFilter: null,
     searchQuery: '',
