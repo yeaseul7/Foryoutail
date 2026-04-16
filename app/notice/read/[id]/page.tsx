@@ -20,10 +20,7 @@ export default function NoticeReadPage() {
 
   return (
     <main className="page-container-full">
-      <PageTemplate
-        visibleHomeTab={false}
-        visibleHeaderButtons={false}
-      >
+      <PageTemplate visibleHeaderButtons={false}>
         <div className="flex h-full min-h-0 w-full flex-col overflow-auto">
           <NoticeReadContent noticeId={noticeId ?? ''} />
         </div>

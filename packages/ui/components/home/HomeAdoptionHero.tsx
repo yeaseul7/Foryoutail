@@ -57,10 +57,11 @@ export default function HomeAdoptionHero() {
 
   return (
     <section
-      className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden min-h-[340px] sm:min-h-[420px] mb-8 sm:mb-10"
+      className="relative left-1/2 w-screen -translate-x-1/2 overflow-x-hidden min-h-[340px] sm:min-h-[420px] "
       aria-labelledby="home-adoption-hero-heading"
     >
-      <div className="absolute inset-0">
+      {/* 배경만 잘라서 scale 이미지가 삐져나가지 않게 — 본문은 hover 시 세로로 잘리지 않음 */}
+      <div className="absolute inset-0 overflow-hidden">
         <Image
           src={heroBackground}
           alt=""
@@ -87,7 +88,7 @@ export default function HomeAdoptionHero() {
           {HERO_SUBTITLE}
         </p>
 
-        <div className="mt-5 sm:mt-6 flex items-center justify-start sm:justify-center gap-2 sm:gap-2.5 max-w-4xl w-full overflow-x-auto whitespace-nowrap px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="mt-5 sm:mt-6 flex items-center justify-start sm:justify-center gap-2 sm:gap-2.5 max-w-4xl w-full overflow-x-auto whitespace-nowrap px-1 py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {QUICK_FILTERS.map((quick) => (
             <button
               key={quick.key}

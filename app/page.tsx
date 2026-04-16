@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import HorizontalAnimalCardSkeleton from '@/packages/ui/components/base/HorizontalAnimalCardSkeleton';
 import RegionalNearbyAnimalCardSkeleton from '@/packages/ui/components/base/RegionalNearbyAnimalCardSkeleton';
 import HomeAdoptionHero from '@/packages/ui/components/home/HomeAdoptionHero';
+import { HiHeart } from 'react-icons/hi2';
 
 const PageTemplate = dynamic(
   () => import('@/packages/ui/components/base/PageTemplate'),
@@ -27,10 +28,15 @@ const SidoMatchedHorizontalAnimalList = dynamic(
   { ssr: true }
 );
 
+const MostLikedHorizontalAnimalList = dynamic(
+  () => import('@/packages/ui/components/shelter/MostLikedHorizontalAnimalList'),
+  { ssr: true }
+);
+
 export default function Home() {
   return (
     <main className="page-container-full">
-      <PageTemplate visibleHomeTab={false}>
+      <PageTemplate>
         <HomeAdoptionHero />
         <div className="w-full mb-8 sm:mb-10">
 
@@ -40,7 +46,7 @@ export default function Home() {
                 <span className="h-5 w-0.5 shrink-0 rounded-full bg-primary1" aria-hidden />
                 최근 입양 공고
               </h2>
-              <div className="flex gap-3 overflow-x-auto pb-2 px-1 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="flex gap-5 sm:gap-6 overflow-x-auto pb-2 px-1 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <div key={i} className="snap-center">
                     <HorizontalAnimalCardSkeleton />
@@ -69,9 +75,9 @@ export default function Home() {
                       clipRule="evenodd"
                     />
                   </svg>
-                 {'\uB0B4 \uC9C0\uC5ED \uADFC\uCC98 \uC544\uC774\uB4E4'}
+                  내 지역 근처 아이들
                 </h2>
-                <div className="flex gap-7 sm:gap-9 overflow-x-auto pt-2 pb-2 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="flex gap-8 sm:gap-10 overflow-x-auto pt-2 pb-2 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {Array.from({ length: 8 }).map((_, i) => (
                     <div key={i} className="snap-center">
                       <RegionalNearbyAnimalCardSkeleton />
@@ -82,6 +88,27 @@ export default function Home() {
             }
           >
             <SidoMatchedHorizontalAnimalList />
+          </Suspense>
+        </div>
+        <div className="w-full mb-8 sm:mb-10">
+          <Suspense
+            fallback={
+              <section className="w-full py-4">
+                <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+                  <HiHeart className="w-5 h-5 shrink-0 text-primary1" aria-hidden />
+                  인기쟁이 모음
+                </h2>
+                <div className="flex gap-6 sm:gap-8 overflow-x-auto pb-2 px-1 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="snap-center">
+                      <HorizontalAnimalCardSkeleton photoOnly />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            }
+          >
+            <MostLikedHorizontalAnimalList />
           </Suspense>
         </div>
       </PageTemplate>

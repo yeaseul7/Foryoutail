@@ -18,7 +18,7 @@ const PageFooter = dynamic(
 export default function NoticePage() {
     return (
         <main className="page-container-full">
-            <PageTemplate visibleHomeTab={false}>
+            <PageTemplate>
                 <div className="flex h-full min-h-0 w-full flex-col">
                     <NoticeList />
                 </div>

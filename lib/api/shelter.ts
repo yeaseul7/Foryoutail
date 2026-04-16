@@ -1,5 +1,40 @@
 import { ShelterAnimalData, ShelterAnimalItem } from '@/packages/type/postType';
 
+/** 공고/보호 중만 목록에 노출 (공공 API·Firestore에 따라 영문·한글 모두 허용) */
+export function isShelterAnimalListable(processState: string | null | undefined): boolean {
+  if (!processState || !String(processState).trim()) return false;
+  const s = String(processState).trim();
+  if (s === 'notice' || s === 'protect') return true;
+  if (s === '공고중' || s === '보호중') return true;
+  return false;
+}
+
+function sortShelterItemsByRecencyDesc(a: ShelterAnimalItem, b: ShelterAnimalItem): number {
+  const toNum = (it: ShelterAnimalItem) =>
+    parseInt(String(it.noticeSdt || it.happenDt || '0').replace(/\D/g, ''), 10) || 0;
+  return toNum(b) - toNum(a);
+}
+
+function mergeShelterItemsByDesertionNo(
+  first: ShelterAnimalItem[],
+  second: ShelterAnimalItem[],
+): ShelterAnimalItem[] {
+  const map = new Map<string, ShelterAnimalItem>();
+  const upsert = (item: ShelterAnimalItem) => {
+    const id = item.desertionNo?.trim();
+    if (!id) return;
+    const prev = map.get(id);
+    if (!prev) {
+      map.set(id, item);
+      return;
+    }
+    map.set(id, sortShelterItemsByRecencyDesc(item, prev) < 0 ? prev : item);
+  };
+  for (const item of first) upsert(item);
+  for (const item of second) upsert(item);
+  return [...map.values()].sort(sortShelterItemsByRecencyDesc);
+}
+
 export type QuickFilterKey =
   | 'humanDog'
   | 'humanCat'
@@ -95,23 +130,18 @@ export interface FetchShelterAnimalDataResult {
   hasMore: boolean;
 }
 
+/** specialMark·검색어 필터 시 한 번에 가져올 최대 건수 (1000이면 공공 API·JSON 파싱이 너무 무거움) */
+const CLIENT_FILTER_PAGE_SIZE = 300;
+
 export async function fetchShelterAnimalData(
   page: number,
   filters: AnimalFilterState,
 ): Promise<FetchShelterAnimalDataResult> {
-  const isNearbyQuickFilter = filters.quickFilter === 'nearby';
-  const isFilteredRequest = Boolean(
-    filters.sexCd ||
-      filters.state ||
-      filters.upKindCd ||
-      filters.neuterYn ||
-      filters.quickFilter ||
-      filters.searchQuery ||
-      filters.bgnde ||
-      filters.endde ||
-      filters.upr_cd,
-  );
-  const numOfRows = isNearbyQuickFilter ? 30 : isFilteredRequest ? 1000 : 30;
+  // specialMark / 검색어는 클라이언트(또는 route에서 search만)에서 다시 거름 → 페이지당 CLIENT_FILTER_PAGE_SIZE씩만 요청하고, 부족하면 스크롤로 다음 pageNo
+  const needsLargeClientBatch =
+    Boolean(filters.searchQuery?.trim()) ||
+    (Boolean(filters.quickFilter) && filters.quickFilter !== 'nearby');
+  const numOfRows = needsLargeClientBatch ? CLIENT_FILTER_PAGE_SIZE : 30;
 
   const params = new URLSearchParams();
   params.append('pageNo', page.toString());
@@ -186,5 +216,26 @@ export async function fetchShelterAnimalData(
   return {
     items: resultItems,
     hasMore,
+  };
+}
+
+/**
+ * 공고중(notice)·보호중(protect)만 합쳐서 조회 (공공 API는 state당 한 종류만 허용하는 경우가 많음).
+ * `filters.state`는 무시되고 병합 결과만 반환합니다.
+ */
+export async function fetchShelterAnimalDataNoticeProtectMerged(
+  page: number,
+  filters: AnimalFilterState,
+): Promise<FetchShelterAnimalDataResult> {
+  const base: AnimalFilterState = { ...filters, state: null };
+  const [noticeRes, protectRes] = await Promise.all([
+    fetchShelterAnimalData(page, { ...base, state: 'notice' }),
+    fetchShelterAnimalData(page, { ...base, state: 'protect' }),
+  ]);
+  const merged = mergeShelterItemsByDesertionNo(noticeRes.items, protectRes.items);
+  const listable = merged.filter((it) => isShelterAnimalListable(it.processState));
+  return {
+    items: listable,
+    hasMore: noticeRes.hasMore || protectRes.hasMore,
   };
 }

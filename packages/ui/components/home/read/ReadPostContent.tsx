@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Image } from '@tiptap/extension-image';
-import PageTemplate from '@/packages/ui/components/base/PageTemplate';
 import { IoIosArrowBack } from 'react-icons/io';
 import Loading from '@/packages/ui/components/base/Loading';
 import NotFound from '@/packages/ui/components/base/NotFound';
@@ -14,7 +13,6 @@ import { PostData } from '@/packages/type/postType';
 import ReadHeader from '@/packages/ui/components/home/read/ReadHeader';
 import ReadFooter from '@/packages/ui/components/common/ReadFooter';
 import Liked from '@/packages/ui/components/home/comment/Liked';
-import PageFooter from '@/packages/ui/components/base/PageFooter';
 import { optimizeImageUrlsInHtml } from '@/packages/utils/optimization';
 
 interface ReadPostContentProps {

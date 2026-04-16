@@ -21,7 +21,7 @@ const CommunityPosts = dynamic(
 export default function CommunityPage() {
     return (
         <main className="page-container-full">
-            <PageTemplate visibleHomeTab={false}>
+            <PageTemplate>
                 <div className="w-full">
                     <Suspense fallback={
                         <div className="w-full">

@@ -33,7 +33,7 @@ export default function SearchAnimalPage() {
 
     return (
         <main className="page-container-full">
-            <PageTemplate visibleHomeTab={false}>
+            <PageTemplate>
                 <div className="w-full">
                     <AiHeader
                         previewUrl={previewUrl}

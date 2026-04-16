@@ -73,7 +73,7 @@ export default async function ReadPostPage({
 
   return (
     <main className="page-container-full">
-      <PageTemplate visibleHeaderButtons={true} visibleHomeTab={false}>
+      <PageTemplate visibleHeaderButtons={true}>
         <ReadPostContent postId={postId} initialPost={post} />
       </PageTemplate>
       <PageFooter />

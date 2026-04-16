@@ -208,7 +208,7 @@ export default async function AnimalShelterPage({ params }: AnimalShelterPagePro
     return (
         <div className="w-full min-h-screen font-sans bg-white">
             <main className="flex flex-col justify-between items-center w-full min-h-screen bg-whitesm:items-start">
-                <PageTemplate visibleHomeTab={false}>
+                <PageTemplate>
                     <ShelterInfoComponent shelter={shelter} animals={animals} />
                 </PageTemplate>
                 <PageFooter />

@@ -181,7 +181,7 @@ export default function ShelterDetailPageContent({
   return (
     <div className="w-full min-h-screen font-sans bg-white">
       <main className="flex flex-col justify-between items-center w-full min-h-screen bg-whitesm:items-start">
-        <PageTemplate visibleHomeTab={false}>
+        <PageTemplate>
           <div className="flex flex-col gap-6 px-4 mx-auto w-full max-w-6xl sm:px-6 lg:px-8 py-8">
             <button
               onClick={() => router.back()}

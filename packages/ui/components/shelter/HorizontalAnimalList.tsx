@@ -1,7 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { fetchShelterAnimalData, type AnimalFilterState } from '@/lib/api/shelter';
+import {
+  fetchShelterAnimalDataNoticeProtectMerged,
+  type AnimalFilterState,
+} from '@/lib/api/shelter';
 import type { ShelterAnimalItem } from '@/packages/type/postType';
 import HorizontalAnimalCardSkeleton from '@/packages/ui/components/base/HorizontalAnimalCardSkeleton';
 import {
@@ -29,7 +32,7 @@ export default function HorizontalAnimalList() {
     let isMounted = true;
     (async () => {
       try {
-        const result = await fetchShelterAnimalData(1, DEFAULT_FILTERS);
+        const result = await fetchShelterAnimalDataNoticeProtectMerged(1, DEFAULT_FILTERS);
         if (!isMounted) return;
         setItems(result.items.slice(0, DISPLAY_COUNT));
       } catch (e) {
@@ -45,7 +48,7 @@ export default function HorizontalAnimalList() {
 
   if (error) {
     return (
-      <section className="w-full py-4">
+      <section className="w-full">
         <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
           <span className="h-5 w-0.5 shrink-0 rounded-full bg-primary1" aria-hidden />
           최근 입양 공고
@@ -57,12 +60,12 @@ export default function HorizontalAnimalList() {
 
   if (items === null) {
     return (
-      <section className="w-full py-4">
+      <section className="w-full">
         <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
           <span className="h-5 w-0.5 shrink-0 rounded-full bg-primary1" aria-hidden />
           최근 입양 공고
         </h2>
-        <div className="flex gap-3 overflow-x-auto pb-2 px-1 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex gap-5 sm:gap-6 overflow-x-auto pb-2 px-1 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="snap-center">
               <HorizontalAnimalCardSkeleton />
@@ -78,13 +81,13 @@ export default function HorizontalAnimalList() {
   }
 
   return (
-    <section className="w-full py-4">
+    <section className="w-full">
       <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
         <span className="h-5 w-0.5 shrink-0 rounded-full bg-primary1" aria-hidden />
         최근 입양 공고
       </h2>
       <div
-        className="flex gap-3 overflow-x-auto pb-2 px-1 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex gap-5 sm:gap-6 overflow-x-auto pb-2 px-1 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         role="list"
         aria-label="최근 입양 공고 목록"
       >

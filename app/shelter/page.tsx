@@ -6,7 +6,7 @@ import PreloadSearchModel from './PreloadSearchModel';
 export default function Shelter() {
   return (
     <main className="page-container-full">
-      <PageTemplate visibleHomeTab={false}>
+      <PageTemplate>
         <PreloadSearchModel />
         <ShelterPostsServer />
       </PageTemplate>

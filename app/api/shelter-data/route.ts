@@ -100,12 +100,13 @@ export async function GET(request: NextRequest) {
     if (params.notice_no) urlParams.append('notice_no', params.notice_no);
 
     const apiUrl = `${API_BASE_URL}/abandonmentPublic_v2?${urlParams.toString()}`;
-    console.log('API URL:', apiUrl);
+    // 공공데이터포털 API는 응답이 수 초 걸리는 경우가 흔함. 동일 쿼리는 짧게 캐시해 체감 지연·부하를 줄임.
     const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
+      next: { revalidate: 60 },
     });
 
     if (!response.ok) {
@@ -157,6 +158,8 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
+        // 브라우저 재방문·탭 전환 시 동일 URL은 잠시 재사용 (개인정보 없는 공개 목록 전제)
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
       },
     });
   } catch (error) {

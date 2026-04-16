@@ -20,7 +20,7 @@ export default function PostsListPage() {
 
   return (
     <main className="page-container-full">
-      <PageTemplate visibleHomeTab={false}>
+      <PageTemplate>
         <div className="flex flex-col gap-4 px-4 mx-auto w-full max-w-4xl sm:px-6 lg:px-8">
           <UserHeader />
           <ProfileSwitchTag category={category} setCategory={setCategory} isOwnProfile={isOwnProfile} />

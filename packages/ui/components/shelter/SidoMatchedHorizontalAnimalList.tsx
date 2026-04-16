@@ -1,7 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { fetchShelterAnimalData, type AnimalFilterState } from '@/lib/api/shelter';
+import {
+  fetchShelterAnimalDataNoticeProtectMerged,
+  type AnimalFilterState,
+} from '@/lib/api/shelter';
 import type { ShelterAnimalItem } from '@/packages/type/postType';
 import RegionalNearbyAnimalCard from '@/packages/ui/components/shelter/RegionalNearbyAnimalCard';
 import RegionalNearbyAnimalCardSkeleton from '@/packages/ui/components/base/RegionalNearbyAnimalCardSkeleton';
@@ -109,7 +112,7 @@ export default function SidoMatchedHorizontalAnimalList() {
       setSectionTitle(`${shortenAreaLabel(level1, sidoName)}${TITLE_NEAR_SUFFIX}`);
       try {
         const filters: AnimalFilterState = { ...BASE_FILTERS, upr_cd: sidoCd };
-        const result = await fetchShelterAnimalData(1, filters);
+        const result = await fetchShelterAnimalDataNoticeProtectMerged(1, filters);
         if (!isMounted) return;
         setItems(result.items.slice(0, DISPLAY_COUNT));
       } catch (e) {
@@ -174,7 +177,7 @@ export default function SidoMatchedHorizontalAnimalList() {
     return (
       <section className={sectionShell}>
         <NearSectionHeading title={sectionTitle} />
-        <div className="flex gap-7 sm:gap-9 overflow-x-auto pt-2 pb-2 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex gap-8 sm:gap-10 overflow-x-auto pt-2 pb-2 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="snap-center first:pl-0">
               <RegionalNearbyAnimalCardSkeleton />
@@ -193,7 +196,7 @@ export default function SidoMatchedHorizontalAnimalList() {
     <section className={sectionShell}>
       <NearSectionHeading title={sectionTitle} />
       <div
-        className="flex gap-7 sm:gap-9 overflow-x-auto pt-2 pb-2 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex gap-8 sm:gap-10 overflow-x-auto pt-2 pb-2 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         role="list"
         aria-label={LIST_ARIA}
       >

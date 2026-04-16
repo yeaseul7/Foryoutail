@@ -2,9 +2,27 @@
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { HiOutlineHeart } from 'react-icons/hi2';
 import type { ShelterAnimalItem } from '@/packages/type/postType';
 import getOptimizedCloudinaryUrl from '@/packages/utils/optimization';
 import { useShelterLike } from '@/hooks/useShelterLike';
+
+/** 720, 3.1k 형태 (참고 UI용) */
+export function formatCompactLikeCount(n: number): string {
+  if (!Number.isFinite(n) || n < 0) return '0';
+  if (n < 1000) return String(Math.floor(n));
+  if (n < 10_000) {
+    const k = n / 1000;
+    const rounded = Math.round(k * 10) / 10;
+    const s = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+    return `${s.replace(/\.0$/, '')}k`;
+  }
+  if (n < 1_000_000) return `${Math.round(n / 1000)}k`;
+  const m = n / 1_000_000;
+  const rounded = Math.round(m * 10) / 10;
+  const s = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  return `${s.replace(/\.0$/, '')}M`;
+}
 
 export const DISPLAY_COUNT = 15;
 
@@ -44,6 +62,67 @@ function getSexLabel(item: ShelterAnimalItem): string {
   if (item.sexCd === 'M') return '수컷';
   if (item.sexCd === 'F') return '암컷';
   return '미상';
+}
+
+/** 이미지만(인기쟁이 모음 등). 상세 페이지에서 찜 가능 */
+export function HorizontalAnimalPhotoCard({
+  item,
+  likeCount,
+}: {
+  item: ShelterAnimalItem;
+  /** Firestore 집계 등. 있으면 우하단 pill로 표시 */
+  likeCount?: number;
+}) {
+  const router = useRouter();
+  const imageUrl = getFirstImageUrl(item);
+  const displayUrl = imageUrl?.includes('res.cloudinary.com')
+    ? getOptimizedCloudinaryUrl(imageUrl, 400, 500)
+    : imageUrl || '/static/images/defaultDog.png';
+  const region = getShortRegion(item);
+  const breedLabel = item.kindNm?.trim() || getKindLabel(item);
+  const showLikes = typeof likeCount === 'number' && Number.isFinite(likeCount);
+  const a11yLabel = showLikes
+    ? `${breedLabel}, ${region}. 좋아요 ${Math.max(0, Math.floor(likeCount))}회. 상세 보기`
+    : `${breedLabel}, ${region}. 상세 보기`;
+
+  return (
+    <article
+      role="button"
+      tabIndex={0}
+      aria-label={a11yLabel}
+      onClick={() => router.push(`/shelter/${item.desertionNo}`)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          router.push(`/shelter/${item.desertionNo}`);
+        }
+      }}
+      className="flex-shrink-0 w-[220px] sm:w-[250px] mt-4 rounded-2xl overflow-hidden bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.13)] transition-shadow duration-200 cursor-pointer focus:outline-none group"
+    >
+      <div className="relative w-full aspect-[4/5] bg-gray-100">
+        <Image
+          src={displayUrl}
+          alt=""
+          fill
+          className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          sizes="250px"
+          unoptimized={displayUrl === '/static/images/defaultDog.png'}
+          loading="lazy"
+        />
+        {showLikes && (
+          <div
+            className="pointer-events-none absolute bottom-2.5 right-2.5 flex items-center gap-1.5"
+            aria-hidden
+          >
+            <span className="inline-flex items-center gap-1 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-semibold leading-none text-white shadow-sm backdrop-blur-[2px] tabular-nums">
+              <HiOutlineHeart className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} aria-hidden />
+              {formatCompactLikeCount(likeCount)}
+            </span>
+          </div>
+        )}
+      </div>
+    </article>
+  );
 }
 
 export function HorizontalAnimalCard({ item }: { item: ShelterAnimalItem }) {

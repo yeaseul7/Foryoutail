@@ -21,7 +21,7 @@ export default function NoticeEditPage() {
   return (
     <main className="grid h-screen min-h-screen w-full grid-rows-[1fr_auto]">
       <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
-        <PageTemplate visibleHomeTab={false} visibleHeaderButtons={false}>
+        <PageTemplate visibleHeaderButtons={false}>
           <div className="flex h-full min-h-0 w-full flex-col">
             <NoticeWriteContainer noticeId={noticeId} />
           </div>

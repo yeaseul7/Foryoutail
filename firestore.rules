@@ -104,6 +104,66 @@ service cloud.firestore {
       allow delete: if false; // 삭제 불가
     }
 
+    // 전역 유기동물 찜 집계 (useShelterLike와 동일한 전제)
+    match /likedAnimals/{desertionNo} {
+      function likedIds(data) {
+        return data.get('likedUserID', []);
+      }
+
+      function likedCount(data) {
+        return data.get('likedCount', data.get('likeCount', 0));
+      }
+
+      allow read: if true;
+
+      // 첫 찜: 문서 ID와 desertionNo 일치, 본인만 배열에, likedCount == 1
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasAll(['likedUserID', 'likedCount', 'desertionNo'])
+        && request.resource.data.desertionNo == desertionNo
+        && request.resource.data.likedUserID is list
+        && request.resource.data.likedUserID.size() == 1
+        && request.auth.uid == request.resource.data.likedUserID[0]
+        && request.resource.data.likedCount is int
+        && request.resource.data.likedCount == 1
+        && request.resource.data.likedCount <= 500000
+        && request.resource.data.likedUserID.size() <= 5000;
+
+      // 갱신: (1) 이미 찜한 사람이 동물 스냅샷·processState만 동기화
+      //       (2) 새 찜: likedCount +1, 배열 크기 +1, 이전에 본인 없음
+      //       (3) 찜 해제: likedCount -1, 배열 크기 -1, 이후 본인 없음
+      allow update: if request.auth != null
+        && request.resource.data.desertionNo == resource.data.desertionNo
+        && request.resource.data.likedUserID is list
+        && request.resource.data.likedCount is int
+        && request.resource.data.likedCount >= 0
+        && request.resource.data.likedCount <= 500000
+        && request.resource.data.likedUserID.size() <= 5000
+        && (
+          (
+            likedCount(request.resource.data) == likedCount(resource.data)
+            && likedIds(request.resource.data).size() == likedIds(resource.data).size()
+            && request.auth.uid in likedIds(resource.data)
+          )
+          || (
+            likedCount(request.resource.data) == likedCount(resource.data) + 1
+            && likedIds(request.resource.data).size() == likedIds(resource.data).size() + 1
+            && request.auth.uid in likedIds(request.resource.data)
+            && !(request.auth.uid in likedIds(resource.data))
+          )
+          || (
+            likedCount(request.resource.data) == likedCount(resource.data) - 1
+            && likedIds(request.resource.data).size() == likedIds(resource.data).size() - 1
+            && !(request.auth.uid in likedIds(request.resource.data))
+            && request.auth.uid in likedIds(resource.data)
+          )
+        );
+
+      // 마지막 한 명이 찜 해제할 때 문서 삭제
+      allow delete: if request.auth != null
+        && likedIds(resource.data).size() == 1
+        && request.auth.uid == likedIds(resource.data)[0];
+    }
+
     // 'notice' 컬렉션: 공지사항 (읽기는 모두, 작성/수정/삭제는 fulladmin만. 조회수는 view 서브컬렉션 개수로 판단)
     match /notice/{noticeId} {
       allow read: if true; // 모든 사람이 공지사항을 읽을 수 있음
