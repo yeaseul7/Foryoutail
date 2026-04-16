@@ -38,19 +38,6 @@ const QUICK_FILTER_LABEL: Record<
   young: '어린 동물',
 };
 
-function getLoadingKeyword(filters: AnimalFilterState): string {
-  if (filters.searchQuery.trim()) return filters.searchQuery.trim();
-  if (filters.quickFilter) return QUICK_FILTER_LABEL[filters.quickFilter];
-  if (filters.upKindCd === '417000') return '강아지';
-  if (filters.upKindCd === '422400') return '고양이';
-  if (filters.upKindCd === '429900') return '기타 동물';
-  if (filters.sexCd === 'F') return '암컷';
-  if (filters.sexCd === 'M') return '수컷';
-  if (filters.state === 'notice') return '공고중 아이';
-  if (filters.state === 'protect') return '보호중 아이';
-  return '아이들';
-}
-
 const UP_KIND_LABEL: Record<string, string> = {
   '417000': '개',
   '422400': '고양이',
@@ -613,15 +600,17 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
             <>
               <div className="mx-auto w-full min-w-0 ">
                 {loading && shelterAnimalData.length === 0 ? (
-                  <div className="content-start">
-                    <p className="px-1 py-2 text-sm text-gray-600">
-                      {`${getLoadingKeyword(filtersRef.current)} 열심히 찾는중입니다...`}
-                    </p>
-                    <div className="grid grid-cols-1 justify-items-center gap-x-3 gap-y-8 sm:grid-cols-2 sm:gap-y-10 lg:grid-cols-3 xl:grid-cols-4">
-                      {Array.from({ length: 12 }).map((_, index) => (
-                        <AbandonedCardSkeleton key={`skeleton-${index}`} />
-                      ))}
-                    </div>
+                  <div
+                    className="grid grid-cols-1 justify-items-stretch gap-x-3 gap-y-8 sm:grid-cols-2 sm:gap-y-10 lg:grid-cols-3 xl:grid-cols-4"
+                    role="list"
+                    aria-busy="true"
+                    aria-label="입양 공고 목록 불러오는 중"
+                  >
+                    {Array.from({ length: 12 }).map((_, index) => (
+                      <div key={`skeleton-${index}`} role="listitem" className="min-w-0">
+                        <AbandonedCardSkeleton />
+                      </div>
+                    ))}
                   </div>
                 ) : shelterAnimalData.length > 0 ? (
                   <>
