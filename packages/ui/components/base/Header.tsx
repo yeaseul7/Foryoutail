@@ -14,6 +14,7 @@ import Link from 'next/link';
 import NavLink from '../common/NavLink';
 import { usePathname } from 'next/navigation';
 import { RiPencilFill } from 'react-icons/ri';
+import { MdPets, MdAutoAwesome, MdForum, MdHomeWork } from 'react-icons/md';
 
 const LoginModal = dynamic(
   () => import('../auth/LoginModal'),
@@ -124,7 +125,39 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
                 : '!text-gray-700 hover:!text-primary1'
                 }`}
             >
-              입양 공고
+              <span className="inline-flex items-center gap-1.5">
+                <MdPets className="h-4 w-4" aria-hidden />
+                입양하기
+              </span>
+            </NavLink>
+            <NavLink
+              to="/search-animal"
+              activeClassName="active"
+              isActive={() =>
+                pathname === '/search-animal' || pathname.startsWith('/search-animal')
+              }
+              className={`!border-b-0 !p-0 text-sm lg:text-base transition-colors ${
+                pathname === '/search-animal' || pathname.startsWith('/search-animal')
+                  ? '!text-primary1 font-semibold'
+                  : '!text-gray-700 hover:!text-primary1'
+              }`}
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <MdAutoAwesome className="h-4 w-4" aria-hidden />
+                AI 찾기
+              </span>
+            </NavLink>
+            <NavLink
+              to="/community"
+              activeClassName="active"
+              isActive={() => pathname === '/community'}
+              className={`!border-b-0 !p-0 text-sm lg:text-base transition-colors ${pathname === '/community' ? '!text-primary1 font-semibold' : '!text-gray-700 hover:!text-primary1'
+                }`}
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <MdForum className="h-4 w-4" aria-hidden />
+                커뮤니티
+              </span>
             </NavLink>
             <NavLink
               to="/animalShelter"
@@ -135,39 +168,12 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
                 : '!text-gray-700 hover:!text-primary1'
                 }`}
             >
-              보호소
+              <span className="inline-flex items-center gap-1.5">
+                <MdHomeWork className="h-4 w-4" aria-hidden />
+                보호소
+              </span>
             </NavLink>
-            <NavLink
-              to="/community"
-              activeClassName="active"
-              isActive={() => pathname === '/community'}
-              className={`!border-b-0 !p-0 text-sm lg:text-base transition-colors ${pathname === '/community' ? '!text-primary1 font-semibold' : '!text-gray-700 hover:!text-primary1'
-                }`}
-            >
-              커뮤니티
-            </NavLink>
-            {/* <NavLink
-              to="/protectionGroup"
-              activeClassName="active"
-              isActive={() => pathname === '/protectionGroup' || pathname.startsWith('/protectionGroup')}
-              className={`!border-b-0 !p-0 text-sm lg:text-base transition-colors ${pathname === '/protectionGroup' || pathname.startsWith('/protectionGroup')
-                ? '!text-primary1 font-semibold'
-                : '!text-gray-700 hover:!text-primary1'
-                }`}
-            >
-              보호단체
-            </NavLink> */}
-            <NavLink
-              to="/card_news"
-              activeClassName="active"
-              isActive={() => pathname === '/card_news' || pathname.startsWith('/card_news')}
-              className={`!border-b-0 !p-0 text-sm lg:text-base transition-colors ${pathname === '/card_news' || pathname.startsWith('/card_news')
-                ? '!text-primary1 font-semibold'
-                : '!text-gray-700 hover:!text-primary1'
-                }`}
-            >
-              카드뉴스
-            </NavLink>
+
           </div>
 
           {/* 모바일 햄버거 버튼 */}
@@ -265,7 +271,7 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
 
       {/* 모바일 메뉴 - 헤더 하단에 자연스럽게 확장 */}
       <div
-        className={`md:hidden border-t border-gray-200 bg-white transition-all duration-300 ease-in-out overflow-hidden ${isMobileMenuOpen ? 'max-h-60 opacity-100' : 'max-h-0 opacity-0'
+        className={`md:hidden border-t border-gray-200 bg-white transition-all duration-300 ease-in-out overflow-hidden ${isMobileMenuOpen ? 'max-h-[22rem] opacity-100' : 'max-h-0 opacity-0'
           }`}
       >
         <div className="px-4 py-2 max-w-7xl mx-auto">
@@ -289,7 +295,41 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
               }`}
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            입양 공고
+            <span className="inline-flex items-center gap-2">
+              <MdPets className="h-4 w-4" aria-hidden />
+              입양하기
+            </span>
+          </NavLink>
+          <NavLink
+            to="/search-animal"
+            activeClassName="active"
+            isActive={() =>
+              pathname === '/search-animal' || pathname.startsWith('/search-animal')
+            }
+            className={`block px-4 py-3 !border-b-0 text-sm transition-colors hover:bg-gray-50 rounded-lg ${
+              pathname === '/search-animal' || pathname.startsWith('/search-animal')
+                ? '!text-primary1 bg-blue-50 font-semibold'
+                : '!text-gray-700'
+            }`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <span className="inline-flex items-center gap-2">
+              <MdAutoAwesome className="h-4 w-4" aria-hidden />
+              AI 찾기
+            </span>
+          </NavLink>
+          <NavLink
+            to="/community"
+            activeClassName="active"
+            isActive={() => pathname === '/community'}
+            className={`block px-4 py-3 !border-b-0 text-sm transition-colors hover:bg-gray-50 rounded-lg ${pathname === '/community' ? '!text-primary1 bg-blue-50 font-semibold' : '!text-gray-700'
+              }`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <span className="inline-flex items-center gap-2">
+              <MdForum className="h-4 w-4" aria-hidden />
+              커뮤니티
+            </span>
           </NavLink>
           <NavLink
             to="/animalShelter"
@@ -301,43 +341,12 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
               }`}
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            보호소
+            <span className="inline-flex items-center gap-2">
+              <MdHomeWork className="h-4 w-4" aria-hidden />
+              보호소
+            </span>
           </NavLink>
 
-          <NavLink
-            to="/community"
-            activeClassName="active"
-            isActive={() => pathname === '/community'}
-            className={`block px-4 py-3 !border-b-0 text-sm transition-colors hover:bg-gray-50 rounded-lg ${pathname === '/community' ? '!text-primary1 bg-blue-50 font-semibold' : '!text-gray-700'
-              }`}
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            커뮤니티
-          </NavLink>
-          {/* <NavLink
-            to="/protectionGroup"
-            activeClassName="active"
-            isActive={() => pathname === '/protectionGroup' || pathname.startsWith('/protectionGroup')}
-            className={`block px-4 py-3 !border-b-0 text-sm transition-colors hover:bg-gray-50 rounded-lg ${pathname === '/protectionGroup' || pathname.startsWith('/protectionGroup')
-              ? '!text-primary1 bg-blue-50 font-semibold'
-              : '!text-gray-700'
-              }`}
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            보호단체
-          </NavLink> */}
-          <NavLink
-            to="/card_news"
-            activeClassName="active"
-            isActive={() => pathname === '/card_news' || pathname.startsWith('/card_news')}
-            className={`block px-4 py-3 !border-b-0 text-sm transition-colors hover:bg-gray-50 rounded-lg ${pathname === '/card_news' || pathname.startsWith('/card_news')
-              ? '!text-primary1 bg-blue-50 font-semibold'
-              : '!text-gray-700'
-              }`}
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            카드뉴스
-          </NavLink>
         </div>
       </div>
 
