@@ -24,8 +24,8 @@ function getPrimaryTitle(item: ShelterAnimalItem): string {
 }
 
 function getHeadlineLine(item: ShelterAnimalItem): string {
-  const species = item.upKindNm?.trim() || getKindLabel(item);
-  return `${species}`;
+  const weight = item.weight?.trim() || getKindLabel(item);
+  return `${weight}`;
 }
 
 export default function RegionalNearbyAnimalCard({ item }: { item: ShelterAnimalItem }) {
