@@ -32,13 +32,13 @@ export default function LikeAnimals({ searchError, searchMatches }: LikeAnimalsP
             {searchMatches != null && (
                 <div className="mt-4 pt-4 border-t border-gray-100">
                     <h3 className="text-sm font-semibold text-gray-700 mb-1">
-                        닮은 친구 ({limited.length}건)
+                        제일 닮은 친구 ({limited.length}건)
                     </h3>
                     <p className="text-xs text-gray-500 mb-3">
-                        제일 닮은 {MAX_DISPLAY}건만 보여드립니다.
+                        제일 닮은 친구 {MAX_DISPLAY}건만 보여드립니다.
                     </p>
                     {limited.length === 0 ? (
-                        <p className="text-gray-500 text-sm">유사한 레코드가 없습니다.</p>
+                        <p className="text-gray-500 text-sm">닮은 친구가 존재하지 않습니다.</p>
                     ) : (
                         <>
                             <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -78,7 +78,7 @@ export default function LikeAnimals({ searchError, searchMatches }: LikeAnimalsP
                             {totalPages > 1 && (
                                 <nav
                                     className="mt-6 flex items-center justify-center gap-2"
-                                    aria-label="닮은 친구 목록 페이지"
+                                    aria-label="제일 닮은 친구 목록 페이지"
                                 >
                                     <button
                                         type="button"

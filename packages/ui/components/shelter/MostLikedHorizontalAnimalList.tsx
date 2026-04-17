@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   collection,
   getDocs,
@@ -15,6 +15,7 @@ import HorizontalAnimalCardSkeleton from '@/packages/ui/components/base/Horizont
 import { HorizontalAnimalPhotoCard } from '@/packages/ui/components/shelter/horizontalAnimalCarousel';
 import { isShelterAnimalListable } from '@/lib/api/shelter';
 import { HiHeart } from 'react-icons/hi2';
+import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
 
 const LIKED_ANIMALS_COLLECTION = 'likedAnimals';
 /** 홈 '인기쟁이 모음' 가로 목록 노출 개수 */
@@ -65,6 +66,13 @@ const LIST_ROW_GAP =
 export default function MostLikedHorizontalAnimalList() {
   const [rows, setRows] = useState<MostLikedRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+
+  const scrollByCard = (dir: 'left' | 'right') => {
+    const node = scrollerRef.current;
+    if (!node) return;
+    node.scrollBy({ left: dir === 'left' ? -360 : 360, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -105,10 +113,20 @@ export default function MostLikedHorizontalAnimalList() {
   if (error) {
     return (
       <section className="w-full">
-        <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
-          <HiHeart className="w-5 h-5 shrink-0 text-primary1" aria-hidden />
-          인기쟁이 모음
-        </h2>
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+            <HiHeart className="w-5 h-5 shrink-0 text-primary1" aria-hidden />
+            인기쟁이 모음
+          </h2>
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={() => scrollByCard('left')} className="inline-flex items-center gap-1 rounded-full border border-primary1/30 bg-primary1/10 px-2.5 py-1.5 text-xs font-semibold text-primary1 transition-colors hover:bg-primary1/20" aria-label="왼쪽으로 이동">
+              <MdChevronLeft className="h-4 w-4" />
+            </button>
+            <button type="button" onClick={() => scrollByCard('right')} className="inline-flex items-center gap-1 rounded-full border border-primary1/30 bg-primary1/10 px-2.5 py-1.5 text-xs font-semibold text-primary1 transition-colors hover:bg-primary1/20" aria-label="오른쪽으로 이동">
+              <MdChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
         <p className="text-xs text-red-500 px-1 mt-1">{error}</p>
       </section>
     );
@@ -117,11 +135,21 @@ export default function MostLikedHorizontalAnimalList() {
   if (rows === null) {
     return (
       <section className="w-full">
-        <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
-          <HiHeart className="w-5 h-5 shrink-0 text-primary1" aria-hidden />
-          인기쟁이 모음
-        </h2>
-        <div className={LIST_ROW_GAP}>
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+            <HiHeart className="w-5 h-5 shrink-0 text-primary1" aria-hidden />
+            인기쟁이 모음
+          </h2>
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={() => scrollByCard('left')} className="inline-flex items-center gap-1 rounded-full border border-primary1/30 bg-primary1/10 px-2.5 py-1.5 text-xs font-semibold text-primary1 transition-colors hover:bg-primary1/20" aria-label="왼쪽으로 이동">
+              <MdChevronLeft className="h-4 w-4" />
+            </button>
+            <button type="button" onClick={() => scrollByCard('right')} className="inline-flex items-center gap-1 rounded-full border border-primary1/30 bg-primary1/10 px-2.5 py-1.5 text-xs font-semibold text-primary1 transition-colors hover:bg-primary1/20" aria-label="오른쪽으로 이동">
+              <MdChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+        <div ref={scrollerRef} className={LIST_ROW_GAP}>
           {Array.from({ length: MOST_LIKED_LIMIT }).map((_, i) => (
             <div key={i} className="snap-center">
               <HorizontalAnimalCardSkeleton photoOnly />
@@ -138,11 +166,21 @@ export default function MostLikedHorizontalAnimalList() {
 
   return (
     <section className="w-full">
-      <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
-        <HiHeart className="w-5 h-5 shrink-0 text-primary1" aria-hidden />
-        인기쟁이 모음
-      </h2>
-      <div className={LIST_ROW_GAP} role="list" aria-label="인기쟁이 모음 유기동물 목록">
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+          <HiHeart className="w-5 h-5 shrink-0 text-primary1" aria-hidden />
+          인기쟁이 모음
+        </h2>
+        <div className="flex items-center gap-1">
+          <button type="button" onClick={() => scrollByCard('left')} className="inline-flex items-center gap-1 rounded-full border border-primary1/30 bg-primary1/10 px-2.5 py-1.5 text-xs font-semibold text-primary1 transition-colors hover:bg-primary1/20" aria-label="왼쪽으로 이동">
+            <MdChevronLeft className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={() => scrollByCard('right')} className="inline-flex items-center gap-1 rounded-full border border-primary1/30 bg-primary1/10 px-2.5 py-1.5 text-xs font-semibold text-primary1 transition-colors hover:bg-primary1/20" aria-label="오른쪽으로 이동">
+            <MdChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+      <div ref={scrollerRef} className={LIST_ROW_GAP} role="list" aria-label="인기쟁이 모음 유기동물 목록">
         {rows.map(({ item, likedCount }) => (
           <div key={item.desertionNo} className="snap-center">
             <HorizontalAnimalPhotoCard item={item} likeCount={likedCount} />

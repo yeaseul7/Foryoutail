@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   fetchShelterAnimalDataNoticeProtectMerged,
   type AnimalFilterState,
@@ -9,6 +9,7 @@ import type { ShelterAnimalItem } from '@/packages/type/postType';
 import RegionalNearbyAnimalCard from '@/packages/ui/components/shelter/RegionalNearbyAnimalCard';
 import RegionalNearbyAnimalCardSkeleton from '@/packages/ui/components/base/RegionalNearbyAnimalCardSkeleton';
 import { DISPLAY_COUNT } from '@/packages/ui/components/shelter/horizontalAnimalCarousel';
+import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
 
 const MATCHED_ADDRESS_KEY = 'matched_address';
 const POLL_MS = 500;
@@ -97,6 +98,13 @@ export default function SidoMatchedHorizontalAnimalList() {
   const [items, setItems] = useState<ShelterAnimalItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sectionTitle, setSectionTitle] = useState(DEFAULT_SECTION_TITLE);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+
+  const scrollByCard = (dir: 'left' | 'right') => {
+    const node = scrollerRef.current;
+    if (!node) return;
+    node.scrollBy({ left: dir === 'left' ? -360 : 360, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -176,8 +184,18 @@ export default function SidoMatchedHorizontalAnimalList() {
   if (items === null) {
     return (
       <section className={sectionShell}>
-        <NearSectionHeading title={sectionTitle} />
-        <div className="flex gap-8 sm:gap-10 overflow-x-auto pt-2 pb-2 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <NearSectionHeading title={sectionTitle} />
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={() => scrollByCard('left')} className="inline-flex items-center gap-1 rounded-full border border-primary1/30 bg-primary1/10 px-2.5 py-1.5 text-xs font-semibold text-primary1 transition-colors hover:bg-primary1/20" aria-label="왼쪽으로 이동">
+              <MdChevronLeft className="h-4 w-4" />
+            </button>
+            <button type="button" onClick={() => scrollByCard('right')} className="inline-flex items-center gap-1 rounded-full border border-primary1/30 bg-primary1/10 px-2.5 py-1.5 text-xs font-semibold text-primary1 transition-colors hover:bg-primary1/20" aria-label="오른쪽으로 이동">
+              <MdChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+        <div ref={scrollerRef} className="flex gap-8 sm:gap-10 overflow-x-auto pt-2 pb-2 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="snap-center first:pl-0">
               <RegionalNearbyAnimalCardSkeleton />
@@ -194,8 +212,19 @@ export default function SidoMatchedHorizontalAnimalList() {
 
   return (
     <section className={sectionShell}>
-      <NearSectionHeading title={sectionTitle} />
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <NearSectionHeading title={sectionTitle} />
+        <div className="flex items-center gap-1">
+          <button type="button" onClick={() => scrollByCard('left')} className="inline-flex items-center gap-1 rounded-full border border-primary1/30 bg-primary1/10 px-2.5 py-1.5 text-xs font-semibold text-primary1 transition-colors hover:bg-primary1/20" aria-label="왼쪽으로 이동">
+            <MdChevronLeft className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={() => scrollByCard('right')} className="inline-flex items-center gap-1 rounded-full border border-primary1/30 bg-primary1/10 px-2.5 py-1.5 text-xs font-semibold text-primary1 transition-colors hover:bg-primary1/20" aria-label="오른쪽으로 이동">
+            <MdChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
       <div
+        ref={scrollerRef}
         className="flex gap-8 sm:gap-10 overflow-x-auto pt-2 pb-2 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         role="list"
         aria-label={LIST_ARIA}

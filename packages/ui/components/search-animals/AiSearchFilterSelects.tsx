@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { getShortSidoName } from '@/packages/utils/locationUtils';
 import { sidoLocation } from '@/static/data/sidoLocation';
-import type { AiSearchFiltersValues, PetTypeFilter } from './AiSearchFilters';
+import type { AiSearchFiltersValues } from './AiSearchFilters';
+import { MdSearch } from 'react-icons/md';
 
 interface SidoItem {
   SIDO_CD: string;
@@ -16,14 +17,14 @@ export interface AiSearchFilterSelectsProps {
   sidoList?: SidoItem[];
 }
 
-const PET_OPTIONS: { value: PetTypeFilter; label: string }[] = [
+const SELECT_CLASS =
+  'w-full rounded-xl border border-gray-300 bg-white py-2.5 pl-3 pr-8 text-sm text-gray-800 focus:border-primary1 focus:outline-none focus:ring-1 focus:ring-primary1 appearance-none cursor-pointer';
+
+const PET_BUTTONS: { value: AiSearchFiltersValues['petType']; label: string }[] = [
   { value: '', label: '전체' },
   { value: '417000', label: '강아지' },
   { value: '422400', label: '고양이' },
 ];
-
-const SELECT_CLASS =
-  'w-full rounded-xl border border-gray-300 bg-white py-2.5 pl-3 pr-8 text-sm text-gray-800 focus:border-primary1 focus:outline-none focus:ring-1 focus:ring-primary1 appearance-none cursor-pointer';
 
 export default function AiSearchFilterSelects({
   value,
@@ -57,17 +58,35 @@ export default function AiSearchFilterSelects({
     onChange({ ...value, sidoCd: v === '' ? null : v });
   };
 
-  const handlePetTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onChange({ ...value, petType: (e.target.value || '') as PetTypeFilter });
-  };
-
   return (
     <div className="flex flex-col gap-3">
+      <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1.5 text-sm font-semibold text-gray-700">
+        <MdSearch className="h-4 w-4 text-primary1" aria-hidden />
+        <span>검색 조건</span>
+      </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0">
+        <div className="flex flex-wrap gap-2">
+          {PET_BUTTONS.map((opt) => {
+            const isActive = value.petType === opt.value;
+            return (
+              <button
+                key={opt.value || 'all'}
+                type="button"
+                onClick={() => onChange({ ...value, petType: opt.value })}
+                className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${isActive
+                    ? 'border-primary1 bg-primary1/10 text-primary1'
+                    : 'border-gray-300 bg-white text-gray-700 hover:border-primary1/40 hover:text-primary1'
+                  }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
       {/* 지역: select */}
-      <div className="flex flex-col gap-1">
-        <label htmlFor="ai-filter-region" className="text-sm font-medium text-gray-700">
-          지역
-        </label>
+      <div className="w-full sm:w-[220px]">
         <div className="relative">
           <select
             id="ai-filter-region"
@@ -88,30 +107,6 @@ export default function AiSearchFilterSelects({
           </span>
         </div>
       </div>
-
-      {/* 동물: 드롭다운 select (스크롤 가능) */}
-      <div className="flex flex-col gap-1">
-        <label htmlFor="ai-filter-pet" className="text-sm font-medium text-gray-700">
-          동물
-        </label>
-        <div className="relative">
-          <select
-            id="ai-filter-pet"
-            value={value.petType}
-            onChange={handlePetTypeChange}
-            className={SELECT_CLASS}
-            aria-label="동물 종류 선택"
-          >
-            {PET_OPTIONS.map((opt) => (
-              <option key={opt.value || 'all'} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-          <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden>
-            ▼
-          </span>
-        </div>
       </div>
     </div>
   );
