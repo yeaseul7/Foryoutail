@@ -1,8 +1,8 @@
 'use client';
 import { firestore } from '@/lib/firebase/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, increment, updateDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Image } from '@tiptap/extension-image';
@@ -29,6 +29,7 @@ export default function ReadPostContent({
   const [loading, setLoading] = useState(!initialPost);
   const [error, setError] = useState<string | null>(null);
   const [canGoBack, setCanGoBack] = useState(false);
+  const countedRef = useRef<string | null>(null);
 
   const editor = useEditor({
     extensions: [StarterKit, Image],
@@ -88,6 +89,36 @@ export default function ReadPostContent({
 
     fetchPost();
   }, [postId, editor, initialPost]);
+
+  useEffect(() => {
+    if (!postId || typeof window === 'undefined') return;
+    if (countedRef.current === postId) return;
+
+    const VIEWED_POSTS_KEY = 'viewed_posts';
+    const markViewedOnce = async () => {
+      try {
+        const raw = localStorage.getItem(VIEWED_POSTS_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        const viewedPosts = Array.isArray(parsed) ? (parsed as string[]) : [];
+
+        if (viewedPosts.includes(postId)) {
+          countedRef.current = postId;
+          return;
+        }
+
+        const postRef = doc(firestore, 'boards', postId);
+        await updateDoc(postRef, { views: increment(1) });
+
+        const nextViewed = [...viewedPosts, postId].slice(-300);
+        localStorage.setItem(VIEWED_POSTS_KEY, JSON.stringify(nextViewed));
+        countedRef.current = postId;
+      } catch (e) {
+        console.error('조회수 업데이트 실패:', e);
+      }
+    };
+
+    void markViewedOnce();
+  }, [postId]);
   if (loading) {
     return <Loading />;
   }
