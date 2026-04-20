@@ -64,6 +64,22 @@ export default function PostCard({ post, highPriority = false, highQuality = fal
     return '/static/images/defaultDog.png';
   }, [post.tags]);
 
+  const categoryLabel = useMemo(() => {
+    if (post.category === 'adoption') return '입양후기';
+    if (post.category === 'question') return '질문';
+    if (post.category === 'daily' || post.category === 'pet-life' || !post.category) {
+      return '일상';
+    }
+    return null;
+  }, [post.category]);
+
+  const previewTags = useMemo(() => {
+    const normalized = (post.tags || [])
+      .map((tag) => stripTagHashes(tag))
+      .filter(Boolean);
+    return normalized.slice(0, 2);
+  }, [post.tags]);
+
   useEffect(() => {
     const fetchCommentCount = async () => {
       if (!post.id) return;
@@ -112,6 +128,11 @@ export default function PostCard({ post, highPriority = false, highQuality = fal
           fetchPriority={highPriority ? 'high' : 'auto'}
           quality={highQuality ? 90 : 75}
         />
+        {categoryLabel && (
+          <span className="absolute left-2.5 top-2.5 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-[1px]">
+            {categoryLabel}
+          </span>
+        )}
       </div>
       <div className="flex flex-1 flex-col px-3 pb-3 pt-2.5 sm:px-4 sm:pb-4 sm:pt-3">
         <h2 className="mb-1.5 line-clamp-1 text-base font-semibold leading-snug text-gray-900 sm:text-lg">
@@ -120,6 +141,16 @@ export default function PostCard({ post, highPriority = false, highQuality = fal
         <p className="mb-2 line-clamp-3 text-xs leading-relaxed text-gray-600 sm:text-sm">
           {extractText(post.content)}
         </p>
+        <div className="mb-2 flex flex-wrap items-center gap-1.5">
+          {previewTags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600"
+            >
+              #{tag}
+            </span>
+          ))}
+        </div>
 
         <div className="mt-auto flex items-center justify-between gap-2 pt-0.5">
           <UserProfile
