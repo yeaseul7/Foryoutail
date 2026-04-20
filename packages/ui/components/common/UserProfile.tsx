@@ -9,6 +9,7 @@ export default function UserProfile({
   sizeClass,
   existName,
   iconSize,
+  nameClassName = 'text-sm text-gray-700',
 }: {
   profileUrl: string;
   profileName: string;
@@ -16,6 +17,7 @@ export default function UserProfile({
   sizeClass: string;
   existName: boolean;
   iconSize: string;
+  nameClassName?: string;
 }) {
   return (
     <div className="flex gap-2 items-center">
@@ -37,7 +39,7 @@ export default function UserProfile({
         </div>
       )}
       {existName && (
-        <span className="text-sm text-gray-700">
+        <span className={nameClassName}>
           @{profileName || '존재하지 않는 사용자'}
         </span>
       )}

@@ -7,7 +7,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { HiHeart } from 'react-icons/hi2';
 import { HiChatBubbleLeft } from 'react-icons/hi2';
 import { PostData } from '@/packages/type/postType';
-import { formatDate } from '@/packages/utils/dateFormatting';
+import { stripTagHashes } from '@/lib/community/boardSuggestedTags';
 import getOptimizedCloudinaryUrl from '@/packages/utils/optimization';
 import UserProfile from '../common/UserProfile';
 
@@ -27,7 +27,7 @@ export default function PostCard({ post, highPriority = false, highQuality = fal
       .replace(/<[^>]*>/g, '')
       .replace(/\s+/g, ' ')
       .trim();
-    return text.length > 150 ? text.substring(0, 150) + '...' : text;
+    return text.length > 100 ? text.substring(0, 50) + '...' : text;
   };
 
   const extractFirstImage = (html: string | undefined): string | null => {
@@ -58,7 +58,7 @@ export default function PostCard({ post, highPriority = false, highQuality = fal
       return '/static/images/defaultDog.png';
     }
     const catTags = ['고양이', '냥냥이', '냥이', '냥', '냐옹', '츄르', '야옹'];
-    if (catTags.some((tag) => post.tags.includes(tag))) {
+    if (catTags.some((cat) => post.tags.some((pt) => stripTagHashes(pt) === cat))) {
       return '/static/images/defaultCat.png';
     }
     return '/static/images/defaultDog.png';
@@ -100,51 +100,50 @@ export default function PostCard({ post, highPriority = false, highQuality = fal
       onClick={() => router.push(`/read/${post.id}`)}
       className="flex overflow-hidden flex-col bg-white rounded-2xl shadow-sm transition-all duration-200 cursor-pointer hover:shadow-lg hover:translate-y-1 active:translate-y-0 active:shadow-sm"
     >
-      <div className="relative w-full bg-gray-200 aspect-square overflow-hidden">
+      <div className="relative aspect-square w-full overflow-hidden bg-gray-200">
         <Image
           src={thumbnailImage || defaultImage}
           alt={post.title || '게시물 이미지'}
           width={400}
           height={400}
-          className="object-cover w-full h-full"
+          className="h-full w-full object-cover"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           priority={highPriority}
           fetchPriority={highPriority ? 'high' : 'auto'}
           quality={highQuality ? 90 : 75}
         />
       </div>
-      <div className="flex flex-col flex-1 p-2">
-        <h2 className="mb-1.5 text-base font-semibold text-gray-900 line-clamp-2">
+      <div className="flex flex-1 flex-col px-3 pb-3 pt-2.5 sm:px-4 sm:pb-4 sm:pt-3">
+        <h2 className="mb-1.5 line-clamp-1 text-base font-semibold leading-snug text-gray-900 sm:text-lg">
           {post.title}
         </h2>
-        <p className="mb-2 text-xs text-gray-600 line-clamp-2">
+        <p className="mb-2 line-clamp-3 text-xs leading-relaxed text-gray-600 sm:text-sm">
           {extractText(post.content)}
         </p>
 
-        <div className="flex justify-between items-center mt-auto">
-          <div className="flex gap-2 items-center text-xs text-gray-500">
-            <span>{formatDate(post.createdAt)}</span>
-            <span>·</span>
-          </div>
-        </div>
-        <div className="flex justify-between items-center mt-2">
+        <div className="mt-auto flex items-center justify-between gap-2 pt-0.5">
           <UserProfile
             profileUrl={post.authorPhotoURL || ''}
             profileName={post.authorName || ''}
-            imgSize={20}
-            sizeClass="w-5 h-5"
+            imgSize={40}
+            sizeClass="w-8 h-8"
             existName={true}
-            iconSize="text-xs"
+            iconSize="text-xl"
+            nameClassName="text-sm font-medium text-gray-800"
           />
 
-          <div className="flex gap-2 items-center">
-            <div className="flex gap-1 items-center text-[#FFB6C1]">
-              <HiHeart className="w-3.5 h-3.5" />
-              <span className="text-xs">{post.likes || 0}</span>
+          <div className="flex shrink-0 items-center gap-3">
+            <div className="flex items-center gap-1.5 text-gray-400">
+              <HiHeart className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
+              <span className="text-sm font-semibold tabular-nums text-gray-800">
+                {post.likes || 0}
+              </span>
             </div>
-            <div className="flex gap-1 items-center text-[#87CEEB]">
-              <HiChatBubbleLeft className="w-3.5 h-3.5" />
-              <span className="text-xs">{commentCount}</span>
+            <div className="flex items-center gap-1.5 text-sky-300">
+              <HiChatBubbleLeft className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
+              <span className="text-sm font-semibold tabular-nums text-gray-800">
+                {commentCount}
+              </span>
             </div>
           </div>
         </div>

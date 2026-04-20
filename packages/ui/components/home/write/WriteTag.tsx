@@ -16,7 +16,6 @@ import {
   HiXMark,
 } from 'react-icons/hi2';
 import { PiTextAlignCenterLight } from 'react-icons/pi';
-import ImageUpload from './ImageUpload';
 
 export default function WriteTag({ editor }: { editor: Editor }) {
   const editorState = useEditorState({
@@ -175,7 +174,6 @@ export default function WriteTag({ editor }: { editor: Editor }) {
           <HiXMark className="w-4 h-4" />
         </button>
       </div>
-      <ImageUpload editor={editor} menuButtonStyle={menuButtonStyle} />
     </div>
   );
 }

@@ -2,21 +2,15 @@
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import type { QuickFilterKey } from '@/lib/api/shelter';
+import { HOME_HERO_QUICK_FILTERS, QUICK_FILTER_ICONS } from '@/lib/shelter/quickFilterLabels';
+import { MdPhotoCamera } from 'react-icons/md';
 import heroBackground from '@/static/images/background_default.png';
 
-const HERO_TITLE = '어떤 아이를 만나고 싶으세요?';
-const HERO_SUBTITLE = '나와 잘 맞는 친구를 찾아보세요';
+const HERO_TITLE = '입양 가능한 아이를 찾아보세요';
+const HERO_SUBTITLE = '지역, 성격, 보호소 정보를 바탕으로 나와 잘 맞는 아이를 찾아보세요.';
 const PHOTO_CTA_LABEL = '사진으로 비슷한 아이 찾기';
-const MAIN_CTA_LABEL = '필터로 자세히 찾기';
-
-const QUICK_FILTERS = [
-  { key: 'humanDog', label: '사람 좋아하는 강아지' },
-  { key: 'humanCat', label: '사람 좋아하는 고양이' },
-  { key: 'nearby', label: '근처 지역' },
-  { key: 'gentleCat', label: '순한 고양이' },
-  { key: 'gentleDog', label: '순한 강아지' },
-  { key: 'young', label: '어린 동물' },
-] as const;
+const MAIN_CTA_LABEL = '입양 공고 더 보기';
 
 export default function HomeAdoptionHero() {
   const router = useRouter();
@@ -33,20 +27,11 @@ export default function HomeAdoptionHero() {
     }
   };
 
-  const applyQuickFilter = (key: (typeof QUICK_FILTERS)[number]['key']) => {
+  const applyQuickFilter = (key: QuickFilterKey) => {
     const params = new URLSearchParams();
     params.set('state', 'notice');
     params.set('quickFilter', key);
 
-    if (key === 'humanDog' || key === 'gentleDog') {
-      params.set('upkind', '417000');
-    }
-    if (key === 'humanCat') {
-      params.set('upkind', '422400');
-    }
-    if (key === 'gentleCat') {
-      params.set('upkind', '422400');
-    }
     if (key === 'nearby') {
       const uprCd = getMatchedSidoCd();
       if (uprCd) params.set('upr_cd', uprCd);
@@ -89,24 +74,29 @@ export default function HomeAdoptionHero() {
         </p>
 
         <div className="mt-5 sm:mt-6 flex items-center justify-start sm:justify-center gap-2 sm:gap-2.5 max-w-4xl w-full overflow-x-auto whitespace-nowrap px-1 py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {QUICK_FILTERS.map((quick) => (
-            <button
-              key={quick.key}
-              type="button"
-              onClick={() => applyQuickFilter(quick.key)}
-              className="h-10 sm:h-11 px-4 sm:px-5 shrink-0 rounded-full bg-white/90 border border-white/90 text-gray-800 text-sm sm:text-[15px] font-semibold shadow-[0_4px_14px_rgba(15,23,42,0.12)] hover:bg-white hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.16)] active:translate-y-0 active:shadow-[0_4px_12px_rgba(15,23,42,0.12)] transition-all"
-            >
-              {quick.label}
-            </button>
-          ))}
+          {HOME_HERO_QUICK_FILTERS.map((quick) => {
+            const Icon = QUICK_FILTER_ICONS[quick.key];
+            return (
+              <button
+                key={quick.key}
+                type="button"
+                onClick={() => applyQuickFilter(quick.key)}
+                className="inline-flex h-10 sm:h-11 items-center justify-center gap-1.5 px-4 sm:px-5 shrink-0 rounded-full bg-white/90 border border-white/90 text-gray-800 text-sm sm:text-[15px] font-semibold shadow-[0_4px_14px_rgba(15,23,42,0.12)] hover:bg-white hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.16)] active:translate-y-0 active:shadow-[0_4px_12px_rgba(15,23,42,0.12)] transition-all"
+              >
+                <Icon className="h-[18px] w-[18px] shrink-0 text-gray-700 opacity-90 sm:h-5 sm:w-5" aria-hidden />
+                {quick.label}
+              </button>
+            );
+          })}
         </div>
 
         <div className="mt-5 sm:mt-6 w-full max-w-3xl flex flex-col items-center justify-center gap-2.5 sm:gap-3">
           <button
             type="button"
             onClick={() => router.push('/search-animal')}
-            className="w-full sm:w-auto h-12 sm:h-13 min-w-[280px] px-8 rounded-full bg-[#6b85e3] text-white font-bold text-[15px] sm:text-base hover:brightness-105 hover:-translate-y-0.5 shadow-[0_10px_26px_rgba(107,133,227,0.42)] active:translate-y-0 active:shadow-[0_6px_16px_rgba(107,133,227,0.32)] transition-all"
+            className="w-full sm:w-auto h-12 sm:h-13 min-w-[280px] px-8 rounded-full bg-[#6b85e3] text-white font-bold text-[15px] sm:text-base hover:brightness-105 hover:-translate-y-0.5 shadow-[0_10px_26px_rgba(107,133,227,0.42)] active:translate-y-0 active:shadow-[0_6px_16px_rgba(107,133,227,0.32)] transition-all inline-flex items-center justify-center gap-2"
           >
+            <MdPhotoCamera className="h-5 w-5 shrink-0" aria-hidden />
             {PHOTO_CTA_LABEL}
           </button>
           <button

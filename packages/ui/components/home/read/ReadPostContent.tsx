@@ -50,7 +50,7 @@ export default function ReadPostContent({
       setLoading(false);
       if (editor && initialPost.content) {
         // 이미지 URL 최적화 후 콘텐츠 설정
-        const optimizedContent = optimizeImageUrlsInHtml(initialPost.content);
+        const optimizedContent = optimizeImageUrlsInHtml(initialPost.content, 800);
         editor.commands.setContent(optimizedContent);
       }
       return;
@@ -73,7 +73,7 @@ export default function ReadPostContent({
 
           if (editor && data.content) {
             // 이미지 URL 최적화 후 콘텐츠 설정
-            const optimizedContent = optimizeImageUrlsInHtml(data.content);
+            const optimizedContent = optimizeImageUrlsInHtml(data.content, 800);
             editor.commands.setContent(optimizedContent);
           }
         } else {
@@ -144,7 +144,7 @@ export default function ReadPostContent({
             <article className="px-4 py-0 w-full sm:px-6 sm:py-2 lg:px-8 lg:py-3">
               <ReadHeader post={post} isEditing={false} />
 
-              <div className="max-w-none prose prose-sm sm:prose-base lg:prose-lg [&_img]:mx-auto [&_img]:block">
+              <div className="prose prose-sm sm:prose-base lg:prose-lg mx-auto max-w-[800px] [&_img]:mx-auto [&_img]:block [&_img]:max-w-[800px] [&_img]:max-h-[680px] [&_img]:w-auto [&_img]:h-auto">
                 {editor && (
                   <EditorContent editor={editor} className="tiptap" />
                 )}

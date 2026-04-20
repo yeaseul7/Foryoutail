@@ -75,7 +75,7 @@ export default function Home() {
                       clipRule="evenodd"
                     />
                   </svg>
-                  내 지역 근처 아이들
+                  내 위치 기준 근처 보호소의 아이들
                 </h2>
                 <div className="flex gap-8 sm:gap-10 overflow-x-auto pt-2 pb-2 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {Array.from({ length: 8 }).map((_, i) => (
@@ -96,7 +96,7 @@ export default function Home() {
               <section className="w-full py-4">
                 <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
                   <HiHeart className="w-5 h-5 shrink-0 text-primary1" aria-hidden />
-                  인기쟁이 모음
+                  최근 인기 많은 아이 모음
                 </h2>
                 <div className="flex gap-6 sm:gap-8 overflow-x-auto pb-2 px-1 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {Array.from({ length: 5 }).map((_, i) => (

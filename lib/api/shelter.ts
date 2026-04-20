@@ -35,13 +35,7 @@ function mergeShelterItemsByDesertionNo(
   return [...map.values()].sort(sortShelterItemsByRecencyDesc);
 }
 
-export type QuickFilterKey =
-  | 'humanDog'
-  | 'humanCat'
-  | 'gentleCat'
-  | 'nearby'
-  | 'gentleDog'
-  | 'young';
+export type QuickFilterKey = 'likesHuman' | 'gentle' | 'nearby' | 'young';
 
 export interface AnimalFilterState {
   sexCd: string | null;
@@ -56,7 +50,7 @@ export interface AnimalFilterState {
 }
 
 const QUICK_FILTER_KEYWORDS: Record<Exclude<QuickFilterKey, 'nearby'>, string[]> = {
-  humanDog: [
+  likesHuman: [
     '사람', '사람좋아', '사람을잘따름', '사람을잘따라',
     '사람을좋아', '사람친화', '사람친화적', '교감',
     '애교', '애교많', '애교쟁이',
@@ -65,27 +59,7 @@ const QUICK_FILTER_KEYWORDS: Record<Exclude<QuickFilterKey, 'nearby'>, string[]>
     '사람만보면', '사람을보면좋아',
     '사람을잘따르고', '사람과잘지냄'
   ],
-  humanCat: [
-    '사람', '사람좋아', '사람을잘따름', '사람을잘따라',
-    '사람을좋아', '사람친화', '사람친화적', '교감',
-    '애교', '애교많', '애교쟁이',
-    '붙임성', '붙임성좋', '잘따름',
-    '사교성', '사교성좋',
-    '사람만보면', '사람을보면좋아',
-    '사람을잘따르고', '사람과잘지냄'
-  ],
-  gentleDog: [
-    '순한', '온순', '착함', '착한', '순둥', '순둥이',
-    '온화', '차분', '얌전', '얌전한',
-    '조용', '조용한',
-    '성격좋', '성격이좋',
-    '무난', '무난한',
-    '공격성없', '공격성없음',
-    '사납지않', '사납지않음',
-    '겁이없', '겁이없음',
-    '사람을잘따르고온순',
-  ],
-  gentleCat: [
+  gentle: [
     '순한', '온순', '착함', '착한', '순둥', '순둥이',
     '온화', '차분', '얌전', '얌전한',
     '조용', '조용한',

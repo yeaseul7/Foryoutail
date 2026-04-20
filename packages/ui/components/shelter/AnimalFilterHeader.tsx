@@ -21,6 +21,7 @@ import {
 import Image from 'next/image';
 import { RiResetLeftFill } from 'react-icons/ri';
 import { getShortSidoName } from '@/packages/utils/locationUtils';
+import type { QuickFilterKey } from '@/lib/api/shelter';
 
 interface SidoItem {
   SIDO_CD: string;
@@ -88,7 +89,7 @@ export interface AnimalFilterState {
   state: string | null;
   upKindCd: string | null;
   neuterYn: string | null;
-  quickFilter: 'humanDog' | 'humanCat' | 'gentleCat' | 'nearby' | 'gentleDog' | 'young' | null;
+  quickFilter: QuickFilterKey | null;
   searchQuery: string;
   bgnde: string | null;
   endde: string | null;

@@ -8,6 +8,7 @@ import AbandonedCardSkeleton from '../base/AbandonedCardSkeleton';
 import AnimalFilterHeader, { AnimalFilterState } from './AnimalFilterHeader';
 import { fetchShelterAnimalData, FetchShelterAnimalDataResult } from '@/lib/api/shelter';
 import { gatherListQuickMatches, type ListQuickFilterId } from '@/lib/shelter/listQuickFilter';
+import { QUICK_FILTER_ICONS, QUICK_FILTER_LABEL } from '@/lib/shelter/quickFilterLabels';
 import SearchAi from './SearchAi';
 import { sidoLocation } from '@/static/data/sidoLocation';
 
@@ -26,17 +27,19 @@ const LIST_QUICK_BUTTONS: {
     { id: 'neutered', emoji: '🏥', label: '중성화 완료' },
   ];
 
-const QUICK_FILTER_LABEL: Record<
-  NonNullable<AnimalFilterState['quickFilter']>,
-  string
-> = {
-  humanDog: '사람 좋아하는 강아지',
-  humanCat: '사람 좋아하는 고양이',
-  gentleCat: '순한 고양이',
-  nearby: '근처 지역',
-  gentleDog: '순한 강아지',
-  young: '어린 동물',
-};
+type FilterSummaryRow =
+  | { key: string; variant: 'quick'; quick: NonNullable<AnimalFilterState['quickFilter']> }
+  | { key: string; variant: 'text'; text: string };
+
+function parseQuickFilterFromSearchParams(
+  raw: string | null,
+): AnimalFilterState['quickFilter'] {
+  if (!raw) return null;
+  if (raw === 'likesHuman' || raw === 'humanDog' || raw === 'humanCat') return 'likesHuman';
+  if (raw === 'gentle' || raw === 'gentleDog' || raw === 'gentleCat') return 'gentle';
+  if (raw === 'nearby' || raw === 'young') return raw;
+  return null;
+}
 
 const UP_KIND_LABEL: Record<string, string> = {
   '417000': '개',
@@ -86,39 +89,48 @@ function regionShortFromCode(upr_cd: string | null): string | null {
   return getShortSidoName(hit.SIDO_NAME);
 }
 
-function buildFilterSummaryTags(filters: AnimalFilterState): string[] {
-  const tags: string[] = [];
+function buildFilterSummaryRows(filters: AnimalFilterState): FilterSummaryRow[] {
+  const rows: FilterSummaryRow[] = [];
+  let n = 0;
+  const pushText = (text: string) => {
+    rows.push({ key: `t-${n++}`, variant: 'text', text });
+  };
+
   const q = filters.searchQuery.trim();
   if (q) {
     const short = q.length > 26 ? `${q.slice(0, 26)}…` : q;
-    tags.push(`검색 · ${short}`);
+    pushText(`검색 · ${short}`);
   }
   if (filters.quickFilter) {
-    tags.push(QUICK_FILTER_LABEL[filters.quickFilter]);
+    rows.push({
+      key: `q-${filters.quickFilter}`,
+      variant: 'quick',
+      quick: filters.quickFilter,
+    });
   }
   if (
     filters.upKindCd &&
     filters.upKindCd !== '417000' &&
     UP_KIND_LABEL[filters.upKindCd]
   ) {
-    tags.push(`축종 · ${UP_KIND_LABEL[filters.upKindCd]}`);
+    pushText(`축종 · ${UP_KIND_LABEL[filters.upKindCd]}`);
   }
   if (filters.sexCd && SEX_LABEL[filters.sexCd]) {
-    tags.push(`성별 · ${SEX_LABEL[filters.sexCd]}`);
+    pushText(`성별 · ${SEX_LABEL[filters.sexCd]}`);
   }
   if (filters.state && STATE_LABEL[filters.state]) {
-    tags.push(`상태 · ${STATE_LABEL[filters.state]}`);
+    pushText(`상태 · ${STATE_LABEL[filters.state]}`);
   }
   if (filters.neuterYn && NEUTER_LABEL[filters.neuterYn]) {
-    tags.push(NEUTER_LABEL[filters.neuterYn]);
+    pushText(NEUTER_LABEL[filters.neuterYn]);
   }
   const region = regionShortFromCode(filters.upr_cd);
   if (region) {
-    tags.push(`지역 · ${region}`);
+    pushText(`지역 · ${region}`);
   }
   const receipt = receiptRangeLabel(filters.bgnde, filters.endde);
-  if (receipt) tags.push(receipt);
-  return tags;
+  if (receipt) pushText(receipt);
+  return rows;
 }
 
 export default function ShelterPostsClient({ initialData }: ShelterPostsClientProps) {
@@ -330,7 +342,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
   const handleUpKindBadgePress = useCallback(
     (value: (typeof UP_KIND_BADGES)[number]['value']) => {
       const base = filtersRef.current;
-      if ((base.upKindCd ?? '417000') === value) return;
+      if (base.upKindCd === value) return;
       handleFilterChange({ ...base, upKindCd: value });
     },
     [handleFilterChange],
@@ -410,10 +422,11 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
     const upkind = searchParams.get('upkind');
     const neuter = searchParams.get('neuter');
     const state = searchParams.get('state');
-    const quickFilter = searchParams.get('quickFilter');
+    const quickFilterRaw = searchParams.get('quickFilter');
+    const parsedQuick = parseQuickFilterFromSearchParams(quickFilterRaw);
     const uprCd = searchParams.get('upr_cd');
     const hasFilterParams = Boolean(
-      q || sex || upkind || neuter || state || quickFilter || uprCd,
+      q || sex || upkind || neuter || state || quickFilterRaw || uprCd,
     );
     if (!hasFilterParams) return;
     appliedUrlQueryRef.current = true;
@@ -424,19 +437,13 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
       upKindCd:
         upkind === '417000' || upkind === '422400' || upkind === '429900'
           ? upkind
-          : '417000',
+          : parsedQuick === 'likesHuman' || parsedQuick === 'gentle'
+            ? null
+            : '417000',
       neuterYn:
         neuter === 'Y' || neuter === 'N' || neuter === 'U' ? neuter : null,
       state: state === 'notice' || state === 'protect' ? state : null,
-      quickFilter:
-        quickFilter === 'humanDog' ||
-          quickFilter === 'humanCat' ||
-          quickFilter === 'gentleCat' ||
-          quickFilter === 'nearby' ||
-          quickFilter === 'gentleDog' ||
-          quickFilter === 'young'
-          ? quickFilter
-          : null as AnimalFilterState['quickFilter'],
+      quickFilter: parsedQuick,
       upr_cd: uprCd && /^\d{7}$/.test(uprCd) ? uprCd : null,
     });
   }, [searchParams, handleFilterChange]);
@@ -476,7 +483,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
         ? shelterAnimalData.length.toLocaleString()
         : '0';
 
-  const filterSummaryTags = useMemo(() => buildFilterSummaryTags(filters), [filters]);
+  const filterSummaryRows = useMemo(() => buildFilterSummaryRows(filters), [filters]);
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-7xl pb-4 sm:pb-5">
@@ -488,7 +495,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
             aria-label="축종 선택"
           >
             {UP_KIND_BADGES.map(({ value, label }) => {
-              const active = (filters.upKindCd ?? '417000') === value;
+              const active = filters.upKindCd === value;
               return (
                 <button
                   key={value}
@@ -523,25 +530,34 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
                 </h2>
                 <div className="mt-1.5 space-y-2">
                   <p className="text-sm leading-snug text-gray-600">
-                    {filterSummaryTags.length > 0
+                    {filterSummaryRows.length > 0
                       ? '적용한 조건에 맞는 보호소 입양 공고만 골라 보여드려요.'
                       : '전국 보호소 입양 공고를 기본 조건으로 보여드리고 있어요.'}
                   </p>
-                  {filterSummaryTags.length > 0 && (
+                  {filterSummaryRows.length > 0 && (
                     <div
                       className="flex flex-wrap gap-1.5"
                       role="list"
                       aria-label="적용된 필터"
                     >
-                      {filterSummaryTags.map((tag, i) => (
-                        <span
-                          key={`${i}-${tag}`}
-                          role="listitem"
-                          className="inline-flex max-w-full items-center rounded-full border border-primary1/20 bg-primary1/10 px-2.5 py-0.5 text-[11px] font-medium text-primary1 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] sm:text-xs"
-                        >
-                          <span className="truncate">{tag}</span>
-                        </span>
-                      ))}
+                      {filterSummaryRows.map((row) => {
+                        const chipClass =
+                          'inline-flex max-w-full items-center gap-1 rounded-full border border-primary1/20 bg-primary1/10 px-2.5 py-0.5 text-[11px] font-medium text-primary1 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] sm:text-xs';
+                        if (row.variant === 'quick') {
+                          const Icon = QUICK_FILTER_ICONS[row.quick];
+                          return (
+                            <span key={row.key} role="listitem" className={chipClass}>
+                              <Icon className="h-3.5 w-3.5 shrink-0 opacity-90" aria-hidden />
+                              <span className="truncate">{QUICK_FILTER_LABEL[row.quick]}</span>
+                            </span>
+                          );
+                        }
+                        return (
+                          <span key={row.key} role="listitem" className={chipClass}>
+                            <span className="truncate">{row.text}</span>
+                          </span>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -558,11 +574,10 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
                         type="button"
                         aria-pressed={active}
                         onClick={() => handleListQuickChange(active ? null : id)}
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-semibold transition-all sm:px-4 sm:py-2 sm:text-[15px] ${
-                          active
-                            ? 'border-primary1 bg-primary1/10 text-primary1 ring-1 ring-primary1/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]'
-                            : 'border-gray-200 bg-white text-gray-800 shadow-sm hover:border-primary1/35 hover:bg-primary1/[0.06]'
-                        }`}
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-semibold transition-all sm:px-4 sm:py-2 sm:text-[15px] ${active
+                          ? 'border-primary1 bg-primary1/10 text-primary1 ring-1 ring-primary1/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]'
+                          : 'border-gray-200 bg-white text-gray-800 shadow-sm hover:border-primary1/35 hover:bg-primary1/[0.06]'
+                          }`}
                       >
                         <span aria-hidden>{emoji}</span>
                         {label}

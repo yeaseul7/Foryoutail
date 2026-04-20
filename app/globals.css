@@ -145,7 +145,7 @@ button:disabled,
   outline: none;
 
   p {
-    @apply first:mt-0 last:mb-0 text-base leading-relaxed;
+    @apply first:mt-0 last:mb-0 text-base leading-relaxed sm:text-lg;
   }
 
   h1 {

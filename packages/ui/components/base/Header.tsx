@@ -13,7 +13,6 @@ import { getUnreadHistoryCount } from '@/lib/api/hisotry';
 import Link from 'next/link';
 import NavLink from '../common/NavLink';
 import { usePathname } from 'next/navigation';
-import { RiPencilFill } from 'react-icons/ri';
 import { MdPets, MdAutoAwesome, MdForum, MdHomeWork } from 'react-icons/md';
 
 const LoginModal = dynamic(
@@ -59,10 +58,6 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
 
   const handleSearchClick = useCallback(() => {
     router.push('/search');
-  }, [router]);
-
-  const writeArticle = useCallback(() => {
-    router.push('/write');
   }, [router]);
 
   const openLoginModal = useCallback(() => {
@@ -238,17 +233,6 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
                     ref={userMenuRef}
                     className="flex relative gap-2 items-center sm:gap-3"
                   >
-                    <RoundButton
-                      onClick={writeArticle}
-                      className="hidden sm:flex items-center gap-2"
-                      bgcolor="bg-primary1"
-                      hoverColor="hover:bg-primary2"
-                      borderColor="border-primary1"
-                      textColor="text-white"
-                    >
-                      <RiPencilFill />
-                      글쓰기
-                    </RoundButton>
                     <HeaderUserIcon
                       setIsUserMenuOpen={setIsUserMenuOpen}
                       isUserMenuOpen={isUserMenuOpen}

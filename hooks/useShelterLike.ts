@@ -128,14 +128,21 @@ export function useShelterLike(
 
       if (isLiked) {
         await runTransaction(firestore, async (transaction) => {
-          transaction.delete(abRef);
-
           const likedSnap = await transaction.get(likedRef);
-          if (!likedSnap.exists()) return;
+
+          if (!likedSnap.exists()) {
+            transaction.delete(abRef);
+            return;
+          }
 
           const data = likedSnap.data() as Record<string, unknown>;
           const likedIds = (data.likedUserID as string[] | undefined) ?? [];
-          if (!likedIds.includes(user.uid)) return;
+          if (!likedIds.includes(user.uid)) {
+            transaction.delete(abRef);
+            return;
+          }
+
+          transaction.delete(abRef);
 
           const nextIds = likedIds.filter((id) => id !== user.uid);
           if (nextIds.length === 0) {

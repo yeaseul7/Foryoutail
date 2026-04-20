@@ -181,9 +181,9 @@ export async function getTrendingBoardsData(
   try {
     const boardsCol = collection(firestore, 'boards');
 
-    const qPetLife = query(
+    const qDailyLike = query(
       boardsCol,
-      where('category', '==', 'pet-life'),
+      where('category', 'in', ['daily', 'pet-life']),
       limit(limitCount * 2),
     );
 
@@ -193,12 +193,12 @@ export async function getTrendingBoardsData(
       limit(limitCount * 3),
     );
 
-    const [petLifeSnapshot, allSnapshot] = await Promise.all([
-      getDocs(qPetLife),
+    const [dailyLikeSnapshot, allSnapshot] = await Promise.all([
+      getDocs(qDailyLike),
       getDocs(qAll),
     ]);
 
-    const petLifePosts = petLifeSnapshot.docs.map((doc) => ({
+    const dailyLikePosts = dailyLikeSnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     })) as PostData[];
@@ -212,7 +212,7 @@ export async function getTrendingBoardsData(
       (post) => !post.category || post.category === undefined
     );
 
-    const allFilteredPosts = [...petLifePosts, ...noCategoryPosts];
+    const allFilteredPosts = [...dailyLikePosts, ...noCategoryPosts];
     const uniquePostsMap = new Map<string, PostData>();
     allFilteredPosts.forEach((post) => {
       if (!uniquePostsMap.has(post.id)) {

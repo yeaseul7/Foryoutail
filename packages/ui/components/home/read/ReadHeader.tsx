@@ -153,12 +153,12 @@ export default function ReadHeader({
 
       {post?.tags && post?.tags.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {post?.tags.map((tag, index) => (
+          {post?.tags.map((tag) => (
             <span
-              key={index}
-              className="px-2 py-1 text-sm whitespace-nowrap rounded-full cursor-pointer bg-element2 text-primary1 shrink-0"
+              key={tag}
+              className="shrink-0 cursor-pointer whitespace-nowrap rounded-full bg-element2 px-2 py-1 text-sm text-primary1"
             >
-              # {tag}
+              {tag.startsWith('#') ? tag : `#${tag}`}
             </span>
           ))}
         </div>
