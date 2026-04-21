@@ -85,7 +85,7 @@ export default function ShelterIntro({ shelterId }: ShelterIntroProps) {
             }
 
             try {
-                const introDocRef = doc(firestore, 'shelter', shelterId);
+                const introDocRef = doc(firestore, 'shelter-info', shelterId);
                 const introDoc = await getDoc(introDocRef);
 
                 if (introDoc.exists()) {
@@ -133,7 +133,7 @@ export default function ShelterIntro({ shelterId }: ShelterIntroProps) {
 
         setIsSaving(true);
         try {
-            const introDocRef = doc(firestore, 'shelter', shelterId);
+            const introDocRef = doc(firestore, 'shelter-info', shelterId);
             const dataToSave = {
                 content,
                 updatedAt: serverTimestamp(),

@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation';
 import PageTemplate from '@/packages/ui/components/base/PageTemplate';
 import Loading from '@/packages/ui/components/base/Loading';
 import { ShelterAnimalItem, ShelterAnimalData } from '@/packages/type/postType';
-import { ShelterInfoResponse, ShelterInfoItem } from '@/app/api/shelter-info/route';
+import { ShelterInfoItem } from '@/packages/type/shelterTyps';
 import { IoIosArrowBack } from 'react-icons/io';
 import Notfound_ad_animal from '@/packages/ui/components/base/Notfound_ad_animal';
 import AnimalImgCard from '@/packages/ui/components/shelter/AnimalImgCard';
 import AnimalInfoCard from '@/packages/ui/components/shelter/AnimalInfoCard';
 import AnimalNotice from '@/packages/ui/components/common/AnimalNotice';
 import PageFooter from '@/packages/ui/components/base/PageFooter';
+import { fetchShelterInfoByCareRegNo } from '@/lib/api/shelterInfo';
 
 interface ShelterDetailPageContentProps {
   desertionNo: string;
@@ -97,29 +98,13 @@ export default function ShelterDetailPageContent({
       }
 
       try {
-        const params = new URLSearchParams();
-        params.append('care_reg_no', animalData.careRegNo);
-        params.append('pageNo', '1');
-        params.append('numOfRows', '10');
-
-        const response = await fetch(`/api/shelter-info?${params.toString()}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch shelter info');
-        }
-
-        const shelterInfoResponse = (await response.json()) as ShelterInfoResponse;
-        const items = shelterInfoResponse?.response?.body?.items?.item;
-
-        if (items) {
-          // item이 배열인 경우 첫 번째 항목, 단일 객체인 경우 그대로 사용
-          const item = Array.isArray(items) ? items[0] : items;
-          setShelterInfo(item);
-          console.log('Shelter Info:', item);
-        } else {
-          setShelterInfo(null);
-        }
+        const item = await fetchShelterInfoByCareRegNo(animalData.careRegNo, {
+          cache: 'no-store',
+        });
+        setShelterInfo(item);
       } catch (e) {
         console.error('보호소 정보 조회 중 오류 발생:', e);
+        setShelterInfo(null);
       }
     };
 

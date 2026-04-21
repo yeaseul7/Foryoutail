@@ -122,9 +122,14 @@ module.exports = {
             transform: 'translateY(0)'
           },
         },
+        overlayIndeterminate: {
+          '0%': { transform: 'translateX(-120%)' },
+          '100%': { transform: 'translateX(320%)' },
+        },
       },
       animation: {
         slideDown: 'slideDown 0.2s ease-out',
+        overlayIndeterminate: 'overlayIndeterminate 1.35s ease-in-out infinite',
       },
     },
   },

@@ -183,7 +183,11 @@ export default function MostLikedHorizontalAnimalList() {
       <div ref={scrollerRef} className={LIST_ROW_GAP} role="list" aria-label="최근 인기 많은 아이 모음 유기동물 목록">
         {rows.map(({ item, likedCount }) => (
           <div key={item.desertionNo} className="snap-center">
-            <HorizontalAnimalPhotoCard item={item} likeCount={likedCount} />
+            <HorizontalAnimalPhotoCard
+              key={`${item.desertionNo}-${likedCount}`}
+              item={item}
+              likeCount={likedCount}
+            />
           </div>
         ))}
       </div>

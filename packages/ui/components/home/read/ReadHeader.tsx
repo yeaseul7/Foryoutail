@@ -1,3 +1,5 @@
+'use client';
+
 import { PostData } from '@/packages/type/postType';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
@@ -6,6 +8,7 @@ import { firestore } from '@/lib/firebase/firebase';
 import { useAuth } from '@/lib/firebase/auth';
 import UserProfile from '../../common/UserProfile';
 import { formatDateSimple } from '@/packages/utils/dateFormatting';
+import BlockingProgressOverlay from '@/packages/ui/components/base/BlockingProgressOverlay';
 
 export default function ReadHeader({
   post,
@@ -19,6 +22,12 @@ export default function ReadHeader({
   const { user } = useAuth();
   const [authorNickname, setAuthorNickname] = useState<string>('');
   const [authorPhotoURL, setAuthorPhotoURL] = useState<string | null>(null);
+
+  type DeleteOverlay =
+    | { kind: 'idle' }
+    | { kind: 'loading' }
+    | { kind: 'success'; message: string; redirectTo: string };
+  const [deleteOverlay, setDeleteOverlay] = useState<DeleteOverlay>({ kind: 'idle' });
 
   const postId = params.id as string;
 
@@ -81,12 +90,18 @@ export default function ReadHeader({
       return;
     }
 
+    setDeleteOverlay({ kind: 'loading' });
     try {
       await deleteDoc(doc(firestore, 'boards', postId));
-      alert('게시물이 성공적으로 삭제되었습니다.');
-      router.push('/');
+      setDeleteOverlay({
+        kind: 'success',
+        message: '성공했습니다!',
+        redirectTo: '/community',
+      });
     } catch (e) {
       console.error('게시물 삭제 중 오류 발생:', e);
+
+      setDeleteOverlay({ kind: 'idle' });
 
       const error = e as { code?: string; message?: string };
       if (error.code === 'permission-denied') {
@@ -104,8 +119,34 @@ export default function ReadHeader({
     }
   }, [router, postId, user, post]);
 
+  useEffect(() => {
+    if (deleteOverlay.kind !== 'success') return;
+    const { redirectTo } = deleteOverlay;
+    const t = window.setTimeout(() => {
+      router.push(redirectTo);
+      setDeleteOverlay({ kind: 'idle' });
+    }, 1400);
+    return () => window.clearTimeout(t);
+  }, [deleteOverlay, router]);
+
+  const deleteBusy = deleteOverlay.kind !== 'idle';
+
   return (
     <header className="mb-6">
+      <BlockingProgressOverlay
+        open={deleteBusy}
+        variant={deleteOverlay.kind === 'success' ? 'success' : 'loading'}
+        title={
+          deleteOverlay.kind === 'success'
+            ? deleteOverlay.message
+            : '삭제 중'
+        }
+        subtitle={
+          deleteOverlay.kind === 'success'
+            ? '잠시 후 커뮤니티로 이동해요.'
+            : '게시글을 삭제하고 있어요.'
+        }
+      />
       <h1 className="mb-4 text-xl font-bold sm:text-2xl lg:text-3xl">{post?.title}</h1>
 
       <div className="flex gap-4 justify-between items-center mb-4">
@@ -135,15 +176,19 @@ export default function ReadHeader({
           <div className="flex gap-1 items-center">
             {!isEditing && (
               <button
+                type="button"
                 onClick={handleEdit}
-                className="px-2 py-1 text-gray-500 whitespace-nowrap transition-colors cursor-pointer shrink-0 hover:text-gray-900"
+                disabled={deleteBusy}
+                className="px-2 py-1 text-gray-500 whitespace-nowrap transition-colors cursor-pointer shrink-0 hover:text-gray-900 disabled:pointer-events-none disabled:opacity-40"
               >
                 수정
               </button>
             )}
             <button
-              onClick={handleDelete}
-              className="px-2 py-1 text-gray-500 whitespace-nowrap transition-colors cursor-pointer shrink-0 hover:text-gray-900"
+              type="button"
+              onClick={() => void handleDelete()}
+              disabled={deleteBusy}
+              className="px-2 py-1 text-gray-500 whitespace-nowrap transition-colors cursor-pointer shrink-0 hover:text-gray-900 disabled:pointer-events-none disabled:opacity-40"
             >
               삭제
             </button>

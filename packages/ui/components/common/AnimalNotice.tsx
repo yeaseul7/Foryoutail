@@ -1,4 +1,4 @@
-import { ShelterInfoItem } from "@/app/api/shelter-info/route";
+import { ShelterInfoItem } from "@/packages/type/shelterTyps";
 import { ShelterAnimalItem } from "@/packages/type/postType";
 import { FaPaw } from "react-icons/fa";
 

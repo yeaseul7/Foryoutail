@@ -64,11 +64,24 @@ export default function PostCard({ post, highPriority = false, highQuality = fal
     return '/static/images/defaultDog.png';
   }, [post.tags]);
 
-  const categoryLabel = useMemo(() => {
-    if (post.category === 'adoption') return '입양후기';
-    if (post.category === 'question') return '질문';
+  const categoryBadge = useMemo((): { label: string; tone: string } | null => {
+    if (post.category === 'adoption') {
+      return {
+        label: '입양후기',
+        tone: 'bg-[#ffb36b]/95 text-white ring-1 ring-white/25',
+      };
+    }
+    if (post.category === 'question') {
+      return {
+        label: '질문',
+        tone: 'bg-[#6bc4a3]/95 text-white ring-1 ring-white/25',
+      };
+    }
     if (post.category === 'daily' || post.category === 'pet-life' || !post.category) {
-      return '일상';
+      return {
+        label: '일상',
+        tone: 'bg-[#4a9fe5]/95 text-white ring-1 ring-white/25',
+      };
     }
     return null;
   }, [post.category]);
@@ -128,9 +141,11 @@ export default function PostCard({ post, highPriority = false, highQuality = fal
           fetchPriority={highPriority ? 'high' : 'auto'}
           quality={highQuality ? 90 : 75}
         />
-        {categoryLabel && (
-          <span className="absolute left-2.5 top-2.5 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-[1px]">
-            {categoryLabel}
+        {categoryBadge && (
+          <span
+            className={`absolute left-2.5 top-2.5 rounded-full px-3 py-1.5 text-xs font-semibold sm:text-[13px] ${categoryBadge.tone}`}
+          >
+            {categoryBadge.label}
           </span>
         )}
       </div>

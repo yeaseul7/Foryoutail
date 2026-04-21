@@ -121,16 +121,19 @@ export function HorizontalAnimalPhotoCard({
   const router = useRouter();
   const { shareCopied, handleShareClick } = useShelterAnimalShareLink(item.desertionNo);
   const { isLiked, isUpdating, handleLike } = useShelterLike(item.desertionNo, item);
+  const [likeCountBoost, setLikeCountBoost] = useState(0);
   const imageUrl = getFirstImageUrl(item);
   const displayUrl = imageUrl?.includes('res.cloudinary.com')
     ? getOptimizedCloudinaryUrl(imageUrl, 400, 500)
     : imageUrl || '/static/images/defaultDog.png';
   const region = getShortRegion(item);
   const breedLabel = item.kindNm?.trim() || getKindLabel(item);
-  const likeTotal =
+  const baseLikeCount =
     typeof likeCount === 'number' && Number.isFinite(likeCount)
       ? Math.max(0, Math.floor(likeCount))
       : null;
+  const likeTotal =
+    baseLikeCount === null ? null : Math.max(0, baseLikeCount + likeCountBoost);
   const showLikes = likeTotal !== null;
   const a11yLabel = showLikes
     ? `${breedLabel}, ${region}. 좋아요 ${likeTotal}회. 카드 클릭 시 상세, 하단 숫자로 관심 추가`
@@ -181,7 +184,13 @@ export function HorizontalAnimalPhotoCard({
               isLiked ? `관심 해제, 좋아요 ${likeTotal}회` : `관심 추가, 좋아요 ${likeTotal}회`
             }
             disabled={isUpdating}
-            onClick={(e) => void handleLike(e)}
+            onClick={async (e) => {
+              e.stopPropagation();
+              const d = await handleLike(e);
+              if (baseLikeCount !== null && d !== 0) {
+                setLikeCountBoost((b) => b + d);
+              }
+            }}
             className={`absolute bottom-2.5 right-2.5 z-10 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold leading-none shadow-sm backdrop-blur-[2px] tabular-nums transition-colors border-0 ${isLiked
               ? 'bg-black/65 text-white ring-1 ring-red-400/50'
               : 'bg-black/55 text-white hover:bg-black/70'

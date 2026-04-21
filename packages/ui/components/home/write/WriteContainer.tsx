@@ -11,10 +11,18 @@ import {
   getBoardWriteGuidelineDismissedSnapshot,
   subscribeBoardWriteGuidelineDismissed,
 } from '@/lib/community/boardWriteGuidelineStorage';
-import { Dispatch, SetStateAction, useCallback, useState, useSyncExternalStore } from 'react';
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import { useRouter } from 'next/navigation';
 import type { PostBoardCategory, PostData } from '@/packages/type/postType';
 import WriteNotice from './wrtieNotice';
+import BlockingProgressOverlay from '@/packages/ui/components/base/BlockingProgressOverlay';
 import { uploadCardImages } from '@/packages/utils/cloudinary';
 import {
   deriveBoardTitleFromHtml,
@@ -23,13 +31,26 @@ import {
 
 interface WriteContainerProps {
   className?: string;
+  /** URL `?category=` 등에서 넘긴 초기 게시판 카테고리 */
+  initialCategory?: PostBoardCategory;
 }
-export default function WriteContainer({ className }: WriteContainerProps) {
+export default function WriteContainer({ className, initialCategory }: WriteContainerProps) {
   const { user } = useAuth();
   const router = useRouter();
   const [postData, setPostData] = useState<PostData | null>(null);
-  const [writeCategory, setWriteCategory] = useState<PostBoardCategory>('daily');
+  const [writeCategory, setWriteCategory] = useState<PostBoardCategory>(
+    () => initialCategory ?? 'daily',
+  );
+
+  useEffect(() => {
+    setWriteCategory(initialCategory ?? 'daily');
+  }, [initialCategory]);
   const [coverDraftFiles, setCoverDraftFiles] = useState<File[]>([]);
+  type PostingOverlay =
+    | { kind: 'idle' }
+    | { kind: 'loading' }
+    | { kind: 'success'; readId: string; message: string };
+  const [postingOverlay, setPostingOverlay] = useState<PostingOverlay>({ kind: 'idle' });
 
   const guidelineDismissed = useSyncExternalStore(
     subscribeBoardWriteGuidelineDismissed,
@@ -51,6 +72,7 @@ export default function WriteContainer({ className }: WriteContainerProps) {
       return;
     }
 
+    setPostingOverlay({ kind: 'loading' });
     try {
       let content = postData?.content ?? '';
       if (coverDraftFiles.length > 0) {
@@ -88,14 +110,19 @@ export default function WriteContainer({ className }: WriteContainerProps) {
         collection(firestore, 'boards'),
         postDataToSave,
       );
-      alert('게시물이 성공적으로 생성되었습니다!');
-      router.push(`/read/${docRef.id}`);
+      setPostingOverlay({
+        kind: 'success',
+        readId: docRef.id,
+        message: '성공했습니다!',
+      });
     } catch (e) {
       console.error('게시물 생성 중 오류 발생: ', e);
 
       const error = e as { code?: string; message?: string };
       console.error('오류 코드:', error.code);
       console.error('오류 메시지:', error.message);
+
+      setPostingOverlay({ kind: 'idle' });
 
       if (error.code === 'permission-denied') {
         alert(
@@ -109,6 +136,16 @@ export default function WriteContainer({ className }: WriteContainerProps) {
       }
     }
   }, [postData, writeCategory, user, router, coverDraftFiles]);
+
+  useEffect(() => {
+    if (postingOverlay.kind !== 'success') return;
+    const { readId } = postingOverlay;
+    const t = window.setTimeout(() => {
+      router.push(`/read/${readId}`);
+      setPostingOverlay({ kind: 'idle' });
+    }, 1400);
+    return () => window.clearTimeout(t);
+  }, [postingOverlay, router]);
 
   return (
     <div
@@ -140,10 +177,27 @@ export default function WriteContainer({ className }: WriteContainerProps) {
             />
           </div>
           <div className="mt-4 shrink-0 border-t border-gray-100 pt-4">
-            <WriteFooter onSubmit={posting} />
+            <WriteFooter
+              onSubmit={posting}
+              isSubmitting={postingOverlay.kind !== 'idle'}
+            />
           </div>
         </div>
       </div>
+      <BlockingProgressOverlay
+        open={postingOverlay.kind !== 'idle'}
+        variant={postingOverlay.kind === 'success' ? 'success' : 'loading'}
+        title={
+          postingOverlay.kind === 'success'
+            ? postingOverlay.message
+            : '업로드 중'
+        }
+        subtitle={
+          postingOverlay.kind === 'success'
+            ? '잠시 후 글 화면으로 이동해요.'
+            : '이미지를 올리고 게시글을 저장하고 있어요.'
+        }
+      />
       {!guidelineDismissed && (
         <div className="min-h-0 px-4 sm:px-6 lg:px-8">
           <WriteNotice />

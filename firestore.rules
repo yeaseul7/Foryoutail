@@ -38,6 +38,14 @@ service cloud.firestore {
         allow delete: if request.auth != null && request.auth.uid == userId;
       }
 
+      // 보호소 즐겨찾기 (careRegNo를 문서 ID로 사용, shelterId 필드 저장)
+      match /Favorites/{favoriteId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && request.auth.uid == userId;
+        allow update: if request.auth != null && request.auth.uid == userId;
+        allow delete: if request.auth != null && request.auth.uid == userId;
+      }
+
     }
 
     // 'boards' 컬렉션에 대해서는 로그인된 사용자만 생성 가능
@@ -89,19 +97,31 @@ service cloud.firestore {
       }
     }
 
-    // 'shelter' 컬렉션: 보호소 소개 정보
-    match /shelter/{shelterId} {
-      allow read: if true; // 모든 사람이 보호소 소개 정보를 읽을 수 있음
-      allow create: if request.auth != null; // 로그인한 사용자만 생성 가능
-      // 작성자, 해당 보호소 관리자(shelterInfo.careRegNo == shelterId), 전체 관리자(fulladmin)만 수정 가능
-      // users 문서의 shelterInfo.careRegNo는 문자열이어야 함 (숫자면 규칙 비교 실패)
-      allow update: if request.auth != null && resource.exists && (
+    // 'shelter-info' 컬렉션: 보호소 기본 정보 캐시
+    match /shelter-info/{shelterId} {
+      allow read: if true; // 모두 조회 가능 (목록/상세)
+      // 작성자(기존 문서 authorId), 해당 보호소 관리자(shelterInfo.careRegNo == shelterId), fulladmin만 수정 가능
+      allow create: if request.auth != null && (
+        request.auth.uid == request.resource.data.get('authorId', '')
+        || (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('shelterInfo', null) != null
+            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('shelterInfo', {}).get('careRegNo', '') == shelterId)
+        || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('fulladmin', false) == true
+      );
+      allow update: if request.auth != null && (
         request.auth.uid == resource.data.get('authorId', '')
         || (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('shelterInfo', null) != null
             && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('shelterInfo', {}).get('careRegNo', '') == shelterId)
         || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('fulladmin', false) == true
       );
-      allow delete: if false; // 삭제 불가
+      allow delete: if request.auth != null
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('fulladmin', false) == true;
+    }
+
+    // 'shelterAnimals' 컬렉션: 보호소별 유기동물 캐시
+    match /shelterAnimals/{animalId} {
+      allow read: if true;
+      allow create, update, delete: if request.auth != null
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('fulladmin', false) == true;
     }
 
     // 전역 유기동물 찜 집계 (useShelterLike와 동일한 전제)

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { ShelterInfoItem, ShelterOption } from '@/packages/type/shelterTyps';
 import { sidoLocation } from '@/static/data/sidoLocation';
+import { fetchShelterInfoItems } from '@/lib/api/shelterInfo';
 
 export type { ShelterOption };
 
@@ -47,13 +48,11 @@ export default function ShelterRegis({
         }
         setSheltersLoading(true);
         try {
-            const res = await fetch(
-                `/api/shelter-info?upr_cd=${encodeURIComponent(sidoCd)}&numOfRows=1000&pageNo=1`
-            );
-            if (!res.ok) throw new Error('보호소 목록 조회 실패');
-            const data = await res.json();
-            const raw = data?.response?.body?.items?.item;
-            const list = Array.isArray(raw) ? raw : raw ? [raw] : [];
+            const list = await fetchShelterInfoItems({
+                upr_cd: sidoCd,
+                numOfRows: 1000,
+                pageNo: 1,
+            });
             setShelters(list);
         } catch (e) {
             console.error('보호소 목록 조회 오류:', e);

@@ -11,6 +11,23 @@ export interface ShelterInfoItem {
     lat?: number;
     lng?: number;
     careTel?: string;
+    dsignationDate?: string;
+    weekOprStime?: string;
+    weekOprEtime?: string;
+    weekCellStime?: string;
+    weekCellEtime?: string;
+    weekendOprStime?: string;
+    weekendOprEtime?: string;
+    weekendCellStime?: string;
+    weekendCellEtime?: string;
+    closeDay?: string;
+    vetPersonCnt?: number;
+    specsPersonCnt?: number;
+    medicalCnt?: number;
+    breedCnt?: number;
+    quarabtineCnt?: number;
+    feedCnt?: number;
+    dataStdDt?: string;
 }
 
 /** 회원가입/프로필에서 저장하는 보호소 정보 */

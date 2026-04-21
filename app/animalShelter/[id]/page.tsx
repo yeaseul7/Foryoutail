@@ -3,17 +3,11 @@ import { notFound } from 'next/navigation';
 import PageTemplate from "@/packages/ui/components/base/PageTemplate";
 import { ShelterInfoItem } from '@/packages/type/shelterTyps';
 import { ShelterAnimalItem } from '@/packages/type/postType';
-import dynamic from 'next/dynamic';
-import ShelterInfoComponentSkeleton from '@/packages/ui/components/base/ShelterInfoComponentSkeleton';
-import { decodeShelterId } from '@/lib/shelterId';
+import { fetchShelterInfoByCareRegNo } from '@/lib/api/shelterInfo';
+import ShelterInfoComponent from '@/packages/ui/components/home/shelterList/ShelterInfoComponent';
+import { collection, getDocs } from 'firebase/firestore';
+import { firestore } from '@/lib/firebase/firebase';
 
-const ShelterInfoComponent = dynamic(
-    () => import("@/packages/ui/components/home/shelterList/ShelterInfoComponent"),
-    {
-        ssr: true,
-        loading: () => <ShelterInfoComponentSkeleton />
-    }
-);
 import {
     getBaseUrl,
     generateMetadata as generateMetadataUtil,
@@ -28,111 +22,42 @@ interface AnimalShelterPageProps {
 const baseUrl = getBaseUrl();
 
 async function fetchShelterInfo(careRegNo: string): Promise<ShelterInfoItem | null> {
-    const maxRetries = 3;
-    let lastError: Error | null = null;
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            const apiUrl = `${baseUrl}/api/shelter-info?care_reg_no=${careRegNo}`;
-
-            // 타임아웃을 위한 AbortController
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30초 타임아웃
-
-            const response = await fetch(apiUrl, {
-                cache: 'no-store',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                signal: controller.signal,
-            });
-
-            clearTimeout(timeoutId);
-
-            if (!response.ok) {
-                console.error(`보호소 정보 조회 실패 (시도 ${attempt}/${maxRetries}):`, response.status, response.statusText);
-                if (attempt < maxRetries) {
-                    await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-                    continue;
-                }
-                return null;
-            }
-
-            const data = await response.json();
-            if (data?.response?.body?.items?.item) {
-                const items = Array.isArray(data.response.body.items.item)
-                    ? data.response.body.items.item
-                    : [data.response.body.items.item];
-                return items.length > 0 ? items[0] : null;
-            }
-            return null;
-        } catch (err) {
-            lastError = err instanceof Error ? err : new Error(String(err));
-            console.error(`보호소 정보 조회 오류 (시도 ${attempt}/${maxRetries}):`, lastError.message);
-
-            if (attempt < maxRetries) {
-                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-                continue;
-            }
-        }
+    try {
+        return await fetchShelterInfoByCareRegNo(careRegNo, { baseUrl, cache: 'no-store' });
+    } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error('보호소 정보 조회 실패:', message);
+        return null;
     }
-
-    console.error('보호소 정보 조회 최종 실패:', lastError?.message);
-    return null;
 }
 
 async function fetchShelterAnimals(careRegNo: string): Promise<ShelterAnimalItem[]> {
-    const maxRetries = 3;
-    let lastError: Error | null = null;
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            const apiUrl = `${baseUrl}/api/shelter-data?care_reg_no=${careRegNo}&numOfRows=1000`;
-
-            // 타임아웃을 위한 AbortController
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30초 타임아웃
-
-            const response = await fetch(apiUrl, {
-                cache: 'no-store',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                signal: controller.signal,
+    try {
+        const snap = await getDocs(collection(firestore, 'shelterAnimals'));
+        const suffix = `-${careRegNo}`;
+        return snap.docs
+            .filter((d) => d.id.endsWith(suffix))
+            .map((d) => {
+                const raw = d.data() as ShelterAnimalItem;
+                const rest = { ...raw } as Record<string, unknown>;
+                // Firestore Timestamp(updatedAt)는 Server->Client props로 직접 넘기지 않음
+                delete rest.updatedAt;
+                return {
+                    ...rest,
+                    desertionNo: raw.desertionNo || d.id.split('-')[0],
+                    careRegNo,
+                } as ShelterAnimalItem;
+            })
+            .sort((a, b) => {
+                const aNum = parseInt(String(a.noticeSdt || a.happenDt || '0').replace(/\D/g, ''), 10) || 0;
+                const bNum = parseInt(String(b.noticeSdt || b.happenDt || '0').replace(/\D/g, ''), 10) || 0;
+                return bNum - aNum;
             });
-
-            clearTimeout(timeoutId);
-
-            if (!response.ok) {
-                console.error(`유기동물 정보 조회 실패 (시도 ${attempt}/${maxRetries}):`, response.status, response.statusText);
-                if (attempt < maxRetries) {
-                    await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-                    continue;
-                }
-                return [];
-            }
-
-            const data = await response.json();
-            if (data?.response?.body?.items?.item) {
-                const items = Array.isArray(data.response.body.items.item)
-                    ? data.response.body.items.item
-                    : [data.response.body.items.item];
-                return items;
-            }
-            return [];
-        } catch (err) {
-            lastError = err instanceof Error ? err : new Error(String(err));
-            console.error(`유기동물 정보 조회 오류 (시도 ${attempt}/${maxRetries}):`, lastError.message);
-
-            if (attempt < maxRetries) {
-                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-                continue;
-            }
-        }
+    } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error('shelterAnimals 조회 실패:', message);
+        return [];
     }
-
-    console.error('유기동물 정보 조회 최종 실패:', lastError?.message);
-    return [];
 }
 
 export async function generateMetadata({
@@ -144,7 +69,7 @@ export async function generateMetadata({
     const baseUrl = getBaseUrl();
     const pageUrl = `${baseUrl}/animalShelter/${id}`;
 
-    const careRegNo = decodeShelterId(id);
+    const careRegNo = (id ?? '').trim();
     if (!careRegNo) {
         return generateDefaultMetadata(
             '보호소 정보 | 꼬순내',
@@ -195,7 +120,7 @@ export async function generateMetadata({
 export default async function AnimalShelterPage({ params }: AnimalShelterPageProps) {
     const { id } = await params;
 
-    const careRegNo = decodeShelterId(id);
+    const careRegNo = (id ?? '').trim();
     if (!careRegNo) {
         notFound();
     }

@@ -70,8 +70,11 @@ export interface UseShelterLikeReturn {
   isLiked: boolean;
   /** 처리 중 여부 (중복 클릭 방지) */
   isUpdating: boolean;
-  /** 찜 토글 핸들러 */
-  handleLike: (e?: React.MouseEvent) => Promise<void>;
+  /**
+   * 찜 토글. 성공 시 Firestore `likedAnimals` 집계 기준 변화량 반환(-1, 0, 1).
+   * 실패·조기 종료 시 0.
+   */
+  handleLike: (e?: React.MouseEvent) => Promise<number>;
 }
 
 /**
@@ -112,14 +115,14 @@ export function useShelterLike(
     };
   }, [desertionNo, user]);
 
-  const handleLike = async (e?: React.MouseEvent) => {
+  const handleLike = async (e?: React.MouseEvent): Promise<number> => {
     e?.stopPropagation();
 
     if (!user) {
       alert('로그인이 필요합니다.');
-      return;
+      return 0;
     }
-    if (!desertionNo || isUpdating) return;
+    if (!desertionNo || isUpdating) return 0;
 
     setIsUpdating(true);
     try {
@@ -127,6 +130,7 @@ export function useShelterLike(
       const likedRef = doc(firestore, LIKED_ANIMALS_COLLECTION, desertionNo);
 
       if (isLiked) {
+        let countDelta = 0;
         await runTransaction(firestore, async (transaction) => {
           const likedSnap = await transaction.get(likedRef);
 
@@ -147,6 +151,7 @@ export function useShelterLike(
           const nextIds = likedIds.filter((id) => id !== user.uid);
           if (nextIds.length === 0) {
             transaction.delete(likedRef);
+            countDelta = -1;
             return;
           }
 
@@ -157,57 +162,64 @@ export function useShelterLike(
               animalData?.processState ?? data.processState ?? null,
             updatedAt: serverTimestamp(),
           });
+          countDelta = -1;
         });
         setIsLiked(false);
-      } else {
-        if (!animalData) {
-          alert('동물 정보를 불러온 뒤 다시 시도해 주세요.');
-          return;
-        }
+        return countDelta;
+      }
 
-        const processState = animalData.processState ?? null;
-        const basePayload = buildLikedAnimalBase(animalData, desertionNo);
+      if (!animalData) {
+        alert('동물 정보를 불러온 뒤 다시 시도해 주세요.');
+        return 0;
+      }
 
-        await runTransaction(firestore, async (transaction) => {
-          const likedSnap = await transaction.get(likedRef);
+      const processState = animalData.processState ?? null;
+      const basePayload = buildLikedAnimalBase(animalData, desertionNo);
 
-          transaction.set(abRef, buildAbandonmentPayload(animalData));
+      let countDelta = 0;
+      await runTransaction(firestore, async (transaction) => {
+        const likedSnap = await transaction.get(likedRef);
 
-          if (!likedSnap.exists()) {
-            transaction.set(likedRef, {
-              ...basePayload,
-              likedUserID: [user.uid],
-              likedCount: 1,
-              processState,
-              updatedAt: serverTimestamp(),
-            });
-            return;
-          }
+        transaction.set(abRef, buildAbandonmentPayload(animalData));
 
-          const data = likedSnap.data() as Record<string, unknown>;
-          const likedIds = (data.likedUserID as string[] | undefined) ?? [];
-          if (likedIds.includes(user.uid)) {
-            transaction.update(likedRef, {
-              processState,
-              updatedAt: serverTimestamp(),
-              ...basePayload,
-            });
-            return;
-          }
-
-          transaction.update(likedRef, {
+        if (!likedSnap.exists()) {
+          transaction.set(likedRef, {
             ...basePayload,
-            likedUserID: arrayUnion(user.uid),
-            likedCount: increment(1),
+            likedUserID: [user.uid],
+            likedCount: 1,
             processState,
             updatedAt: serverTimestamp(),
           });
+          countDelta = 1;
+          return;
+        }
+
+        const data = likedSnap.data() as Record<string, unknown>;
+        const likedIds = (data.likedUserID as string[] | undefined) ?? [];
+        if (likedIds.includes(user.uid)) {
+          transaction.update(likedRef, {
+            processState,
+            updatedAt: serverTimestamp(),
+            ...basePayload,
+          });
+          return;
+        }
+
+        transaction.update(likedRef, {
+          ...basePayload,
+          likedUserID: arrayUnion(user.uid),
+          likedCount: increment(1),
+          processState,
+          updatedAt: serverTimestamp(),
         });
-        setIsLiked(true);
-      }
+        countDelta = 1;
+      });
+      setIsLiked(true);
+      return countDelta;
     } catch (error) {
       console.error('찜 처리 실패:', error);
       alert('처리 중 오류가 발생했습니다.');
+      return 0;
     } finally {
       setIsUpdating(false);
     }

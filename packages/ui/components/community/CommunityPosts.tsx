@@ -87,7 +87,7 @@ export default function CommunityPosts({ pageSize = 12, fromMain = false }: Comm
         activeTab={activeTab}
         onTabChange={setActiveTab}
         onWriteClick={() => router.push('/write')}
-        onAskClick={() => router.push('/write')}
+        onAskClick={() => router.push('/write?category=question')}
       />
 
       {emptyAll ? (

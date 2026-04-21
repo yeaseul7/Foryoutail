@@ -77,7 +77,7 @@ declare global {
 export default function MapComponent({
     center,
     zoom = 7,
-    height = '400px',
+    height = 'clamp(480px, 58vh, 780px)',
     shelters,
     onSidoSelect,
     initialSidoCd,
@@ -294,7 +294,7 @@ export default function MapComponent({
     return (
         <div className="w-full">
             {error ? (
-                <div className="flex items-center justify-center h-full min-h-[400px] bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex h-full min-h-[480px] items-center justify-center rounded-lg border border-red-200 bg-red-50">
                     <div className="text-center p-6">
                         <div className="text-red-600 text-lg font-semibold mb-2">⚠️ 지도 로드 실패</div>
                         <p className="text-red-500 text-sm">{error}</p>

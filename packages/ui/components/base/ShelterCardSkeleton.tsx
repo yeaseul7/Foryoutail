@@ -1,24 +1,26 @@
+/** 보호소 목록 카드 스켈레톤 — `ShelterPosts` 카드형 목록과 동일한 외곽 */
 export default function ShelterCardSkeleton() {
   return (
-    <div className="bg-white border border-gray-200 rounded-3xl p-4 animate-pulse">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-2">
-            <div className="h-4 bg-gray-200 rounded w-32" />
+    <div className="animate-pulse rounded-xl border border-gray-100 bg-white p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div className="h-4 w-40 max-w-[65%] rounded bg-gray-200" />
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="h-3 w-10 rounded bg-gray-200" />
+          <div className="h-5 w-5 shrink-0 rounded-full bg-gray-100" />
+        </div>
+      </div>
+      <div className="mt-3 flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex gap-2">
+            <div className="mt-0.5 h-3 w-3 shrink-0 rounded bg-gray-200" />
+            <div className="h-3 flex-1 rounded bg-gray-200" />
           </div>
-          <div className="mb-1 flex items-center gap-2">
-            <div className="w-3 h-3 bg-gray-200 rounded shrink-0" />
-            <div className="h-3 bg-gray-200 rounded w-48" />
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-gray-200 rounded shrink-0" />
-            <div className="h-3 bg-gray-200 rounded w-32" />
+          <div className="flex gap-2">
+            <div className="h-3 w-3 shrink-0 rounded bg-gray-200" />
+            <div className="h-3 w-28 rounded bg-gray-200" />
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="h-8 bg-gray-200 rounded-2xl w-20" />
-          <div className="w-9 h-9 bg-gray-200 rounded-full" />
-        </div>
+        <div className="h-9 w-[4.75rem] shrink-0 rounded-full bg-gray-100" />
       </div>
     </div>
   );

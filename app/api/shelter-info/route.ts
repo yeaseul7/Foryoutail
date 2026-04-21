@@ -1,160 +1,188 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const API_BASE_URL = 'https://apis.data.go.kr/1543061/animalShelterSrvc_v2';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  query,
+  where,
+  type QueryConstraint,
+} from 'firebase/firestore';
+import { firestore } from '@/lib/firebase/firebase';
+import type { ShelterInfoItem } from '@/packages/type/shelterTyps';
+import { sidoLocation } from '@/static/data/sidoLocation';
 
 interface ShelterInfoParams {
-  care_reg_no?: string; // 보호소번호
-  upr_cd?: string; // 시도코드
-  org_cd?: string; // 시군구코드
-  pageNo?: string; // 페이지 번호 (기본값: 1)
-  numOfRows?: string; // 페이지당 보여줄 개수 (기본값: 10)
-  _type?: string; // xml(기본값) 또는 json
+  care_reg_no?: string;
+  upr_cd?: string;
+  org_cd?: string;
+  pageNo?: number;
+  numOfRows?: number;
 }
 
-// 보호소 정보 응답 타입
-export interface ShelterInfoItem {
-  careNm?: string; // 보호소명
-  careRegNo?: string; // 보호소번호
-  orgNm?: string; // 관할기관명
-  divisionNm?: string; // 구분명
-  saveTrgtAnimal?: string; // 보호대상동물
-  careAddr?: string; // 보호소주소
-  jibunAddr?: string; // 지번주소
-  lat?: number; // 위도
-  lng?: number; // 경도
-  dsignationDate?: string; // 지정일자
-  weekOprStime?: string; // 평일 운영시작시간
-  weekOprEtime?: string; // 평일 운영종료시간
-  weekCellStime?: string; // 평일 입양시작시간
-  weekCellEtime?: string; // 평일 입양종료시간
-  weekendOprStime?: string; // 주말 운영시작시간
-  weekendOprEtime?: string; // 주말 운영종료시간
-  weekendCellStime?: string; // 주말 입양시작시간
-  weekendCellEtime?: string; // 주말 입양종료시간
-  closeDay?: string; // 휴무일
-  vetPersonCnt?: number; // 수의사 인원수
-  specsPersonCnt?: number; // 전문인력 인원수
-  medicalCnt?: number; // 의료실 수
-  breedCnt?: number; // 사육실 수
-  quarabtineCnt?: number; // 격리실 수
-  feedCnt?: number; // 사료보관실 수
-  careTel?: string; // 보호소전화번호
-  dataStdDt?: string; // 데이터기준일자
-}
-
-export interface ShelterInfoResponse {
-  response: {
-    header: {
-      reqNo: number;
-      resultCode: string;
-      resultMsg: string;
-    };
-    body: {
-      items: {
-        item: ShelterInfoItem | ShelterInfoItem[];
-      };
-      numOfRows: number;
-      pageNo: number;
-      totalCount: number;
-    };
+function normalizeShelterItem(
+  id: string,
+  raw: Record<string, unknown>,
+): ShelterInfoItem {
+  const pickString = (v: unknown) => (typeof v === 'string' ? v : undefined);
+  const pickNumber = (v: unknown) =>
+    typeof v === 'number' && Number.isFinite(v) ? v : undefined;
+  return {
+    careRegNo:
+      pickString(raw.careRegNo) ??
+      pickString(raw.care_reg_no) ??
+      id,
+    careNm: pickString(raw.careNm) ?? pickString(raw.care_nm),
+    orgNm: pickString(raw.orgNm) ?? pickString(raw.org_nm),
+    orgCd: pickString(raw.orgCd) ?? pickString(raw.org_cd),
+    uprCd: pickString(raw.uprCd) ?? pickString(raw.upr_cd),
+    divisionNm: pickString(raw.divisionNm) ?? pickString(raw.division_nm),
+    saveTrgtAnimal:
+      pickString(raw.saveTrgtAnimal) ?? pickString(raw.save_trgt_animal),
+    careAddr: pickString(raw.careAddr) ?? pickString(raw.care_addr),
+    jibunAddr: pickString(raw.jibunAddr) ?? pickString(raw.jibun_addr),
+    lat: pickNumber(raw.lat),
+    lng: pickNumber(raw.lng),
+    careTel: pickString(raw.careTel) ?? pickString(raw.care_tel),
+    dsignationDate:
+      pickString(raw.dsignationDate) ?? pickString(raw.dsignation_date),
+    weekOprStime:
+      pickString(raw.weekOprStime) ?? pickString(raw.week_opr_stime),
+    weekOprEtime:
+      pickString(raw.weekOprEtime) ?? pickString(raw.week_opr_etime),
+    weekCellStime:
+      pickString(raw.weekCellStime) ?? pickString(raw.week_cell_stime),
+    weekCellEtime:
+      pickString(raw.weekCellEtime) ?? pickString(raw.week_cell_etime),
+    weekendOprStime:
+      pickString(raw.weekendOprStime) ?? pickString(raw.weekend_opr_stime),
+    weekendOprEtime:
+      pickString(raw.weekendOprEtime) ?? pickString(raw.weekend_opr_etime),
+    weekendCellStime:
+      pickString(raw.weekendCellStime) ?? pickString(raw.weekend_cell_stime),
+    weekendCellEtime:
+      pickString(raw.weekendCellEtime) ?? pickString(raw.weekend_cell_etime),
+    closeDay: pickString(raw.closeDay) ?? pickString(raw.close_day),
+    vetPersonCnt: pickNumber(raw.vetPersonCnt),
+    specsPersonCnt: pickNumber(raw.specsPersonCnt),
+    medicalCnt: pickNumber(raw.medicalCnt),
+    breedCnt: pickNumber(raw.breedCnt),
+    quarabtineCnt: pickNumber(raw.quarabtineCnt),
+    feedCnt: pickNumber(raw.feedCnt),
+    dataStdDt: pickString(raw.dataStdDt) ?? pickString(raw.data_std_dt),
   };
+}
+
+async function queryShelterDocs(params: ShelterInfoParams): Promise<ShelterInfoItem[]> {
+  const coll = collection(firestore, 'shelter-info');
+  const constraints: QueryConstraint[] = [];
+  let fallbackConstraints: QueryConstraint[] | null = null;
+
+  if (params.care_reg_no) {
+    const careRegNo = params.care_reg_no.trim();
+    if (careRegNo) {
+      const byDocId = await getDoc(doc(coll, careRegNo));
+      if (byDocId.exists()) {
+        return [
+          normalizeShelterItem(
+            byDocId.id,
+            byDocId.data() as Record<string, unknown>,
+          ),
+        ];
+      }
+      constraints.push(where('careRegNo', '==', careRegNo));
+      fallbackConstraints = [where('care_reg_no', '==', careRegNo)];
+    }
+  }
+  if (params.upr_cd) {
+    constraints.push(where('uprCd', '==', params.upr_cd));
+    fallbackConstraints = (fallbackConstraints ?? []).concat(
+      where('upr_cd', '==', params.upr_cd),
+    );
+  }
+  if (params.org_cd) {
+    constraints.push(where('orgCd', '==', params.org_cd));
+    fallbackConstraints = (fallbackConstraints ?? []).concat(
+      where('org_cd', '==', params.org_cd),
+    );
+  }
+
+  const pageNo = params.pageNo ?? 1;
+  const numOfRows = params.numOfRows ?? 10;
+  const fetchLimit = Math.max(pageNo * numOfRows, numOfRows);
+
+  const q = constraints.length
+    ? query(coll, ...constraints, limit(fetchLimit))
+    : query(coll, limit(fetchLimit));
+  let snap = await getDocs(q);
+  if (snap.empty && fallbackConstraints && fallbackConstraints.length) {
+    snap = await getDocs(query(coll, ...fallbackConstraints, limit(fetchLimit)));
+  }
+  let items = snap.docs.map((d) =>
+    normalizeShelterItem(d.id, d.data() as Record<string, unknown>),
+  );
+
+  // Firestore 문서에 uprCd/orgCd가 아직 없고 orgNm만 있는 경우를 위한 최종 폴백
+  if (items.length === 0 && params.upr_cd) {
+    const sidoName =
+      sidoLocation.items.find((s) => s.SIDO_CD === params.upr_cd)?.SIDO_NAME ??
+      null;
+    if (sidoName) {
+      const allSnap = await getDocs(query(coll, limit(5000)));
+      const allItems = allSnap.docs.map((d) =>
+        normalizeShelterItem(d.id, d.data() as Record<string, unknown>),
+      );
+      items = allItems.filter((item) =>
+        (item.orgNm ?? '').startsWith(sidoName),
+      );
+    }
+  }
+  return items;
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const serviceKey = process.env.NEXT_PUBLIC_SHELTERS_OPENAPI;
+    const sp = request.nextUrl.searchParams;
+    const params: ShelterInfoParams = {
+      care_reg_no: sp.get('care_reg_no') ?? undefined,
+      upr_cd: sp.get('upr_cd') ?? undefined,
+      org_cd: sp.get('org_cd') ?? undefined,
+      pageNo: Math.max(parseInt(sp.get('pageNo') ?? '1', 10) || 1, 1),
+      numOfRows: Math.max(parseInt(sp.get('numOfRows') ?? '10', 10) || 10, 1),
+    };
 
-    if (!serviceKey) {
-      return NextResponse.json(
-        { error: 'API key is not configured' },
-        { status: 500 },
-      );
-    }
+    const allMatches = await queryShelterDocs(params);
+    const totalCount = allMatches.length;
+    const pageNo = params.pageNo ?? 1;
+    const numOfRows = params.numOfRows ?? 10;
+    const start = (pageNo - 1) * numOfRows;
+    const pageItems = allMatches.slice(start, start + numOfRows);
 
-    // URL 쿼리 파라미터에서 요청 파라미터 추출
-    const searchParams = request.nextUrl.searchParams;
-    const params: ShelterInfoParams = {};
-
-    // 각 파라미터를 조건부로 추가
-    if (searchParams.has('care_reg_no'))
-      params.care_reg_no = searchParams.get('care_reg_no')!;
-    if (searchParams.has('upr_cd'))
-      params.upr_cd = searchParams.get('upr_cd')!;
-    if (searchParams.has('org_cd'))
-      params.org_cd = searchParams.get('org_cd')!;
-    if (searchParams.has('pageNo'))
-      params.pageNo = searchParams.get('pageNo')!;
-    if (searchParams.has('numOfRows'))
-      params.numOfRows = searchParams.get('numOfRows')!;
-    if (searchParams.has('_type'))
-      params._type = searchParams.get('_type')!;
-
-    // 기본값 설정
-    const pageNo = params.pageNo || '1';
-    const numOfRows = params.numOfRows || '10';
-    const _type = params._type || 'json';
-
-    // URL 파라미터 구성
-    const urlParams = new URLSearchParams();
-    urlParams.append('serviceKey', serviceKey);
-    urlParams.append('pageNo', pageNo);
-    urlParams.append('numOfRows', numOfRows);
-    urlParams.append('_type', _type);
-
-    // 선택적 파라미터 추가
-    if (params.care_reg_no)
-      urlParams.append('care_reg_no', params.care_reg_no);
-    if (params.upr_cd) urlParams.append('upr_cd', params.upr_cd);
-    if (params.org_cd) urlParams.append('org_cd', params.org_cd);
-
-    // 공공데이터포털 API 호출
-    // 엔드포인트 경로: /shelterInfo (보호소 정보 조회)
-    const apiUrl = `${API_BASE_URL}/shelterInfo_v2?${urlParams.toString()}`;
-    console.log('Shelter API URL:', apiUrl);
-
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Shelter API Error:', errorText);
-      return NextResponse.json(
-        {
-          error: 'Failed to fetch data from shelter API',
-          details: errorText,
+    return NextResponse.json({
+      response: {
+        header: {
+          reqNo: Date.now(),
+          resultCode: '00',
+          resultMsg: 'NORMAL SERVICE.',
         },
-        { status: response.status },
-      );
-    }
-
-    const data = (await response.json()) as ShelterInfoResponse;
-
-    // 응답 데이터 검증 및 정규화
-    if (data?.response?.body?.items?.item) {
-      // item이 배열이 아닌 경우 배열로 변환
-      const items = data.response.body.items.item;
-      if (!Array.isArray(items)) {
-        data.response.body.items.item = [items];
-      }
-    }
-
-    return NextResponse.json(data, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
+        body: {
+          items: {
+            item: pageItems,
+          },
+          numOfRows,
+          pageNo,
+          totalCount,
+        },
       },
     });
   } catch (error) {
-    console.error('Shelter info API error:', error);
+    console.error('Shelter info API (Firestore) error:', error);
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       {
-        error: 'Failed to fetch shelter info',
+        error: 'Failed to fetch shelter info from firestore',
         details: errorMessage,
       },
       { status: 500 },
