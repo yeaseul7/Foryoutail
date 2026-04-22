@@ -1,14 +1,8 @@
 import {
-  collection,
-  documentId,
-  getDocs,
-  limit,
-  query,
-  where,
-  type QueryDocumentSnapshot,
-  type DocumentData,
-} from 'firebase/firestore';
-import { firestore } from '@/lib/firebase/firebase';
+  listFirestoreCollection,
+  runFirestoreCollectionQuery,
+  type FirestoreRestRow,
+} from '@/lib/firebase/firestore-rest';
 import type { ShelterAnimalItem } from '@/packages/type/shelterAnimalTypes';
 
 /** `/api/shelter-data` 쿼리와 동일한 필터 키 (공공 API 파라미터 이름 유지) */
@@ -40,12 +34,10 @@ function stripFirestoreOnlyFields(data: Record<string, unknown>): ShelterAnimalI
   return rest as ShelterAnimalItem;
 }
 
-function snapshotDocToShelterAnimal(
-  docSnap: QueryDocumentSnapshot<DocumentData>,
-): ShelterAnimalItem {
-  const raw = docSnap.data() as Record<string, unknown>;
+function firestoreRowToShelterAnimal(row: FirestoreRestRow): ShelterAnimalItem {
+  const raw = row.data;
   const item = stripFirestoreOnlyFields(raw);
-  const fromId = docSnap.id.split('-');
+  const fromId = row.id.split('-');
   const desertionFromId = fromId[0]?.trim();
   const careFromId = fromId.length > 1 ? fromId.slice(1).join('-') : undefined;
   return {
@@ -99,6 +91,10 @@ function matchesState(item: ShelterAnimalItem, state?: string): boolean {
   if (state === 'notice') return ps === 'notice' || ps === '공고중';
   if (state === 'protect') return ps === 'protect' || ps === '보호중';
   return ps === state;
+}
+
+function isListableState(item: ShelterAnimalItem): boolean {
+  return matchesState(item, 'notice') || matchesState(item, 'protect');
 }
 
 function pickStringField(item: ShelterAnimalItem, camel: string, snake: string): string {
@@ -194,8 +190,84 @@ export function filterShelterAnimalsFromParams(
 }
 
 export async function loadAllShelterAnimalsFromFirestore(): Promise<ShelterAnimalItem[]> {
-  const snap = await getDocs(collection(firestore, 'shelterAnimals'));
-  return snap.docs.map(snapshotDocToShelterAnimal).sort(sortShelterItemsByRecencyDesc);
+  const rows = await listFirestoreCollection('shelterAnimals');
+  return rows.map(firestoreRowToShelterAnimal).sort(sortShelterItemsByRecencyDesc);
+}
+
+function stateQueryValues(state?: string): string[] | null {
+  if (!state) return ['notice', 'protect', '공고중', '보호중'];
+  if (state === 'notice') return ['notice', '공고중'];
+  if (state === 'protect') return ['protect', '보호중'];
+  return [state];
+}
+
+function buildShelterAnimalQueryFilters(params: ShelterDataFirestoreParams) {
+  const filters: Parameters<typeof runFirestoreCollectionQuery>[0]['filters'] = [];
+
+  if (params.orgNm?.trim()) {
+    const orgNm = params.orgNm.trim();
+    return [
+      { field: 'orgNm', op: 'GREATER_THAN_OR_EQUAL' as const, value: orgNm },
+      { field: 'orgNm', op: 'LESS_THAN_OR_EQUAL' as const, value: `${orgNm}\uf8ff` },
+    ];
+  }
+
+  const states = stateQueryValues(params.state);
+
+  if (states && states.length === 1) {
+    filters.push({ field: 'processState', op: 'EQUAL', value: states[0] });
+  } else if (states && states.length > 1) {
+    filters.push({ field: 'processState', op: 'IN', value: states });
+  }
+  if (params.upkind) filters.push({ field: 'upKindCd', op: 'EQUAL', value: params.upkind.trim() });
+  if (params.kind) filters.push({ field: 'kindCd', op: 'EQUAL', value: params.kind.trim() });
+  if (params.sex_cd) filters.push({ field: 'sexCd', op: 'EQUAL', value: params.sex_cd.trim() });
+  if (params.neuter_yn) {
+    filters.push({ field: 'neuterYn', op: 'EQUAL', value: params.neuter_yn.trim() });
+  }
+  if (params.care_reg_no) {
+    filters.push({ field: 'careRegNo', op: 'EQUAL', value: params.care_reg_no.trim() });
+  }
+  if (params.upr_cd) filters.push({ field: 'uprCd', op: 'EQUAL', value: params.upr_cd.trim() });
+  if (params.org_cd) filters.push({ field: 'orgCd', op: 'EQUAL', value: params.org_cd.trim() });
+  if (params.notice_no) {
+    filters.push({ field: 'noticeNo', op: 'EQUAL', value: params.notice_no.trim() });
+  }
+  if (params.desertion_no) {
+    filters.push({ field: 'desertionNo', op: 'EQUAL', value: params.desertion_no.trim() });
+  }
+  return filters;
+}
+
+export async function queryShelterAnimalsFromFirestore(
+  params: ShelterDataFirestoreParams,
+): Promise<{
+  items: ShelterAnimalItem[];
+  pageNo: number;
+  numOfRows: number;
+  hasMore: boolean;
+}> {
+  const pageNo = pageNum(params.pageNo, 1);
+  const numOfRows = rowsNum(params.numOfRows, 1000);
+  const usesOrgPrefixQuery = Boolean(params.orgNm?.trim());
+  const queryLimit = usesOrgPrefixQuery ? Math.min(numOfRows * 5 + 1, 1000) : numOfRows + 1;
+  const offset = (pageNo - 1) * (usesOrgPrefixQuery ? Math.max(queryLimit - 1, numOfRows) : numOfRows);
+  const rows = await runFirestoreCollectionQuery({
+    collectionId: 'shelterAnimals',
+    filters: buildShelterAnimalQueryFilters(params),
+    limit: queryLimit,
+    offset,
+  });
+  const queried = rows.map(firestoreRowToShelterAnimal).sort(sortShelterItemsByRecencyDesc);
+  const filtered = filterShelterAnimalsFromParams(queried, params).filter((item) =>
+    params.state ? true : isListableState(item),
+  );
+  return {
+    items: filtered.slice(0, numOfRows),
+    pageNo,
+    numOfRows,
+    hasMore: filtered.length > numOfRows || rows.length > numOfRows,
+  };
 }
 
 /**
@@ -207,26 +279,13 @@ export async function getShelterAnimalByDesertionNo(
   const trimmed = desertionNo.trim();
   if (!trimmed) return null;
 
-  const startId = `${trimmed}-`;
-  const endId = `${trimmed}-\uf8ff`;
-  const qy = query(
-    collection(firestore, 'shelterAnimals'),
-    where(documentId(), '>=', startId),
-    where(documentId(), '<=', endId),
-    limit(25),
-  );
-  const snap = await getDocs(qy);
-  let rows = snap.docs.map(snapshotDocToShelterAnimal);
-
-  if (rows.length === 0) {
-    const q2 = query(
-      collection(firestore, 'shelterAnimals'),
-      where('desertionNo', '==', trimmed),
-      limit(10),
-    );
-    const snap2 = await getDocs(q2);
-    rows = snap2.docs.map(snapshotDocToShelterAnimal);
-  }
+  const rows = (
+    await runFirestoreCollectionQuery({
+      collectionId: 'shelterAnimals',
+      filters: [{ field: 'desertionNo', op: 'EQUAL', value: trimmed }],
+      limit: 10,
+    })
+  ).map(firestoreRowToShelterAnimal);
 
   if (rows.length === 0) return null;
   const sorted = [...rows].sort(sortShelterItemsByRecencyDesc);
@@ -253,6 +312,20 @@ export function buildAbandonmentPublicV2Json(
       },
     },
   };
+}
+
+export function buildShelterDataJsonFromQueryResult(result: {
+  items: ShelterAnimalItem[];
+  pageNo: number;
+  numOfRows: number;
+  hasMore: boolean;
+}): ReturnType<typeof buildAbandonmentPublicV2Json> {
+  return buildAbandonmentPublicV2Json(
+    result.items,
+    result.pageNo,
+    result.numOfRows,
+    result.hasMore ? result.pageNo * result.numOfRows + 1 : (result.pageNo - 1) * result.numOfRows + result.items.length,
+  );
 }
 
 const pageNum = (raw: string | undefined, fallback: number) => {

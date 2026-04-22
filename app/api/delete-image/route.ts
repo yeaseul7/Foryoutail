@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import cloudinary from '@/lib/cloudinary/cloudinart';
+import { getCloudinaryConfig, signCloudinaryParams } from '@/lib/cloudinary/edge';
+
+export const runtime = 'edge';
 
 /**
  * Cloudinary URL에서 public_id를 추출
@@ -60,11 +62,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await cloudinary.uploader.destroy(publicId, {
-      resource_type: 'image',
-    });
+    const { cloudName, apiKey, apiSecret } = getCloudinaryConfig();
+    const timestamp = Math.floor(Date.now() / 1000);
+    const signedParams = { public_id: publicId, timestamp };
+    const signature = await signCloudinaryParams(signedParams, apiSecret);
 
-    if (result.result === 'ok' || result.result === 'not found') {
+    const deleteForm = new FormData();
+    deleteForm.append('public_id', publicId);
+    deleteForm.append('timestamp', String(timestamp));
+    deleteForm.append('api_key', apiKey);
+    deleteForm.append('signature', signature);
+
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`,
+      {
+        method: 'POST',
+        body: deleteForm,
+      },
+    );
+    const result = await response.json();
+
+    if (response.ok && (result.result === 'ok' || result.result === 'not found')) {
       return NextResponse.json({ success: true });
     } else {
       return NextResponse.json(

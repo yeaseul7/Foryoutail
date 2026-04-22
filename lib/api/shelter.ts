@@ -85,11 +85,27 @@ function normalizeKoreanText(input: string): string {
   return input.toLowerCase().replace(/\s+/g, '');
 }
 
+function isYoungShelterAnimal(item: ShelterAnimalItem): boolean {
+  const specialMark = normalizeKoreanText(item.specialMark ?? '');
+  const youngKeywords = QUICK_FILTER_KEYWORDS.young;
+  if (youngKeywords.some((keyword) => specialMark.includes(normalizeKoreanText(keyword)))) {
+    return true;
+  }
+
+  const birthYear = parseInt(String(item.age ?? '').match(/\d{4}/)?.[0] ?? '', 10);
+  if (!Number.isFinite(birthYear)) return false;
+
+  const thisYear = new Date().getFullYear();
+  return thisYear - birthYear <= 2;
+}
+
 function applyQuickFilterBySpecialMark(
   items: ShelterAnimalItem[],
   quickFilter: QuickFilterKey | null,
 ): ShelterAnimalItem[] {
   if (!quickFilter || quickFilter === 'nearby') return items;
+  if (quickFilter === 'young') return items.filter(isYoungShelterAnimal);
+
   const keywords = QUICK_FILTER_KEYWORDS[quickFilter];
   if (!keywords || keywords.length === 0) return items;
 

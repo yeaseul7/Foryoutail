@@ -5,6 +5,8 @@ import ShelterPostsServer from '@/packages/ui/components/shelter/ShelterPostsSer
 import AbandonedCardSkeleton from '@/packages/ui/components/base/AbandonedCardSkeleton';
 import PreloadSearchModel from './PreloadSearchModel';
 
+export const runtime = 'edge';
+
 /** 공공 API no-store fetch + useSearchParams로 정적 프리렌더 불가 */
 export const dynamic = 'force-dynamic';
 

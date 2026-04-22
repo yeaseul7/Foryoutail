@@ -11,6 +11,7 @@ import { gatherListQuickMatches, type ListQuickFilterId } from '@/lib/shelter/li
 import { QUICK_FILTER_ICONS, QUICK_FILTER_LABEL } from '@/lib/shelter/quickFilterLabels';
 import SearchAi from './SearchAi';
 import { sidoLocation } from '@/static/data/sidoLocation';
+import { MdClose } from 'react-icons/md';
 
 interface ShelterPostsClientProps {
   initialData: FetchShelterAnimalDataResult;
@@ -28,8 +29,23 @@ const LIST_QUICK_BUTTONS: {
   ];
 
 type FilterSummaryRow =
-  | { key: string; variant: 'quick'; quick: NonNullable<AnimalFilterState['quickFilter']> }
-  | { key: string; variant: 'text'; text: string };
+  | {
+      key: string;
+      variant: 'quick';
+      quick: NonNullable<AnimalFilterState['quickFilter']>;
+      removeKey: FilterSummaryRemoveKey;
+    }
+  | { key: string; variant: 'text'; text: string; removeKey: FilterSummaryRemoveKey };
+
+type FilterSummaryRemoveKey =
+  | 'searchQuery'
+  | 'quickFilter'
+  | 'upKindCd'
+  | 'sexCd'
+  | 'state'
+  | 'neuterYn'
+  | 'region'
+  | 'receiptDate';
 
 function parseQuickFilterFromSearchParams(
   raw: string | null,
@@ -89,23 +105,29 @@ function regionShortFromCode(upr_cd: string | null): string | null {
   return getShortSidoName(hit.SIDO_NAME);
 }
 
+function regionShortFromOrgNm(orgNm: string | null | undefined): string | null {
+  if (!orgNm?.trim()) return null;
+  return getShortSidoName(orgNm.trim());
+}
+
 function buildFilterSummaryRows(filters: AnimalFilterState): FilterSummaryRow[] {
   const rows: FilterSummaryRow[] = [];
   let n = 0;
-  const pushText = (text: string) => {
-    rows.push({ key: `t-${n++}`, variant: 'text', text });
+  const pushText = (text: string, removeKey: FilterSummaryRemoveKey) => {
+    rows.push({ key: `t-${n++}`, variant: 'text', text, removeKey });
   };
 
   const q = filters.searchQuery.trim();
   if (q) {
     const short = q.length > 26 ? `${q.slice(0, 26)}…` : q;
-    pushText(`검색 · ${short}`);
+    pushText(`검색 · ${short}`, 'searchQuery');
   }
   if (filters.quickFilter) {
     rows.push({
       key: `q-${filters.quickFilter}`,
       variant: 'quick',
       quick: filters.quickFilter,
+      removeKey: 'quickFilter',
     });
   }
   if (
@@ -113,23 +135,23 @@ function buildFilterSummaryRows(filters: AnimalFilterState): FilterSummaryRow[] 
     filters.upKindCd !== '417000' &&
     UP_KIND_LABEL[filters.upKindCd]
   ) {
-    pushText(`축종 · ${UP_KIND_LABEL[filters.upKindCd]}`);
+    pushText(`축종 · ${UP_KIND_LABEL[filters.upKindCd]}`, 'upKindCd');
   }
   if (filters.sexCd && SEX_LABEL[filters.sexCd]) {
-    pushText(`성별 · ${SEX_LABEL[filters.sexCd]}`);
+    pushText(`성별 · ${SEX_LABEL[filters.sexCd]}`, 'sexCd');
   }
   if (filters.state && STATE_LABEL[filters.state]) {
-    pushText(`상태 · ${STATE_LABEL[filters.state]}`);
+    pushText(`상태 · ${STATE_LABEL[filters.state]}`, 'state');
   }
   if (filters.neuterYn && NEUTER_LABEL[filters.neuterYn]) {
-    pushText(NEUTER_LABEL[filters.neuterYn]);
+    pushText(NEUTER_LABEL[filters.neuterYn], 'neuterYn');
   }
-  const region = regionShortFromCode(filters.upr_cd);
+  const region = regionShortFromCode(filters.upr_cd) ?? regionShortFromOrgNm(filters.orgNm);
   if (region) {
-    pushText(`지역 · ${region}`);
+    pushText(`지역 · ${region}`, 'region');
   }
   const receipt = receiptRangeLabel(filters.bgnde, filters.endde);
-  if (receipt) pushText(receipt);
+  if (receipt) pushText(receipt, 'receiptDate');
   return rows;
 }
 
@@ -154,6 +176,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
     bgnde: null,
     endde: null,
     upr_cd: null,
+    orgNm: null,
   });
   const filtersRef = useRef<AnimalFilterState>(filters);
   const isLoadingMoreRef = useRef(false);
@@ -274,7 +297,8 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
       prevFilters.quickFilter !== newFilters.quickFilter ||
       prevFilters.bgnde !== newFilters.bgnde ||
       prevFilters.endde !== newFilters.endde ||
-      prevFilters.upr_cd !== newFilters.upr_cd;
+      prevFilters.upr_cd !== newFilters.upr_cd ||
+      prevFilters.orgNm !== newFilters.orgNm;
     if (!isSearchQueryChanged && !isOtherFilterChanged) {
       return;
     }
@@ -338,6 +362,45 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
       applyFilters();
     }
   }, []);
+
+  const handleRemoveFilterSummary = useCallback(
+    (removeKey: FilterSummaryRemoveKey) => {
+      const base = filtersRef.current;
+      const next: AnimalFilterState = { ...base };
+
+      switch (removeKey) {
+        case 'searchQuery':
+          next.searchQuery = '';
+          break;
+        case 'quickFilter':
+          next.quickFilter = null;
+          break;
+        case 'upKindCd':
+          next.upKindCd = '417000';
+          break;
+        case 'sexCd':
+          next.sexCd = null;
+          break;
+        case 'state':
+          next.state = null;
+          break;
+        case 'neuterYn':
+          next.neuterYn = null;
+          break;
+        case 'region':
+          next.upr_cd = null;
+          next.orgNm = null;
+          break;
+        case 'receiptDate':
+          next.bgnde = null;
+          next.endde = null;
+          break;
+      }
+
+      handleFilterChange(next);
+    },
+    [handleFilterChange],
+  );
 
   const handleUpKindBadgePress = useCallback(
     (value: (typeof UP_KIND_BADGES)[number]['value']) => {
@@ -425,8 +488,9 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
     const quickFilterRaw = searchParams.get('quickFilter');
     const parsedQuick = parseQuickFilterFromSearchParams(quickFilterRaw);
     const uprCd = searchParams.get('upr_cd');
+    const orgNm = searchParams.get('orgNm')?.trim() || searchParams.get('org_nm')?.trim();
     const hasFilterParams = Boolean(
-      q || sex || upkind || neuter || state || quickFilterRaw || uprCd,
+      q || sex || upkind || neuter || state || quickFilterRaw || uprCd || orgNm,
     );
     if (!hasFilterParams) return;
     appliedUrlQueryRef.current = true;
@@ -445,6 +509,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
       state: state === 'notice' || state === 'protect' ? state : null,
       quickFilter: parsedQuick,
       upr_cd: uprCd && /^\d{7}$/.test(uprCd) ? uprCd : null,
+      orgNm: orgNm || null,
     });
   }, [searchParams, handleFilterChange]);
 
@@ -542,20 +607,37 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
                     >
                       {filterSummaryRows.map((row) => {
                         const chipClass =
-                          'inline-flex max-w-full items-center gap-1 rounded-full border border-primary1/20 bg-primary1/10 px-2.5 py-0.5 text-[11px] font-medium text-primary1 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] sm:text-xs';
+                          'inline-flex max-w-full items-center gap-1 rounded-full border border-primary1/20 bg-primary1/10 px-2.5 py-0.5 text-[11px] font-medium text-primary1 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] transition-colors hover:bg-primary1/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary1/30 sm:text-xs';
                         if (row.variant === 'quick') {
                           const Icon = QUICK_FILTER_ICONS[row.quick];
+                          const label = QUICK_FILTER_LABEL[row.quick];
                           return (
-                            <span key={row.key} role="listitem" className={chipClass}>
+                            <button
+                              key={row.key}
+                              type="button"
+                              role="listitem"
+                              className={chipClass}
+                              aria-label={`${label} 필터 제거`}
+                              onClick={() => handleRemoveFilterSummary(row.removeKey)}
+                            >
                               <Icon className="h-3.5 w-3.5 shrink-0 opacity-90" aria-hidden />
-                              <span className="truncate">{QUICK_FILTER_LABEL[row.quick]}</span>
-                            </span>
+                              <span className="truncate">{label}</span>
+                              <MdClose className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
+                            </button>
                           );
                         }
                         return (
-                          <span key={row.key} role="listitem" className={chipClass}>
+                          <button
+                            key={row.key}
+                            type="button"
+                            role="listitem"
+                            className={chipClass}
+                            aria-label={`${row.text} 필터 제거`}
+                            onClick={() => handleRemoveFilterSummary(row.removeKey)}
+                          >
                             <span className="truncate">{row.text}</span>
-                          </span>
+                            <MdClose className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
+                          </button>
                         );
                       })}
                     </div>
@@ -679,4 +761,3 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
     </div>
   );
 }
-

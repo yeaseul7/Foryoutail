@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import cloudinary from '@/lib/cloudinary/cloudinart';
+import { getCloudinaryConfig, signCloudinaryParams } from '@/lib/cloudinary/edge';
+
+export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,23 +13,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Convert File to Buffer
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const { cloudName, apiKey, apiSecret } = getCloudinaryConfig();
+    const timestamp = Math.floor(Date.now() / 1000);
+    const signedParams = { folder, timestamp };
+    const signature = await signCloudinaryParams(signedParams, apiSecret);
 
-    // Convert buffer to base64 string (Cloudinary prefers base64 over stream for server-side)
-    const base64 = buffer.toString('base64');
+    const uploadForm = new FormData();
+    uploadForm.append('file', file, file.name);
+    uploadForm.append('folder', folder);
+    uploadForm.append('timestamp', String(timestamp));
+    uploadForm.append('api_key', apiKey);
+    uploadForm.append('signature', signature);
 
-    // Upload to Cloudinary using base64
-    const result = await cloudinary.uploader.upload(
-      `data:${file.type};base64,${base64}`,
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
       {
-        folder,
-        resource_type: 'image',
-        quality: 'auto',
-        fetch_format: 'auto',
+        method: 'POST',
+        body: uploadForm,
       },
     );
+
+    const result = await response.json();
+    if (!response.ok) {
+      const message =
+        typeof result?.error?.message === 'string'
+          ? result.error.message
+          : 'Cloudinary upload failed';
+      throw new Error(message);
+    }
 
     return NextResponse.json({
       url: result.secure_url,

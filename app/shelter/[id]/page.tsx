@@ -7,6 +7,8 @@ import {
 } from '@/packages/utils/metadata';
 import { getShelterAnimalByDesertionNo } from '@/lib/utils/shelterAnimalsFirestore';
 
+export const runtime = 'edge';
+
 const baseUrl = getBaseUrl();
 
 async function fetchAnimalData(desertionNo: string) {
