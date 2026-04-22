@@ -1,19 +1,67 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type PropsWithChildren,
+  type RefObject,
+} from 'react';
 import {
   fetchShelterAnimalDataNoticeProtectMerged,
   type AnimalFilterState,
 } from '@/lib/api/shelter';
-import type { ShelterAnimalItem } from '@/packages/type/postType';
+import type { ShelterAnimalItem } from '@/packages/type/shelterAnimalTypes';
 import RegionalNearbyAnimalCard from '@/packages/ui/components/shelter/RegionalNearbyAnimalCard';
 import RegionalNearbyAnimalCardSkeleton from '@/packages/ui/components/base/RegionalNearbyAnimalCardSkeleton';
 import { DISPLAY_COUNT } from '@/packages/ui/components/shelter/horizontalAnimalCarousel';
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
 
+/* -------------------------------------------------------------------------- */
+/*  상수                                                                       */
+/* -------------------------------------------------------------------------- */
+
 const MATCHED_ADDRESS_KEY = 'matched_address';
 const POLL_MS = 500;
-const POLL_MAX_MS = 15000;
+const POLL_MAX_MS = 15_000;
+const SKELETON_PLACEHOLDERS = 8;
+const SCROLL_STEP_PX = 360;
+
+const TITLE_NEAR_SUFFIX = ' 근처 아이들';
+const DEFAULT_SECTION_TITLE = `내 지역${TITLE_NEAR_SUFFIX}`;
+const FETCH_ERROR = '유기동물 데이터를 불러오지 못했습니다.';
+const LIST_ARIA = '내 지역 근처 입양 공고 목록';
+
+const SECTION_SHELL =
+  'w-full pt-4 sm:pt-5 pb-6 sm:pb-8 rounded-2xl bg-gray-100 px-4 sm:px-5';
+
+const SCROLLER_ROW =
+  'flex gap-8 sm:gap-10 overflow-x-auto pt-2 pb-2 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden';
+
+const SCROLL_NAV_BTN =
+  'inline-flex items-center gap-1 rounded-full border border-primary1/30 bg-primary1/10 px-2.5 py-1.5 text-xs font-semibold text-primary1 transition-colors hover:bg-primary1/20';
+
+const BASE_FILTERS: Omit<AnimalFilterState, 'upr_cd'> = {
+  sexCd: null,
+  state: null,
+  upKindCd: null,
+  neuterYn: null,
+  quickFilter: null,
+  searchQuery: '',
+  bgnde: null,
+  endde: null,
+};
+
+/* -------------------------------------------------------------------------- */
+/*  localStorage / 라벨                                                       */
+/* -------------------------------------------------------------------------- */
+
+type MatchedSido = {
+  sidoCd: string;
+  sidoName: string | null;
+  level1: string | null;
+};
 
 function shortenAreaLabel(level1: string | null, sidoName: string | null): string {
   const raw = (level1?.trim() || sidoName?.trim()) ?? '';
@@ -22,20 +70,18 @@ function shortenAreaLabel(level1: string | null, sidoName: string | null): strin
   const strip = (suffix: string) => {
     if (s.endsWith(suffix)) s = s.slice(0, -suffix.length);
   };
-  strip('\uD2B9\uBCC4\uC790\uCE58\uC2DC');
-  strip('\uD2B9\uBCC4\uC790\uCE58\uB3C4');
-  strip('\uD2B9\uBCC4\uC2DC');
-  strip('\uAD11\uC5ED\uC2DC');
-  strip('\uB3C4');
+  strip('특별자치시');
+  strip('특별자치도');
+  strip('특별시');
+  strip('광역시');
+  strip('도');
   s = s.trim();
+  console.log('s', s);
+  console.log('raw', raw);
   return s || raw;
 }
 
-function readMatchedSido(): {
-  sidoCd: string;
-  sidoName: string | null;
-  level1: string | null;
-} | null {
+function readMatchedSido(): MatchedSido | null {
   if (typeof window === 'undefined') return null;
   const raw = localStorage.getItem(MATCHED_ADDRESS_KEY);
   if (!raw) return null;
@@ -58,16 +104,20 @@ function readMatchedSido(): {
   return null;
 }
 
-const BASE_FILTERS: Omit<AnimalFilterState, 'upr_cd'> = {
-  sexCd: null,
-  state: null,
-  upKindCd: null,
-  neuterYn: null,
-  quickFilter: null,
-  searchQuery: '',
-  bgnde: null,
-  endde: null,
-};
+async function fetchNearbyPage(matchedSido: MatchedSido): Promise<ShelterAnimalItem[]> {
+  const orgNm = (matchedSido.sidoName?.trim() || matchedSido.level1?.trim()) ?? '';
+  const filters: AnimalFilterState = {
+    ...BASE_FILTERS,
+    upr_cd: null,
+    orgNm: orgNm || null,
+  };
+  const result = await fetchShelterAnimalDataNoticeProtectMerged(1, filters);
+  return result.items.slice(0, DISPLAY_COUNT);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  UI 조각                                                                   */
+/* -------------------------------------------------------------------------- */
 
 function NearSectionHeading({ title }: { title: string }) {
   return (
@@ -89,66 +139,123 @@ function NearSectionHeading({ title }: { title: string }) {
   );
 }
 
-const TITLE_NEAR_SUFFIX = ` \uADFC\uCC98 \uC544\uC774\uB4E4`;
-const DEFAULT_SECTION_TITLE = `\uB0B4 \uC9C0\uC5ED${TITLE_NEAR_SUFFIX}`;
-const FETCH_ERROR = `\uC720\uAE30\uB3D9\uBB3C \uB370\uC774\uD130\uB97C \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4.`;
-const LIST_ARIA = `\uB0B4 \uC9C0\uC5ED \uADFC\uCC98 \uC785\uC591 \uACF5\uACE0 \uBAA9\uB85D`;
+function HorizontalScrollNav({
+  onScroll,
+}: {
+  onScroll: (dir: 'left' | 'right') => void;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      <button
+        type="button"
+        className={SCROLL_NAV_BTN}
+        aria-label="왼쪽으로 이동"
+        onClick={() => onScroll('left')}
+      >
+        <MdChevronLeft className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        className={SCROLL_NAV_BTN}
+        aria-label="오른쪽으로 이동"
+        onClick={() => onScroll('right')}
+      >
+        <MdChevronRight className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
 
-export default function SidoMatchedHorizontalAnimalList() {
+function SectionToolbar({
+  title,
+  onScroll,
+}: {
+  title: string;
+  onScroll: (dir: 'left' | 'right') => void;
+}) {
+  return (
+    <div className="mb-1 flex items-center justify-between gap-2">
+      <NearSectionHeading title={title} />
+      <HorizontalScrollNav onScroll={onScroll} />
+    </div>
+  );
+}
+
+function HorizontalScroller({
+  scrollerRef,
+  asList,
+  children,
+}: PropsWithChildren<{
+  scrollerRef: RefObject<HTMLDivElement | null>;
+  asList?: boolean;
+}>) {
+  return (
+    <div
+      ref={scrollerRef}
+      className={SCROLLER_ROW}
+      {...(asList ? { role: 'list' as const, 'aria-label': LIST_ARIA } : {})}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  데이터: 매칭 주소가 생길 때까지 폴링 후 근처 공고 로드                            */
+/* -------------------------------------------------------------------------- */
+
+function useMatchedSidoNearbyAnimals() {
   const [items, setItems] = useState<ShelterAnimalItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sectionTitle, setSectionTitle] = useState(DEFAULT_SECTION_TITLE);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
-  const scrollByCard = (dir: 'left' | 'right') => {
+  const scrollByCard = useCallback((dir: 'left' | 'right') => {
     const node = scrollerRef.current;
     if (!node) return;
-    node.scrollBy({ left: dir === 'left' ? -360 : 360, behavior: 'smooth' });
-  };
+    node.scrollBy({
+      left: dir === 'left' ? -SCROLL_STEP_PX : SCROLL_STEP_PX,
+      behavior: 'smooth',
+    });
+  }, []);
 
   useEffect(() => {
-    let isMounted = true;
+    let alive = true;
     let pollTimer: ReturnType<typeof setInterval> | null = null;
     let stopPoll: ReturnType<typeof setTimeout> | null = null;
 
-    const runFetch = async (
-      sidoCd: string,
-      sidoName: string | null,
-      level1: string | null,
-    ) => {
-      if (!isMounted) return;
-      setSectionTitle(`${shortenAreaLabel(level1, sidoName)}${TITLE_NEAR_SUFFIX}`);
+    const runForMatch = async (m: MatchedSido) => {
+      if (!alive) return;
+      setSectionTitle(`${shortenAreaLabel(m.level1, m.sidoName)}${TITLE_NEAR_SUFFIX}`);
       try {
-        const filters: AnimalFilterState = { ...BASE_FILTERS, upr_cd: sidoCd };
-        const result = await fetchShelterAnimalDataNoticeProtectMerged(1, filters);
-        if (!isMounted) return;
-        setItems(result.items.slice(0, DISPLAY_COUNT));
+        const next = await fetchNearbyPage(m);
+        if (!alive) return;
+        setItems(next);
       } catch (e) {
-        if (!isMounted) return;
+        if (!alive) return;
         setError(e instanceof Error ? e.message : FETCH_ERROR);
         setItems([]);
       }
     };
 
-    const matched = readMatchedSido();
-    if (matched) {
-      void runFetch(matched.sidoCd, matched.sidoName, matched.level1);
+    const immediate = readMatchedSido();
+    if (immediate) {
+      void runForMatch(immediate);
       return () => {
-        isMounted = false;
+        alive = false;
       };
     }
 
     pollTimer = setInterval(() => {
       const m = readMatchedSido();
-      if (m && pollTimer) {
-        clearInterval(pollTimer);
-        pollTimer = null;
-        if (stopPoll) {
-          clearTimeout(stopPoll);
-          stopPoll = null;
-        }
-        void runFetch(m.sidoCd, m.sidoName, m.level1);
+      if (!m || !pollTimer) return;
+      clearInterval(pollTimer);
+      pollTimer = null;
+      if (stopPoll) {
+        clearTimeout(stopPoll);
+        stopPoll = null;
       }
+      void runForMatch(m);
     }, POLL_MS);
 
     stopPoll = setTimeout(() => {
@@ -156,52 +263,50 @@ export default function SidoMatchedHorizontalAnimalList() {
         clearInterval(pollTimer);
         pollTimer = null;
       }
-      if (!isMounted) return;
+      if (!alive) return;
       if (readMatchedSido() == null) {
         setItems([]);
       }
     }, POLL_MAX_MS);
 
     return () => {
-      isMounted = false;
+      alive = false;
       if (pollTimer) clearInterval(pollTimer);
       if (stopPoll) clearTimeout(stopPoll);
     };
   }, []);
 
-  const sectionShell =
-    'w-full pt-4 sm:pt-5 pb-6 sm:pb-8 rounded-2xl bg-gray-100 px-4 sm:px-5';
+  return { items, error, sectionTitle, scrollerRef, scrollByCard };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  페이지 섹션                                                                */
+/* -------------------------------------------------------------------------- */
+
+export default function SidoMatchedHorizontalAnimalList() {
+  const { items, error, sectionTitle, scrollerRef, scrollByCard } =
+    useMatchedSidoNearbyAnimals();
 
   if (error) {
     return (
-      <section className={sectionShell}>
+      <section className={SECTION_SHELL}>
         <NearSectionHeading title={sectionTitle} />
-        <p className="text-xs text-red-500 mt-2">{error}</p>
+        <p className="mt-2 text-xs text-red-500">{error}</p>
       </section>
     );
   }
 
   if (items === null) {
     return (
-      <section className={sectionShell}>
-        <div className="mb-1 flex items-center justify-between gap-2">
-          <NearSectionHeading title={sectionTitle} />
-          <div className="flex items-center gap-1">
-            <button type="button" onClick={() => scrollByCard('left')} className="inline-flex items-center gap-1 rounded-full border border-primary1/30 bg-primary1/10 px-2.5 py-1.5 text-xs font-semibold text-primary1 transition-colors hover:bg-primary1/20" aria-label="왼쪽으로 이동">
-              <MdChevronLeft className="h-4 w-4" />
-            </button>
-            <button type="button" onClick={() => scrollByCard('right')} className="inline-flex items-center gap-1 rounded-full border border-primary1/30 bg-primary1/10 px-2.5 py-1.5 text-xs font-semibold text-primary1 transition-colors hover:bg-primary1/20" aria-label="오른쪽으로 이동">
-              <MdChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-        <div ref={scrollerRef} className="flex gap-8 sm:gap-10 overflow-x-auto pt-2 pb-2 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {Array.from({ length: 8 }).map((_, i) => (
+      <section className={SECTION_SHELL}>
+        <SectionToolbar title={sectionTitle} onScroll={scrollByCard} />
+        <HorizontalScroller scrollerRef={scrollerRef}>
+          {Array.from({ length: SKELETON_PLACEHOLDERS }, (_, i) => (
             <div key={i} className="snap-center first:pl-0">
               <RegionalNearbyAnimalCardSkeleton />
             </div>
           ))}
-        </div>
+        </HorizontalScroller>
       </section>
     );
   }
@@ -211,30 +316,15 @@ export default function SidoMatchedHorizontalAnimalList() {
   }
 
   return (
-    <section className={sectionShell}>
-      <div className="mb-1 flex items-center justify-between gap-2">
-        <NearSectionHeading title={sectionTitle} />
-        <div className="flex items-center gap-1">
-          <button type="button" onClick={() => scrollByCard('left')} className="inline-flex items-center gap-1 rounded-full border border-primary1/30 bg-primary1/10 px-2.5 py-1.5 text-xs font-semibold text-primary1 transition-colors hover:bg-primary1/20" aria-label="왼쪽으로 이동">
-            <MdChevronLeft className="h-4 w-4" />
-          </button>
-          <button type="button" onClick={() => scrollByCard('right')} className="inline-flex items-center gap-1 rounded-full border border-primary1/30 bg-primary1/10 px-2.5 py-1.5 text-xs font-semibold text-primary1 transition-colors hover:bg-primary1/20" aria-label="오른쪽으로 이동">
-            <MdChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-      <div
-        ref={scrollerRef}
-        className="flex gap-8 sm:gap-10 overflow-x-auto pt-2 pb-2 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        role="list"
-        aria-label={LIST_ARIA}
-      >
+    <section className={SECTION_SHELL}>
+      <SectionToolbar title={sectionTitle} onScroll={scrollByCard} />
+      <HorizontalScroller scrollerRef={scrollerRef} asList>
         {items.map((item) => (
-          <div key={item.desertionNo} className="snap-center">
+          <div key={item.desertionNo} className="snap-center" role="listitem">
             <RegionalNearbyAnimalCard item={item} />
           </div>
         ))}
-      </div>
+      </HorizontalScroller>
     </section>
   );
 }

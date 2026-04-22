@@ -1,4 +1,4 @@
-import { ShelterAnimalData, ShelterAnimalItem } from '@/packages/type/postType';
+import type { ShelterAnimalData, ShelterAnimalItem } from '@/packages/type/shelterAnimalTypes';
 
 /** 공고/보호 중만 목록에 노출 (공공 API·Firestore에 따라 영문·한글 모두 허용) */
 export function isShelterAnimalListable(processState: string | null | undefined): boolean {
@@ -47,6 +47,7 @@ export interface AnimalFilterState {
   bgnde: string | null;
   endde: string | null;
   upr_cd: string | null; // 시도 코드
+  orgNm?: string | null; // 관할기관명
 }
 
 const QUICK_FILTER_KEYWORDS: Record<Exclude<QuickFilterKey, 'nearby'>, string[]> = {
@@ -176,6 +177,7 @@ async function fetchShelterAnimalDataFromApi(
   if (filters.bgnde) params.append('bgnde', filters.bgnde);
   if (filters.endde) params.append('endde', filters.endde);
   if (filters.upr_cd) params.append('upr_cd', filters.upr_cd);
+  if (filters.orgNm) params.append('orgNm', filters.orgNm);
 
   const response = await fetch(`/api/shelter-data?${params.toString()}`);
   if (!response.ok) {
@@ -215,6 +217,7 @@ export async function fetchShelterAnimalDataNoticeProtectMerged(
     fetchShelterAnimalData(page, { ...base, state: 'notice' }),
     fetchShelterAnimalData(page, { ...base, state: 'protect' }),
   ]);
+
   const merged = mergeShelterItemsByDesertionNo(noticeRes.items, protectRes.items);
   const listable = merged.filter((it) => isShelterAnimalListable(it.processState));
   return {

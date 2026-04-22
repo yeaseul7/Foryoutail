@@ -2,10 +2,10 @@
 
 import PageTemplate from '@/packages/ui/components/base/PageTemplate';
 import PostScrollList from '@/packages/ui/components/home/post/PostScrollList';
-import TagList from '@/packages/ui/components/home/post/TagList';
 import UserHeader from '@/packages/ui/components/home/profile/UserHeader';
 import ProfileSwitchTag, { type ProfileCategory } from '@/packages/ui/components/home/ProfileSwitchTag';
 import LikedAnimalList from '@/packages/ui/components/shelter/LikedAnimalList';
+import FavoriteShelterList from '@/packages/ui/components/shelter/FavoriteShelterList';
 import { useAuth } from '@/lib/firebase/auth';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
@@ -24,13 +24,11 @@ export default function PostsListPage() {
         <div className="flex flex-col gap-4 px-4 mx-auto w-full max-w-4xl sm:px-6 lg:px-8">
           <UserHeader />
           <ProfileSwitchTag category={category} setCategory={setCategory} isOwnProfile={isOwnProfile} />
-          {category === 'posts' && (
-            <>
-              <TagList userId={userId} />
-              <PostScrollList userId={userId} />
-            </>
+          {category === 'posts' && <PostScrollList userId={userId} />}
+          {category === 'favoriteShelters' && isOwnProfile && (
+            <FavoriteShelterList userId={userId} />
           )}
-          {category === 'shelter' && isOwnProfile && (
+          {category === 'likedAnimals' && isOwnProfile && (
             <LikedAnimalList userId={userId} />
           )}
         </div>

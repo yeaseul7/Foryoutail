@@ -5,42 +5,13 @@ import {
   generateMetadata as generateMetadataUtil,
   generateDefaultMetadata,
 } from '@/packages/utils/metadata';
+import { getShelterAnimalByDesertionNo } from '@/lib/utils/shelterAnimalsFirestore';
 
 const baseUrl = getBaseUrl();
 
 async function fetchAnimalData(desertionNo: string) {
   try {
-    console.log('[fetchAnimalData] 시작 - desertionNo:', desertionNo);
-
-    const params = new URLSearchParams();
-    params.append('desertion_no', desertionNo);
-    params.append('numOfRows', '1');
-
-    const apiUrl = `${baseUrl}/api/shelter-data?${params.toString()}`;
-
-    const response = await fetch(apiUrl, {
-      cache: 'no-store',
-    });
-
-
-    if (!response.ok) {
-      console.error('[fetchAnimalData] Response not OK');
-      return null;
-    }
-
-    const shelterAnimalResponse = await response.json();
-
-    const items = shelterAnimalResponse?.response?.body?.items?.item;
-
-    if (items) {
-      const itemsArray = Array.isArray(items) ? items : [items];
-
-      if (itemsArray.length > 0) {
-        return itemsArray[0];
-      }
-    }
-
-    return null;
+    return await getShelterAnimalByDesertionNo(desertionNo);
   } catch (error) {
     console.error('[fetchAnimalData] 에러:', error);
     return null;

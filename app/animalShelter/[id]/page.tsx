@@ -2,7 +2,10 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import PageTemplate from "@/packages/ui/components/base/PageTemplate";
 import { ShelterInfoItem } from '@/packages/type/shelterTyps';
-import { ShelterAnimalItem } from '@/packages/type/postType';
+import type {
+    ShelterAnimalFirestoreDoc,
+    ShelterAnimalItem,
+} from '@/packages/type/shelterAnimalTypes';
 import { fetchShelterInfoByCareRegNo } from '@/lib/api/shelterInfo';
 import ShelterInfoComponent from '@/packages/ui/components/home/shelterList/ShelterInfoComponent';
 import { collection, getDocs } from 'firebase/firestore';
@@ -38,7 +41,7 @@ async function fetchShelterAnimals(careRegNo: string): Promise<ShelterAnimalItem
         return snap.docs
             .filter((d) => d.id.endsWith(suffix))
             .map((d) => {
-                const raw = d.data() as ShelterAnimalItem;
+                const raw = d.data() as ShelterAnimalFirestoreDoc;
                 const rest = { ...raw } as Record<string, unknown>;
                 // Firestore Timestamp(updatedAt)는 Server->Client props로 직접 넘기지 않음
                 delete rest.updatedAt;

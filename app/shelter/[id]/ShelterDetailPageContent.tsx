@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import PageTemplate from '@/packages/ui/components/base/PageTemplate';
 import Loading from '@/packages/ui/components/base/Loading';
-import { ShelterAnimalItem, ShelterAnimalData } from '@/packages/type/postType';
+import { ShelterAnimalItem } from '@/packages/type/postType';
 import { ShelterInfoItem } from '@/packages/type/shelterTyps';
 import { IoIosArrowBack } from 'react-icons/io';
 import Notfound_ad_animal from '@/packages/ui/components/base/Notfound_ad_animal';
@@ -13,6 +13,7 @@ import AnimalInfoCard from '@/packages/ui/components/shelter/AnimalInfoCard';
 import AnimalNotice from '@/packages/ui/components/common/AnimalNotice';
 import PageFooter from '@/packages/ui/components/base/PageFooter';
 import { fetchShelterInfoByCareRegNo } from '@/lib/api/shelterInfo';
+import { getShelterAnimalByDesertionNo } from '@/lib/utils/shelterAnimalsFirestore';
 
 interface ShelterDetailPageContentProps {
   desertionNo: string;
@@ -40,28 +41,9 @@ export default function ShelterDetailPageContent({
 
       try {
         setLoading(true);
-        const params = new URLSearchParams();
-        params.append('desertion_no', desertionNo);
-        params.append('numOfRows', '1');
-
-        const response = await fetch(`/api/shelter-data?${params.toString()}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch animal data');
-        }
-
-        const shelterAnimalResponse = (await response.json()) as {
-          response: ShelterAnimalData;
-        };
-
-        const items = shelterAnimalResponse?.response?.body?.items?.item;
-        if (items) {
-          const itemsArray = Array.isArray(items) ? items : [items];
-          if (itemsArray.length > 0) {
-            console.log(itemsArray[0]);
-            setAnimalData(itemsArray[0]);
-          } else {
-            setError('동물 정보를 찾을 수 없습니다.');
-          }
+        const row = await getShelterAnimalByDesertionNo(desertionNo);
+        if (row) {
+          setAnimalData(row);
         } else {
           setError('동물 정보를 찾을 수 없습니다.');
         }

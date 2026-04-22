@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
+import { getShelterAnimalByDesertionNo } from '@/lib/utils/shelterAnimalsFirestore';
 
-export const runtime = 'edge';
 export const alt = '꼬순내 - 유기동물 입양 정보';
 export const size = {
   width: 1200,
@@ -8,33 +8,9 @@ export const size = {
 };
 export const contentType = 'image/png';
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_BASE_URL ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-  'http://localhost:3001';
-
 async function fetchAnimalData(desertionNo: string) {
   try {
-    const params = new URLSearchParams();
-    params.append('desertion_no', desertionNo);
-    params.append('numOfRows', '1');
-
-    const response = await fetch(`${baseUrl}/api/shelter-data?${params.toString()}`, {
-      cache: 'no-store',
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const shelterAnimalResponse = await response.json();
-    const items = shelterAnimalResponse?.response?.body?.items?.item;
-
-    if (items) {
-      const itemsArray = Array.isArray(items) ? items : [items];
-      return itemsArray.length > 0 ? itemsArray[0] : null;
-    }
-    return null;
+    return await getShelterAnimalByDesertionNo(desertionNo);
   } catch (error) {
     console.error('OG Image - 동물 정보 조회 중 오류 발생:', error);
     return null;
