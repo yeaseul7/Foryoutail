@@ -94,6 +94,7 @@ export interface AnimalFilterState {
   bgnde: string | null;
   endde: string | null;
   upr_cd: string | null;
+  orgNm?: string | null;
 }
 
 interface AnimalFilterHeaderProps {
@@ -106,7 +107,7 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
   const [sidoList, setSidoList] = useState<SidoItem[]>([]);
 
-  const { floatingStyles: datePopoverStyles, context: datePopoverContext } = useFloating({
+  const { floatingStyles: datePopoverStyles, refs: datePopoverRefs, context: datePopoverContext } = useFloating({
     open: dateRangeOpen,
     onOpenChange: (open) => {
       setDateRangeOpen(open);
@@ -122,6 +123,18 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
   const dateRole = useRole(datePopoverContext);
   const { getReferenceProps: getDateReferenceProps, getFloatingProps: getDateFloatingProps } =
     useInteractions([dateClick, dateDismiss, dateRole]);
+  const setDateReference = useCallback(
+    (node: HTMLButtonElement | null) => {
+      datePopoverRefs.setReference(node);
+    },
+    [datePopoverRefs],
+  );
+  const setDateFloating = useCallback(
+    (node: HTMLDivElement | null) => {
+      datePopoverRefs.setFloating(node);
+    },
+    [datePopoverRefs],
+  );
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -183,6 +196,16 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
     setDateRangeOpen(false);
   };
 
+  const handleRegionFilterChange = (sido: SidoItem | null) => {
+    onFilterChange({
+      ...filters,
+      upr_cd: null,
+      orgNm: sido?.SIDO_NAME ?? null,
+    });
+    setOpenDropdown(null);
+    setDateRangeOpen(false);
+  };
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newFilters = { ...filters, searchQuery: e.target.value };
     onFilterChange(newFilters);
@@ -223,6 +246,7 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
   };
 
   const getRegionFilterLabel = (): string => {
+    if (filters.orgNm?.trim()) return getShortSidoName(filters.orgNm.trim());
     if (!filters.upr_cd) return '전국';
     const hit = sidoList.find((s) => s.SIDO_CD === filters.upr_cd);
     return hit ? getShortSidoName(hit.SIDO_NAME) : '전국';
@@ -322,9 +346,9 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
                   >
                     <li
                       role="option"
-                      aria-selected={!filters.upr_cd}
-                      className={filterDropdownOptionStateClass(!filters.upr_cd)}
-                      onClick={() => handleFilterChange('upr_cd', null)}
+                      aria-selected={!filters.upr_cd && !filters.orgNm}
+                      className={filterDropdownOptionStateClass(!filters.upr_cd && !filters.orgNm)}
+                      onClick={() => handleRegionFilterChange(null)}
                     >
                       전국
                     </li>
@@ -332,9 +356,9 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
                       <li
                         key={sido.SIDO_CD}
                         role="option"
-                        aria-selected={filters.upr_cd === sido.SIDO_CD}
-                        className={filterDropdownOptionStateClass(filters.upr_cd === sido.SIDO_CD)}
-                        onClick={() => handleFilterChange('upr_cd', sido.SIDO_CD)}
+                        aria-selected={filters.orgNm === sido.SIDO_NAME || filters.upr_cd === sido.SIDO_CD}
+                        className={filterDropdownOptionStateClass(filters.orgNm === sido.SIDO_NAME || filters.upr_cd === sido.SIDO_CD)}
+                        onClick={() => handleRegionFilterChange(sido)}
                       >
                         {getShortSidoName(sido.SIDO_NAME)}
                       </li>
@@ -348,6 +372,7 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
             <div className={filterDateFieldWrapClass}>
               <button
                 type="button"
+                ref={setDateReference}
                 {...getDateReferenceProps({
                   className: filterPillButtonClass,
                 })}
@@ -367,6 +392,7 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
                 <FloatingPortal>
                   <div
                     data-date-range-popover
+                    ref={setDateFloating}
                     style={datePopoverStyles}
                     {...getDateFloatingProps({
                       className:
@@ -409,11 +435,11 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
             </div>
 
             {/* 필터 초기화 */}
-            {(filters.sexCd !== null || filters.state !== null || (filters.upKindCd !== null && filters.upKindCd !== '417000') || filters.neuterYn !== null || filters.quickFilter !== null || filters.searchQuery || filters.bgnde || filters.endde || filters.upr_cd) && (
+            {(filters.sexCd !== null || filters.state !== null || (filters.upKindCd !== null && filters.upKindCd !== '417000') || filters.neuterYn !== null || filters.quickFilter !== null || filters.searchQuery || filters.bgnde || filters.endde || filters.upr_cd || filters.orgNm) && (
               <button
                 type="button"
                 onClick={() => {
-                  const resetFilters = { sexCd: null, state: null, upKindCd: '417000', neuterYn: null, quickFilter: null, searchQuery: '', bgnde: null, endde: null, upr_cd: null };
+                  const resetFilters = { sexCd: null, state: null, upKindCd: '417000', neuterYn: null, quickFilter: null, searchQuery: '', bgnde: null, endde: null, upr_cd: null, orgNm: null };
                   onFilterChange(resetFilters);
                   setStartDate('');
                   setEndDate('');

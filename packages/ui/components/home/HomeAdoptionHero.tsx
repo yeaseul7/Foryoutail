@@ -15,13 +15,22 @@ const MAIN_CTA_LABEL = '입양 공고 더 보기';
 export default function HomeAdoptionHero() {
   const router = useRouter();
 
-  const getMatchedSidoCd = (): string | null => {
+  const getMatchedOrgNm = (): string | null => {
     if (typeof window === 'undefined') return null;
     try {
       const raw = localStorage.getItem('matched_address');
       if (!raw) return null;
-      const parsed = JSON.parse(raw) as { sidoCd?: unknown };
-      return typeof parsed.sidoCd === 'string' ? parsed.sidoCd : null;
+      const parsed = JSON.parse(raw) as {
+        sidoName?: unknown;
+        level1?: unknown;
+      };
+      if (typeof parsed.sidoName === 'string' && parsed.sidoName.trim()) {
+        return parsed.sidoName.trim();
+      }
+      if (typeof parsed.level1 === 'string' && parsed.level1.trim()) {
+        return parsed.level1.trim();
+      }
+      return null;
     } catch {
       return null;
     }
@@ -29,12 +38,11 @@ export default function HomeAdoptionHero() {
 
   const applyQuickFilter = (key: QuickFilterKey) => {
     const params = new URLSearchParams();
-    params.set('state', 'notice');
     params.set('quickFilter', key);
 
     if (key === 'nearby') {
-      const uprCd = getMatchedSidoCd();
-      if (uprCd) params.set('upr_cd', uprCd);
+      const orgNm = getMatchedOrgNm();
+      if (orgNm) params.set('orgNm', orgNm);
     }
 
     router.push(`/shelter?${params.toString()}`);

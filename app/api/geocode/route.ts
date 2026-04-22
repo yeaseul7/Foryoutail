@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const runtime = 'edge';
+
 /** coord2jibun API 응답을 getAddress와 동일한 형식으로 변환 (프론트 호환) */
 function normalizeCoord2JibunResponse(addr: string): { response: { status: string; result: Array<{ structure: { level1: string } }> } } {
   // 지번주소 첫 토큰이 시/도 (예: 서울특별시, 경기도, 세종특별자치시)

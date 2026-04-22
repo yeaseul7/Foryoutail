@@ -13,6 +13,8 @@ import {
 
 import ReadPostContentSkeleton from '@/packages/ui/components/base/ReadPostContentSkeleton';
 
+export const runtime = 'edge';
+
 // Tiptap을 사용하는 ReadPostContent를 동적 import로 지연 로드
 const ReadPostContent = dynamic(
   () => import('@/packages/ui/components/home/read/ReadPostContent'),

@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { unstable_cache } from 'next/cache';
 import type { ShelterDataFirestoreParams } from '@/lib/utils/shelterAnimalsFirestore';
 import {
   buildShelterDataJsonForDesertionNo,
-  buildShelterDataJsonFromAllItems,
-  loadAllShelterAnimalsFromFirestore,
+  buildShelterDataJsonFromQueryResult,
+  queryShelterAnimalsFromFirestore,
 } from '@/lib/utils/shelterAnimalsFirestore';
 
-const loadAllShelterAnimalsCached = unstable_cache(
-  () => loadAllShelterAnimalsFromFirestore(),
-  ['shelter-data-shelterAnimals-snapshot'],
-  { revalidate: 60 },
-);
+export const runtime = 'edge';
 
 function parseShelterDataParams(searchParams: URLSearchParams): ShelterDataFirestoreParams {
   const params: ShelterDataFirestoreParams = {};
@@ -51,13 +46,13 @@ export async function GET(request: NextRequest) {
 
     const data = params.desertion_no?.trim()
       ? await buildShelterDataJsonForDesertionNo(params)
-      : buildShelterDataJsonFromAllItems(await loadAllShelterAnimalsCached(), params);
+      : buildShelterDataJsonFromQueryResult(await queryShelterAnimalsFromFirestore(params));
 
     return NextResponse.json(data, {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+        'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1800',
       },
     });
   } catch (error) {

@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  limit,
-  query,
-  where,
-  type QueryConstraint,
-} from 'firebase/firestore';
-import { firestore } from '@/lib/firebase/firebase';
+  getFirestoreDocument,
+  runFirestoreCollectionQuery,
+} from '@/lib/firebase/firestore-rest';
 import type { ShelterInfoItem } from '@/packages/type/shelterTyps';
 import { sidoLocation } from '@/static/data/sidoLocation';
+
+export const runtime = 'edge';
 
 interface ShelterInfoParams {
   care_reg_no?: string;
@@ -75,53 +70,42 @@ function normalizeShelterItem(
 }
 
 async function queryShelterDocs(params: ShelterInfoParams): Promise<ShelterInfoItem[]> {
-  const coll = collection(firestore, 'shelter-info');
-  const constraints: QueryConstraint[] = [];
-  let fallbackConstraints: QueryConstraint[] | null = null;
-
   if (params.care_reg_no) {
     const careRegNo = params.care_reg_no.trim();
     if (careRegNo) {
-      const byDocId = await getDoc(doc(coll, careRegNo));
-      if (byDocId.exists()) {
-        return [
-          normalizeShelterItem(
-            byDocId.id,
-            byDocId.data() as Record<string, unknown>,
-          ),
-        ];
-      }
-      constraints.push(where('careRegNo', '==', careRegNo));
-      fallbackConstraints = [where('care_reg_no', '==', careRegNo)];
+      const byDocId = await getFirestoreDocument('shelter-info', careRegNo);
+      if (byDocId) return [normalizeShelterItem(byDocId.id, byDocId.data)];
     }
-  }
-  if (params.upr_cd) {
-    constraints.push(where('uprCd', '==', params.upr_cd));
-    fallbackConstraints = (fallbackConstraints ?? []).concat(
-      where('upr_cd', '==', params.upr_cd),
-    );
-  }
-  if (params.org_cd) {
-    constraints.push(where('orgCd', '==', params.org_cd));
-    fallbackConstraints = (fallbackConstraints ?? []).concat(
-      where('org_cd', '==', params.org_cd),
-    );
   }
 
   const pageNo = params.pageNo ?? 1;
   const numOfRows = params.numOfRows ?? 10;
   const fetchLimit = Math.max(pageNo * numOfRows, numOfRows);
+  const filters: Parameters<typeof runFirestoreCollectionQuery>[0]['filters'] = [];
 
-  const q = constraints.length
-    ? query(coll, ...constraints, limit(fetchLimit))
-    : query(coll, limit(fetchLimit));
-  let snap = await getDocs(q);
-  if (snap.empty && fallbackConstraints && fallbackConstraints.length) {
-    snap = await getDocs(query(coll, ...fallbackConstraints, limit(fetchLimit)));
+  if (params.care_reg_no) {
+    filters.push({ field: 'careRegNo', op: 'EQUAL', value: params.care_reg_no.trim() });
   }
-  let items = snap.docs.map((d) =>
-    normalizeShelterItem(d.id, d.data() as Record<string, unknown>),
-  );
+  if (params.upr_cd) filters.push({ field: 'uprCd', op: 'EQUAL', value: params.upr_cd });
+  if (params.org_cd) filters.push({ field: 'orgCd', op: 'EQUAL', value: params.org_cd });
+
+  const rows = await runFirestoreCollectionQuery({
+    collectionId: 'shelter-info',
+    filters,
+    limit: fetchLimit,
+  });
+  let items = rows.map((row) => normalizeShelterItem(row.id, row.data));
+
+  if (params.care_reg_no) {
+    const careRegNo = params.care_reg_no.trim();
+    items = items.filter((item) => item.careRegNo === careRegNo);
+  }
+  if (params.upr_cd) {
+    items = items.filter((item) => item.uprCd === params.upr_cd);
+  }
+  if (params.org_cd) {
+    items = items.filter((item) => item.orgCd === params.org_cd);
+  }
 
   // Firestore 문서에 uprCd/orgCd가 아직 없고 orgNm만 있는 경우를 위한 최종 폴백
   if (items.length === 0 && params.upr_cd) {
@@ -129,16 +113,18 @@ async function queryShelterDocs(params: ShelterInfoParams): Promise<ShelterInfoI
       sidoLocation.items.find((s) => s.SIDO_CD === params.upr_cd)?.SIDO_NAME ??
       null;
     if (sidoName) {
-      const allSnap = await getDocs(query(coll, limit(5000)));
-      const allItems = allSnap.docs.map((d) =>
-        normalizeShelterItem(d.id, d.data() as Record<string, unknown>),
-      );
-      items = allItems.filter((item) =>
-        (item.orgNm ?? '').startsWith(sidoName),
-      );
+      const fallbackRows = await runFirestoreCollectionQuery({
+        collectionId: 'shelter-info',
+        filters: [
+          { field: 'orgNm', op: 'GREATER_THAN_OR_EQUAL', value: sidoName },
+          { field: 'orgNm', op: 'LESS_THAN_OR_EQUAL', value: `${sidoName}\uf8ff` },
+        ],
+        limit: fetchLimit,
+      });
+      items = fallbackRows.map((row) => normalizeShelterItem(row.id, row.data));
     }
   }
-  return items;
+  return items.slice(0, fetchLimit);
 }
 
 export async function GET(request: NextRequest) {

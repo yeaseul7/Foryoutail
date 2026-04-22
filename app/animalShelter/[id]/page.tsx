@@ -3,13 +3,11 @@ import { notFound } from 'next/navigation';
 import PageTemplate from "@/packages/ui/components/base/PageTemplate";
 import { ShelterInfoItem } from '@/packages/type/shelterTyps';
 import type {
-    ShelterAnimalFirestoreDoc,
     ShelterAnimalItem,
 } from '@/packages/type/shelterAnimalTypes';
 import { fetchShelterInfoByCareRegNo } from '@/lib/api/shelterInfo';
 import ShelterInfoComponent from '@/packages/ui/components/home/shelterList/ShelterInfoComponent';
-import { collection, getDocs } from 'firebase/firestore';
-import { firestore } from '@/lib/firebase/firebase';
+import { loadAllShelterAnimalsFromFirestore } from '@/lib/utils/shelterAnimalsFirestore';
 
 import {
     getBaseUrl,
@@ -17,6 +15,8 @@ import {
     generateDefaultMetadata,
 } from '@/packages/utils/metadata';
 import PageFooter from '@/packages/ui/components/base/PageFooter';
+
+export const runtime = 'edge';
 
 interface AnimalShelterPageProps {
     params: Promise<{ id: string }>;
@@ -36,21 +36,10 @@ async function fetchShelterInfo(careRegNo: string): Promise<ShelterInfoItem | nu
 
 async function fetchShelterAnimals(careRegNo: string): Promise<ShelterAnimalItem[]> {
     try {
-        const snap = await getDocs(collection(firestore, 'shelterAnimals'));
         const suffix = `-${careRegNo}`;
-        return snap.docs
-            .filter((d) => d.id.endsWith(suffix))
-            .map((d) => {
-                const raw = d.data() as ShelterAnimalFirestoreDoc;
-                const rest = { ...raw } as Record<string, unknown>;
-                // Firestore Timestamp(updatedAt)는 Server->Client props로 직접 넘기지 않음
-                delete rest.updatedAt;
-                return {
-                    ...rest,
-                    desertionNo: raw.desertionNo || d.id.split('-')[0],
-                    careRegNo,
-                } as ShelterAnimalItem;
-            })
+        const animals = await loadAllShelterAnimalsFromFirestore();
+        return animals
+            .filter((item) => item.careRegNo === careRegNo || `${item.desertionNo}-${item.careRegNo}`.endsWith(suffix))
             .sort((a, b) => {
                 const aNum = parseInt(String(a.noticeSdt || a.happenDt || '0').replace(/\D/g, ''), 10) || 0;
                 const bNum = parseInt(String(b.noticeSdt || b.happenDt || '0').replace(/\D/g, ''), 10) || 0;

@@ -1,6 +1,8 @@
 import { ImageResponse } from 'next/og';
 import { getShelterAnimalByDesertionNo } from '@/lib/utils/shelterAnimalsFirestore';
 
+export const runtime = 'edge';
+
 export const alt = '포유테일 - 유기동물 입양 정보';
 export const size = {
   width: 1200,

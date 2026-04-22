@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPineconeIndex } from '@/lib/pinecone';
+import {
+  describePineconeStats,
+  fetchPineconeVectors,
+  listPineconeVectorIds,
+  queryPineconeByVector,
+} from '@/lib/pinecone-edge';
 import { sidoLocation } from '@/static/data/sidoLocation';
+
+export const runtime = 'edge';
 
 /** 시도 코드로 SIDO_NAME 조회 (sido_data와 동일한 목록 기준) */
 function getSidoNameByCode(sidoCd: string | null | undefined): string | null {
@@ -33,8 +40,7 @@ export async function POST(request: NextRequest) {
     const needsExtraResults = sidoName || filterByUpKind;
     const topK = needsExtraResults ? Math.min(requestedTopK * 4, 100) : requestedTopK;
 
-    const index = getPineconeIndex();
-    const result = await index.query({
+    const result = await queryPineconeByVector({
       vector,
       topK,
       includeMetadata: true,
@@ -80,25 +86,23 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const index = getPineconeIndex();
+    const stats = await describePineconeStats();
 
-    const stats = await index.describeIndexStats();
-
-    const listResult = await index.listPaginated({ limit: 100 });
+    const listResult = await listPineconeVectorIds(100);
     const ids = (listResult.vectors ?? [])
       .map((v) => v.id)
       .filter((id): id is string => typeof id === 'string');
 
     let records: Record<string, unknown> = {};
     if (ids.length > 0) {
-      const fetchResult = await index.fetch({ ids });
-      const raw = fetchResult?.records;
+      const fetchResult = await fetchPineconeVectors(ids);
+      const raw = fetchResult?.records ?? fetchResult?.vectors;
       records = (raw != null && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
     }
 
     return NextResponse.json({
       stats: {
-        totalRecordCount: stats.totalRecordCount ?? 0,
+        totalRecordCount: stats.totalVectorCount ?? stats.total_vector_count ?? 0,
         namespaces: stats.namespaces ?? {},
         dimension: stats.dimension,
       },
