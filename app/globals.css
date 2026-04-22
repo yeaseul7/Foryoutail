@@ -124,14 +124,6 @@ button:disabled,
   cursor: not-allowed;
 }
 
-/* TipTap Placeholder styles */
-.tiptap p.is-editor-empty:first-child::before {
-  content: attr(data-placeholder);
-  float: left;
-  color: #868E96;
-  pointer-events: none;
-  height: 0;
-}
 
 .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
@@ -141,58 +133,6 @@ button:disabled,
   height: 0;
 }
 
-.tiptap {
-  outline: none;
-
-  p {
-    @apply first:mt-0 last:mb-0 text-base leading-relaxed sm:text-lg;
-  }
-
-  h1 {
-    @apply text-3xl font-bold mt-8 mb-4 first:mt-0 last:mb-0;
-  }
-
-  h2 {
-    @apply text-2xl font-bold mt-6 mb-3 first:mt-0 last:mb-0;
-  }
-
-  h3 {
-    @apply text-xl font-bold mt-4 mb-2 first:mt-0 last:mb-0;
-  }
-
-  ul,
-  ol {
-    @apply my-4 pl-6;
-  }
-
-  ul {
-    @apply list-disc;
-  }
-
-  ol {
-    @apply list-decimal;
-  }
-
-  li {
-    @apply my-1;
-  }
-
-  blockquote {
-    @apply border-l-4 border-element4 pl-4 italic my-4;
-  }
-
-  code {
-    @apply bg-element3 px-1 py-0.5 rounded text-sm;
-  }
-
-  pre {
-    @apply bg-element3 p-4 rounded my-4 overflow-x-auto;
-  }
-
-  pre code {
-    @apply bg-transparent p-0;
-  }
-}
 
 .ProseMirror {
   outline: none !important;

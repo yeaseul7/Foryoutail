@@ -40,19 +40,6 @@ export function getBaseUrl(): string {
 }
 
 
-
-function isUnsupportedImageUrl(imageUrl: string): boolean {
-  if (imageUrl.startsWith('http://')) {
-    return true;
-  }
-
-  if (imageUrl.includes('openapi.animal.go.kr')) {
-    return true;
-  }
-
-  return false;
-}
-
 export function normalizeImageUrl(
   imageUrl: string | null | undefined,
   baseUrl: string,
@@ -62,23 +49,19 @@ export function normalizeImageUrl(
     return `${baseUrl}${defaultImagePath}`;
   }
 
-  if (isUnsupportedImageUrl(imageUrl)) {
-    return `${baseUrl}${defaultImagePath}`;
+  const safeImageUrl = imageUrl.startsWith('http://')
+    ? imageUrl.replace('http://', 'https://')
+    : imageUrl;
+
+  if (safeImageUrl.startsWith('/')) {
+    return `${baseUrl}${safeImageUrl}`;
   }
 
-  if (imageUrl.startsWith('/')) {
-    return `${baseUrl}${imageUrl}`;
+  if (safeImageUrl.startsWith('https://')) {
+    return safeImageUrl;
   }
 
-  if (imageUrl.startsWith('https://')) {
-    return imageUrl;
-  }
-
-  if (imageUrl.startsWith('http://')) {
-    return imageUrl.replace('http://', 'https://');
-  }
-
-  return `${baseUrl}/${imageUrl}`;
+  return `${baseUrl}/${safeImageUrl}`;
 }
 
 
@@ -189,4 +172,3 @@ export function generateDefaultMetadata(
     imageAlt: '포유테일',
   });
 }
-

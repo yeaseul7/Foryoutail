@@ -1,11 +1,10 @@
 'use client';
-import PageTemplate from '@/packages/ui/components/base/PageTemplate';
+import PageTemplate from '@/packages/components/base/PageTemplate';
 import dynamic from 'next/dynamic';
-import WriteContainerSkeleton from '@/packages/ui/components/base/WriteContainerSkeleton';
+import WriteContainerSkeleton from '@/packages/components/skeleton/WriteContainerSkeleton';
 
-// Tiptap을 사용하는 EditContainer를 동적 import로 지연 로드
 const EditContainer = dynamic(
-  () => import('@/packages/ui/components/home/edit/editContainer'),
+  () => import('@/packages/components/home/edit/editContainer'),
   {
     ssr: false,
     loading: () => <WriteContainerSkeleton />

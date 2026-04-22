@@ -8,7 +8,7 @@ import '@/styles/keyframe.css';
 import { AuthProvider } from '@/lib/firebase/auth';
 
 const LocationDataProvider = dynamic(
-  () => import('@/packages/ui/components/base/LocationDataProvider'),
+  () => import('@/packages/components/base/LocationDataProvider'),
   { ssr: true }
 );
 

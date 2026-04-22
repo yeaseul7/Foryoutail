@@ -1,20 +1,20 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import PageTemplate from "@/packages/ui/components/base/PageTemplate";
+import PageTemplate from "@/packages/components/base/PageTemplate";
 import { ShelterInfoItem } from '@/packages/type/shelterTyps';
 import type {
     ShelterAnimalItem,
 } from '@/packages/type/shelterAnimalTypes';
-import { fetchShelterInfoByCareRegNo } from '@/lib/api/shelterInfo';
-import ShelterInfoComponent from '@/packages/ui/components/home/shelterList/ShelterInfoComponent';
-import { loadAllShelterAnimalsFromFirestore } from '@/lib/utils/shelterAnimalsFirestore';
+import { fetchShelterInfoByCareRegNo } from '@/lib/client/shelter-info';
+import ShelterInfoComponent from '@/packages/components/home/shelterList/ShelterInfoComponent';
+import { loadAllShelterAnimalsFromFirestore } from '@/lib/domain/shelter/shelter-animals';
 
 import {
     getBaseUrl,
     generateMetadata as generateMetadataUtil,
     generateDefaultMetadata,
 } from '@/packages/utils/metadata';
-import PageFooter from '@/packages/ui/components/base/PageFooter';
+import PageFooter from '@/packages/components/base/PageFooter';
 
 export const runtime = 'edge';
 

@@ -4,7 +4,7 @@ import {
   fetchPineconeVectors,
   listPineconeVectorIds,
   queryPineconeByVector,
-} from '@/lib/pinecone-edge';
+} from '@/lib/server/pinecone';
 import { sidoLocation } from '@/static/data/sidoLocation';
 
 export const runtime = 'edge';

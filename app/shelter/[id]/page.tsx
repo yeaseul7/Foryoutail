@@ -5,7 +5,7 @@ import {
   generateMetadata as generateMetadataUtil,
   generateDefaultMetadata,
 } from '@/packages/utils/metadata';
-import { getShelterAnimalByDesertionNo } from '@/lib/utils/shelterAnimalsFirestore';
+import { getShelterAnimalByDesertionNo } from '@/lib/domain/shelter/shelter-animals';
 
 export const runtime = 'edge';
 

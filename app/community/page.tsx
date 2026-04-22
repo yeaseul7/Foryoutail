@@ -1,20 +1,20 @@
 'use client';
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
-import PostCardSkeleton from '@/packages/ui/components/base/PostCardSkeleton';
+import PostCardSkeleton from '@/packages/components/skeleton/PostCardSkeleton';
 
 const PageTemplate = dynamic(
-    () => import('@/packages/ui/components/base/PageTemplate'),
+    () => import('@/packages/components/base/PageTemplate'),
     { ssr: true }
 );
 
 const PageFooter = dynamic(
-    () => import('@/packages/ui/components/base/PageFooter'),
+    () => import('@/packages/components/base/PageFooter'),
     { ssr: true }
 );
 
 const CommunityPosts = dynamic(
-    () => import('@/packages/ui/components/community/CommunityPosts'),
+    () => import('@/packages/components/community/CommunityPosts'),
     { ssr: true }
 );
 

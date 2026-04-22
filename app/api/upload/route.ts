@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCloudinaryConfig, signCloudinaryParams } from '@/lib/cloudinary/edge';
+import { getCloudinaryConfig, signCloudinaryParams } from '@/lib/server/cloudinary';
 
 export const runtime = 'edge';
 

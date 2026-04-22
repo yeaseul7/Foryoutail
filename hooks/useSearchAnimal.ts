@@ -11,7 +11,7 @@ import {
 } from '@/lib/search-animal';
 import { useAuth } from '@/lib/firebase/auth';
 import { firestore } from '@/lib/firebase/firebase';
-import type { AiSearchFiltersValues } from '@/packages/ui/components/search-animals/AiSearchFilters';
+import type { AiSearchFiltersValues } from '@/packages/components/search-animals/AiSearchFilters';
 
 const DAILY_LIMIT = 5;
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;

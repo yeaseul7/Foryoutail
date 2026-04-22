@@ -1,35 +1,33 @@
 'use client';
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
-import HorizontalAnimalCardSkeleton from '@/packages/ui/components/base/HorizontalAnimalCardSkeleton';
-import RegionalNearbyAnimalCardSkeleton from '@/packages/ui/components/base/RegionalNearbyAnimalCardSkeleton';
-import HomeAdoptionHero from '@/packages/ui/components/home/HomeAdoptionHero';
+import HorizontalAnimalCardSkeleton from '@/packages/components/skeleton/HorizontalAnimalCardSkeleton';
+import RegionalNearbyAnimalCardSkeleton from '@/packages/components/skeleton/RegionalNearbyAnimalCardSkeleton';
+import HomeAdoptionHero from '@/packages/components/home/HomeAdoptionHero';
 import { HiHeart } from 'react-icons/hi2';
 
 const PageTemplate = dynamic(
-  () => import('@/packages/ui/components/base/PageTemplate'),
+  () => import('@/packages/components/base/PageTemplate'),
   { ssr: true }
 );
 
 const PageFooter = dynamic(
-  () => import('@/packages/ui/components/base/PageFooter'),
+  () => import('@/packages/components/base/PageFooter'),
   { ssr: true }
 );
 
-
-
 const HorizontalAnimalList = dynamic(
-  () => import('@/packages/ui/components/shelter/HorizontalAnimalList'),
+  () => import('@/packages/components/shelter/HorizontalAnimalList'),
   { ssr: true }
 );
 
 const SidoMatchedHorizontalAnimalList = dynamic(
-  () => import('@/packages/ui/components/shelter/SidoMatchedHorizontalAnimalList'),
+  () => import('@/packages/components/shelter/SidoMatchedHorizontalAnimalList'),
   { ssr: true }
 );
 
 const MostLikedHorizontalAnimalList = dynamic(
-  () => import('@/packages/ui/components/shelter/MostLikedHorizontalAnimalList'),
+  () => import('@/packages/components/shelter/MostLikedHorizontalAnimalList'),
   { ssr: true }
 );
 

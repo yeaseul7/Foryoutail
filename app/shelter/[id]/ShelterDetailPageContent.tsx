@@ -2,18 +2,18 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import PageTemplate from '@/packages/ui/components/base/PageTemplate';
-import Loading from '@/packages/ui/components/base/Loading';
+import PageTemplate from '@/packages/components/base/PageTemplate';
+import Loading from '@/packages/components/base/Loading';
 import { ShelterAnimalItem } from '@/packages/type/postType';
 import { ShelterInfoItem } from '@/packages/type/shelterTyps';
 import { IoIosArrowBack } from 'react-icons/io';
-import Notfound_ad_animal from '@/packages/ui/components/base/Notfound_ad_animal';
-import AnimalImgCard from '@/packages/ui/components/shelter/AnimalImgCard';
-import AnimalInfoCard from '@/packages/ui/components/shelter/AnimalInfoCard';
-import AnimalNotice from '@/packages/ui/components/common/AnimalNotice';
-import PageFooter from '@/packages/ui/components/base/PageFooter';
-import { fetchShelterInfoByCareRegNo } from '@/lib/api/shelterInfo';
-import { getShelterAnimalByDesertionNo } from '@/lib/utils/shelterAnimalsFirestore';
+import Notfound_ad_animal from '@/packages/components/base/Notfound_ad_animal';
+import AnimalImgCard from '@/packages/components/shelter/AnimalImgCard';
+import AnimalInfoCard from '@/packages/components/shelter/AnimalInfoCard';
+import PageFooter from '@/packages/components/base/PageFooter';
+import { fetchShelterInfoByCareRegNo } from '@/lib/client/shelter-info';
+import { getShelterAnimalByDesertionNo } from '@/lib/domain/shelter/shelter-animals';
+import ShelterOperationInfoComponent from '@/packages/components/common/AnimalNotice';
 
 interface ShelterDetailPageContentProps {
   desertionNo: string;
@@ -176,7 +176,7 @@ export default function ShelterDetailPageContent({
                   desertionNo={desertionNo}
                 />
 
-                <AnimalNotice shelterInfo={shelterInfo} animalData={animalData} />
+                <ShelterOperationInfoComponent shelterInfo={shelterInfo} animalData={animalData} />
               </div>
             </div>
 

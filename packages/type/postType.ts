@@ -1,4 +1,4 @@
-import { Timestamp } from 'firebase/firestore';
+import type { Timestamp } from 'firebase/firestore';
 
 /** 커뮤니티 글 카테고리 (탭 id와 동일). `pet-life`는 구 데이터 호환용 */
 export type PostBoardCategory = 'daily' | 'question' | 'adoption';

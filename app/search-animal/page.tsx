@@ -2,16 +2,16 @@
 
 import dynamic from 'next/dynamic';
 import { useSearchAnimal } from '@/hooks/useSearchAnimal';
-import AiHeader from '@/packages/ui/components/search-animals/AiHeader';
-import LikeAnimals from '@/packages/ui/components/search-animals/LikeAnimals';
+import AiHeader from '@/packages/components/search-animals/AiHeader';
+import LikeAnimals from '@/packages/components/search-animals/LikeAnimals';
 
 const PageTemplate = dynamic(
-    () => import('@/packages/ui/components/base/PageTemplate'),
+    () => import('@/packages/components/base/PageTemplate'),
     { ssr: true }
 );
 
 const PageFooter = dynamic(
-    () => import('@/packages/ui/components/base/PageFooter'),
+    () => import('@/packages/components/base/PageFooter'),
     { ssr: true }
 );
 

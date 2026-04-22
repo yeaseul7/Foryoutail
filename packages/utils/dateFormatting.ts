@@ -1,4 +1,4 @@
-import { Timestamp } from 'firebase/firestore';
+import type { Timestamp } from 'firebase/firestore';
 
 // Timestamp 또는 일반 객체를 Date로 변환하는 헬퍼 함수
 function toDate(

@@ -95,8 +95,6 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: [
       'react-icons',
-      '@tiptap/react',
-      '@tiptap/starter-kit',
       'lottie-react',
       'firebase',
     ],

@@ -7,7 +7,7 @@
 - **프레임워크**: Next.js 16 (App Router)
 - **UI**: React 19, Tailwind CSS 4
 - **인증/DB**: Firebase (Auth, Firestore)
-- **에디터**: Tiptap
+- **에디터**: 기본 텍스트 입력
 - **미디어**: Cloudinary, next-cloudinary
 - **지도**: 네이버 지도 API
 - **공공 API**: 동물보호관리시스템(유기동물·보호소), V-World(지오코딩), YouTube Data API
@@ -28,7 +28,7 @@ kkosunnae/
 │   ├── register/           # 회원가입
 │   └── api/                # API Routes (shelter-data, upload, geocode 등)
 ├── packages/
-│   ├── ui/components/     # 공용 UI 컴포넌트
+│   ├── components/        # 공용 UI 컴포넌트
 │   ├── type/               # 타입 정의
 │   └── utils/              # 유틸 (metadata, locationUtils 등)
 ├── lib/                    # Firebase, Cloudinary, API 클라이언트
@@ -39,7 +39,7 @@ kkosunnae/
 ## 주요 기능
 
 - **홈**: 트렌딩/최신 게시글, 유기동물 공고 탭, YouTube 추천 영상
-- **글쓰기/수정**: Tiptap 리치 에디터, 이미지 업로드(Cloudinary), 태그·카테고리
+- **글쓰기/수정**: 텍스트 입력, 이미지 업로드(Cloudinary), 태그·카테고리
 - **유기동물**: 시도·성별·축종·접수일·검색 필터, 무한 스크롤, 상세 공고
 - **보호소**: 위치 기반 보호소 목록, 네이버 지도 연동, 시도별 필터
 - **검색**: 게시글·유기동물 검색

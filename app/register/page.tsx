@@ -7,7 +7,7 @@ import { firestore } from '@/lib/firebase/firebase';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { HiLockClosed } from 'react-icons/hi';
-import ShelterRegis from '@/packages/ui/components/register/ShelterRegis';
+import ShelterRegis from '@/packages/components/register/ShelterRegis';
 import type { ShelterOption } from '@/packages/type/shelterTyps';
 
 export default function RegisterPage() {
