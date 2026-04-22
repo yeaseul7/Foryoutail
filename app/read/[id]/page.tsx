@@ -37,7 +37,7 @@ export async function generateMetadata({
     if (post) {
       const title = post.title || '게시물';
       const description =
-        extractText(post.content).substring(0, 160) || '꼬순내 게시물';
+        extractText(post.content).substring(0, 160) || '포유테일 게시물';
       const imageUrl = extractFirstImage(post.content);
 
       return generateMetadataUtil({
@@ -54,8 +54,8 @@ export async function generateMetadata({
   }
 
   return generateDefaultMetadata(
-    '게시물 | 꼬순내',
-    '꼬순내 게시물',
+    '게시물 | 포유테일',
+    '포유테일 게시물',
     url,
     {
       type: 'article',

@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 import { getShelterAnimalByDesertionNo } from '@/lib/utils/shelterAnimalsFirestore';
 
-export const alt = '꼬순내 - 유기동물 입양 정보';
+export const alt = '포유테일 - 유기동물 입양 정보';
 export const size = {
   width: 1200,
   height: 630,
@@ -39,7 +39,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
           }}
         >
           <div style={{ fontSize: 80, marginBottom: 20 }}>🐾</div>
-          <div>꼬순내</div>
+          <div>포유테일</div>
           <div style={{ fontSize: 30, marginTop: 10 }}>유기동물 입양 정보</div>
         </div>
       ),
@@ -99,7 +99,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
             {animalData.weight ? ` / ${animalData.weight}kg` : ''}
           </div>
           <div style={{ fontSize: 25, marginTop: 10, opacity: 0.9 }}>
-            꼬순내 - 입양을 기다리고 있어요 🐾
+            포유테일 - 입양을 기다리고 있어요 🐾
           </div>
         </div>
       </div>

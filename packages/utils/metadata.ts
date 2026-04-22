@@ -105,7 +105,7 @@ export function generateMetadata(options: GenerateMetadataOptions): Metadata {
     imageUrl,
     url,
     type = 'website',
-    siteName = '꼬순내',
+    siteName = '포유테일',
     locale = 'ko_KR',
     defaultImagePath = '/static/images/defaultDog.png',
     includeCanonical = true, // 기본값을 true로 추천 (SEO 중복 방지)
@@ -115,7 +115,7 @@ export function generateMetadata(options: GenerateMetadataOptions): Metadata {
 
   const baseUrl = getBaseUrl();
   const normalizedImageUrl = normalizeImageUrl(imageUrl, baseUrl, defaultImagePath);
-  const imageAltText = imageAlt || `${title} - 꼬순내`;
+  const imageAltText = imageAlt || `${title} - 포유테일`;
 
   // 160자 제한으로 설명문 최적화
   const truncatedDescription = extractText(description)?.substring(0, 160) || '';
@@ -186,7 +186,7 @@ export function generateDefaultMetadata(
     defaultImagePath,
     includeCanonical,
     includeTwitterCreator,
-    imageAlt: '꼬순내',
+    imageAlt: '포유테일',
   });
 }
 

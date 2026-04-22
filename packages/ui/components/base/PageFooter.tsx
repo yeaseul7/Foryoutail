@@ -24,8 +24,8 @@ export default function PageFooter() {
           <div className="flex flex-col items-center sm:items-start gap-3">
             <Link href="/" className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary1/30 rounded">
               <Image
-                src="/static/images/textLogo.png"
-                alt="꼬순내 로고"
+                src="/static/images/foryoutail-textonly.png"
+                alt="포유테일 로고"
                 width={120}
                 height={120}
                 className="shrink-0"
@@ -35,7 +35,7 @@ export default function PageFooter() {
               href="https://www.instagram.com/kkosunnae_official/"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-gray-600 hover:text-primary1 focus:outline-none focus:ring-2 focus:ring-primary1/30 rounded transition-colors"
-              aria-label="꼬순내 인스타그램"
+              aria-label="포유테일 인스타그램"
             >
               <FaInstagram className="w-5 h-5" />
               <span className="text-xs">Instagram</span>
@@ -43,7 +43,7 @@ export default function PageFooter() {
             <a
               href="mailto:kkosunnaekr1@gmail.com"
               className="flex items-center gap-2 text-gray-600 hover:text-primary1 focus:outline-none focus:ring-2 focus:ring-primary1/30 rounded transition-colors"
-              aria-label="꼬순내 이메일"
+              aria-label="포유테일 이메일"
             >
               <HiEnvelope className="w-5 h-5" />
               <span className="text-xs">kkosunnaekr1@gmail.com</span>

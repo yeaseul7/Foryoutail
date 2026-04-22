@@ -75,7 +75,7 @@ export async function generateMetadata({
     const careRegNo = (id ?? '').trim();
     if (!careRegNo) {
         return generateDefaultMetadata(
-            '보호소 정보 | 꼬순내',
+            '보호소 정보 | 포유테일',
             '보호소 정보 및 입양 대기 중인 친구들을 확인해보세요.',
             pageUrl,
             { type: 'website' },
@@ -87,7 +87,7 @@ export async function generateMetadata({
 
         if (shelter) {
             const shelterName = shelter.careNm || '보호소';
-            const title = `${shelterName} | 꼬순내`;
+            const title = `${shelterName} | 포유테일`;
 
             let description = '';
             if (shelter.careAddr) {
@@ -111,7 +111,7 @@ export async function generateMetadata({
     }
 
     return generateDefaultMetadata(
-        '보호소 정보 | 꼬순내',
+        '보호소 정보 | 포유테일',
         '보호소 정보 및 입양 대기 중인 친구들을 확인해보세요.',
         pageUrl,
         {

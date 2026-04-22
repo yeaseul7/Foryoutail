@@ -32,7 +32,7 @@ export default function NoticeList() {
                         공지사항
                     </h1>
                     <p className="mt-1.5 text-xs text-gray-500 sm:mt-2 sm:text-sm md:text-base">
-                        꼬순내의 새로운 소식과 안내를 확인하세요.
+                        포유테일의 새로운 소식과 안내를 확인하세요.
                     </p>
                 </div>
 

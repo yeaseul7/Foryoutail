@@ -30,7 +30,7 @@ export async function generateMetadata({
 
     if (animalData) {
       const kindName = animalData.kindFullNm || animalData.kindNm || '유기동물';
-      const title = `${kindName} | 꼬순내`;
+      const title = `${kindName} | 포유테일`;
 
       let description = '';
       if (animalData.specialMark) {
@@ -70,7 +70,7 @@ export async function generateMetadata({
   const pageUrl = `${baseUrl}/shelter/${desertionNo}`;
 
   return generateDefaultMetadata(
-    '유기동물 정보 | 꼬순내',
+    '유기동물 정보 | 포유테일',
     '유기동물 입양 정보를 확인해보세요.',
     pageUrl,
     {

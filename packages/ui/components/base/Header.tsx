@@ -82,7 +82,7 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
             className="flex items-center transition-opacity hover:opacity-80"
           >
             <Image
-              src="/static/images/IconLogo.png"
+              src="/static/images/foryoutail.png"
               alt="Logo"
               width={30}
               height={30}
@@ -90,7 +90,7 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
               loading="eager"
             />
             <Image
-              src="/static/images/textLogo.png"
+              src="/static/images/foryoutail-textonly.png"
               alt="Logo"
               width={120}
               height={120}
@@ -131,11 +131,10 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
               isActive={() =>
                 pathname === '/search-animal' || pathname.startsWith('/search-animal')
               }
-              className={`!border-b-0 !p-0 text-sm lg:text-base transition-colors ${
-                pathname === '/search-animal' || pathname.startsWith('/search-animal')
-                  ? '!text-primary1 font-semibold'
-                  : '!text-gray-700 hover:!text-primary1'
-              }`}
+              className={`!border-b-0 !p-0 text-sm lg:text-base transition-colors ${pathname === '/search-animal' || pathname.startsWith('/search-animal')
+                ? '!text-primary1 font-semibold'
+                : '!text-gray-700 hover:!text-primary1'
+                }`}
             >
               <span className="inline-flex items-center gap-1.5">
                 <MdAutoAwesome className="h-4 w-4" aria-hidden />
@@ -290,11 +289,10 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
             isActive={() =>
               pathname === '/search-animal' || pathname.startsWith('/search-animal')
             }
-            className={`block px-4 py-3 !border-b-0 text-sm transition-colors hover:bg-gray-50 rounded-lg ${
-              pathname === '/search-animal' || pathname.startsWith('/search-animal')
-                ? '!text-primary1 bg-blue-50 font-semibold'
-                : '!text-gray-700'
-            }`}
+            className={`block px-4 py-3 !border-b-0 text-sm transition-colors hover:bg-gray-50 rounded-lg ${pathname === '/search-animal' || pathname.startsWith('/search-animal')
+              ? '!text-primary1 bg-blue-50 font-semibold'
+              : '!text-gray-700'
+              }`}
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <span className="inline-flex items-center gap-2">

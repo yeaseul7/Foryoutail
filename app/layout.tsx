@@ -42,39 +42,71 @@ const cafe24SsurroundAir = localFont({
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | 꼬순내',
-    default: '꼬순내 - 가족을 기다리는 따뜻한 발걸음, 유기동물 입양 커뮤니티',
+    template: '%s | 포유테일',
+    default: '포유테일 - 가족을 기다리는 따뜻한 발걸음, 유기동물 입양 커뮤니티',
   },
-  description: '사지 말고 입양하세요! 꼬순내에서 전국의 유기견·유기묘 공고를 확인하고, 따뜻한 반려 생활 노하우를 커뮤니티에서 함께 나누어 보세요. 당신의 소중한 새 가족이 기다리고 있습니다.',
-  keywords: ['유기동물입양', '유기견', '유기묘', '반려견커뮤니티', '유기동물보호소', '강아지분양', '고양이분양', '꼬순내'],
+  description:
+    '포유테일에서 전국 유기견·유기묘 입양 공고와 유기동물 보호소 정보를 확인하고, 반려동물 커뮤니티에서 입양 후기와 반려 생활 이야기를 나눠보세요.',
+  keywords: [
+    '포유테일',
+    '유기동물 입양',
+    '유기견 입양',
+    '유기묘 입양',
+    '유기동물 공고',
+    '유기견 공고',
+    '유기묘 공고',
+    '유기동물 보호소',
+    '동물보호소',
+    '보호소 찾기',
+    '강아지 입양',
+    '고양이 입양',
+    '반려동물 커뮤니티',
+    '반려견 커뮤니티',
+    '반려묘 커뮤니티',
+    '입양 후기',
+    '유기동물 정보',
+  ],
   icons: {
-    icon: '/static/images/IconLogo.png',
-    apple: '/static/images/IconLogo.png',
+    icon: '/static/images/foryoutail.png',
+    apple: '/static/images/foryoutail.png',
   },
   verification: {
     google: 'WBwV06sSdVI6wLAiXlN3T32MSQlsqxdSv49eMBt7JWs',
   },
   openGraph: {
-    title: '꼬순내 - 새로운 가족을 만나는 가장 따뜻한 방법',
-    description: '전국 유기동물 실시간 정보부터 반려인들을 위한 소통의 장까지, 지금 꼬순내에서 확인해보세요! 🐾',
+    title: '유기동물 입양 공고·보호소 찾기·반려동물 커뮤니티 | 포유테일',
+    description:
+      '전국 유기견·유기묘 공고, 유기동물 보호소 정보, 입양 후기와 반려동물 커뮤니티를 포유테일에서 한곳에 확인해보세요.',
     url: 'https://kkosunnae.com',
-    siteName: '꼬순내 (Kkosunnae)',
+    siteName: '포유테일',
     locale: 'ko_KR',
     type: 'website',
     images: [
       {
-        url: '/static/images/bannerImg.jpeg',
+        url: 'https://kkosunnae.com/static/images/metabanner.png',
         width: 1200,
         height: 630,
-        alt: '꼬순내 - 유기동물 입양 및 반려인 커뮤니티',
+        alt: '포유테일 - 유기동물 입양 공고, 보호소 찾기, 반려동물 커뮤니티',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: '꼬순내 - 사지 말고 입양하세요',
-    description: '전국의 유기동물 정보와 반려인 커뮤니티를 한곳에서! 당신의 가족을 찾아보세요.',
-    images: ['/static/images/bannerImg.jpeg'],
+    title: '유기동물 입양 공고·보호소 찾기·반려동물 커뮤니티 | 포유테일',
+    description:
+      '전국 유기동물 공고와 보호소 정보를 찾고, 반려인 커뮤니티에서 입양 후기와 반려 생활 이야기를 나눠보세요.',
+    images: ['https://kkosunnae.com/static/images/metabanner.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
   },
 };
 
