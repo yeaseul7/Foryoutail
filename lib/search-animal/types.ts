@@ -3,8 +3,3 @@ export type SimilarMatch = {
   score?: number;
   metadata?: Record<string, unknown>;
 };
-
-export type FeatureExtractor = (
-  url: string,
-  opts?: { pool?: boolean }
-) => Promise<{ data: Float32Array; dims?: number[] }>;

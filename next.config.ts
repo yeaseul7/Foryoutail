@@ -6,17 +6,6 @@ const withBundleAnalyzer = bundleAnalyzer({
 });
 
 const nextConfig: NextConfig = {
-  webpack: (config) => {
-    // transformers.js가 브라우저에서 fs 모듈을 찾지 못해 생기는 에러 방지
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      "sharp$": false,
-      "onnxruntime-node$": false,
-    }
-    return config;
-  },
-  // Next.js 16 기본이 Turbopack이라 webpack만 있으면 에러 남. Turbopack에도 동일 의도 반영.
-  turbopack: {},
   async headers() {
     return [
       {

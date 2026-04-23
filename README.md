@@ -8,7 +8,7 @@
 - **UI**: React 19, Tailwind CSS 4
 - **인증/DB**: Firebase (Auth, Firestore)
 - **에디터**: 기본 텍스트 입력
-- **미디어**: Cloudinary, next-cloudinary
+- **미디어**: 백엔드 이미지 업로드 API, Cloudinary 이미지 CDN
 - **지도**: 네이버 지도 API
 - **공공 API**: 동물보호관리시스템(유기동물·보호소), V-World(지오코딩), YouTube Data API
 

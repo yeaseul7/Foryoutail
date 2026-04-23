@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { doc, getDocFromServer, setDoc } from 'firebase/firestore';
-import type { SimilarMatch } from '@/lib/search-animal';
+import type { SimilarMatch } from '@/lib/search-animal/types';
 import { useAuth } from '@/lib/firebase/auth';
 import { firestore } from '@/lib/firebase/firebase';
 import type { AiSearchFiltersValues } from '@/packages/components/search-animals/AiSearchFilters';
