@@ -1,9 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/firebase/auth';
-import { FcGoogle } from 'react-icons/fc';
-import { FaGithub } from 'react-icons/fa';
-import { SiKakaotalk } from 'react-icons/si';
 import { useClickOutsideModal } from '@/packages/utils/clickEvent';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -196,8 +193,8 @@ export default function LoginModal({ onClose }: LoginModalProps) {
             className="flex justify-center items-center disabled:opacity-60 disabled:cursor-not-allowed"
             aria-label="Google로 로그인"
           >
-            <div className="p-2 rounded-full border border-border3 hover:bg-gray-50 transition-colors">
-              <FcGoogle className="text-2xl" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border3 text-sm font-semibold hover:bg-gray-50 transition-colors">
+              G
             </div>
           </button>
           <button
@@ -207,8 +204,8 @@ export default function LoginModal({ onClose }: LoginModalProps) {
             className="flex justify-center items-center disabled:opacity-60 disabled:cursor-not-allowed"
             aria-label="Github로 로그인"
           >
-            <div className="p-2 rounded-full border border-border3 hover:bg-gray-50 transition-colors">
-              <FaGithub className="text-2xl" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border3 text-sm font-semibold hover:bg-gray-50 transition-colors">
+              GH
             </div>
           </button>
           <button
@@ -218,8 +215,8 @@ export default function LoginModal({ onClose }: LoginModalProps) {
             className="flex justify-center items-center disabled:opacity-60 disabled:cursor-not-allowed"
             aria-label="카카오로 로그인"
           >
-            <div className="p-2 rounded-full border border-border3 hover:bg-[#FEE500]/20 transition-colors">
-              <SiKakaotalk className="text-2xl text-[#191919]" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border3 bg-[#FEE500] text-sm font-semibold text-[#191919] hover:bg-[#FEE500]/80 transition-colors">
+              K
             </div>
           </button>
         </div>

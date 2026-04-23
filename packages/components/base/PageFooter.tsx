@@ -1,7 +1,5 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { FaInstagram } from 'react-icons/fa';
-import { HiEnvelope } from 'react-icons/hi2';
 
 const FOOTER_LINKS = {
   서비스: [
@@ -34,7 +32,6 @@ export default function PageFooter() {
               className="flex items-center gap-2 text-gray-600 hover:text-primary1 focus:outline-none focus:ring-2 focus:ring-primary1/30 rounded transition-colors"
               aria-label="포유테일 인스타그램"
             >
-              <FaInstagram className="w-5 h-5" />
               <span className="text-xs">Instagram</span>
             </a>
             <a
@@ -42,7 +39,6 @@ export default function PageFooter() {
               className="flex items-center gap-2 text-gray-600 hover:text-primary1 focus:outline-none focus:ring-2 focus:ring-primary1/30 rounded transition-colors"
               aria-label="포유테일 이메일"
             >
-              <HiEnvelope className="w-5 h-5" />
               <span className="text-xs">kkosunnaekr1@gmail.com</span>
             </a>
           </div>

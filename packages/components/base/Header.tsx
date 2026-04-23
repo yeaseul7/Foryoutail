@@ -13,7 +13,6 @@ import { getUnreadHistoryCount } from '@/lib/domain/community/history';
 import Link from 'next/link';
 import NavLink from '../common/NavLink';
 import { usePathname } from 'next/navigation';
-import { MdPets, MdAutoAwesome, MdForum, MdHomeWork } from 'react-icons/md';
 
 const LoginModal = dynamic(
   () => import('../auth/LoginModal'),
@@ -121,7 +120,6 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
                 }`}
             >
               <span className="inline-flex items-center gap-1.5">
-                <MdPets className="h-4 w-4" aria-hidden />
                 입양하기
               </span>
             </NavLink>
@@ -137,7 +135,6 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
                 }`}
             >
               <span className="inline-flex items-center gap-1.5">
-                <MdAutoAwesome className="h-4 w-4" aria-hidden />
                 AI 찾기
               </span>
             </NavLink>
@@ -149,7 +146,6 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
                 }`}
             >
               <span className="inline-flex items-center gap-1.5">
-                <MdForum className="h-4 w-4" aria-hidden />
                 커뮤니티
               </span>
             </NavLink>
@@ -163,7 +159,6 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
                 }`}
             >
               <span className="inline-flex items-center gap-1.5">
-                <MdHomeWork className="h-4 w-4" aria-hidden />
                 보호소
               </span>
             </NavLink>
@@ -279,7 +274,6 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <span className="inline-flex items-center gap-2">
-              <MdPets className="h-4 w-4" aria-hidden />
               입양하기
             </span>
           </NavLink>
@@ -296,7 +290,6 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <span className="inline-flex items-center gap-2">
-              <MdAutoAwesome className="h-4 w-4" aria-hidden />
               AI 찾기
             </span>
           </NavLink>
@@ -309,7 +302,6 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <span className="inline-flex items-center gap-2">
-              <MdForum className="h-4 w-4" aria-hidden />
               커뮤니티
             </span>
           </NavLink>
@@ -324,7 +316,6 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <span className="inline-flex items-center gap-2">
-              <MdHomeWork className="h-4 w-4" aria-hidden />
               보호소
             </span>
           </NavLink>

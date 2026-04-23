@@ -110,9 +110,6 @@ npm start
 | `NEXT_PUBLIC_NAVER_MAP` | 네이버 지도 API 클라이언트 ID |
 | `NEXT_PUBLIC_VWORLD_API_KEY` | V-World API 키 (지오코딩) |
 | `NEXT_GOOGLE_YOUTUBE_API` | YouTube Data API 키 |
-| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Cloudinary 클라우드 이름 |
-| `CLOUDINARY_API_KEY` | Cloudinary API Key |
-| `CLOUDINARY_API_SECRET` | Cloudinary API Secret |
 | `SHELTER_ID_SECRET` | 보호소 상세 URL 토큰 암호화용 비밀 키 (미설정 시 기본값 사용) |
 | `ANALYZE` | `true` 시 빌드 시 번들 분석 결과 생성 |
 

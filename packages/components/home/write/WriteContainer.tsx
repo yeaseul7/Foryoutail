@@ -23,7 +23,7 @@ import { useRouter } from 'next/navigation';
 import type { PostBoardCategory, PostData } from '@/packages/type/postType';
 import WriteNotice from './wrtieGuidLine';
 import BlockingProgressOverlay from '@/packages/components/base/BlockingProgressOverlay';
-import { uploadCardImages } from '@/lib/client/cloudinary';
+import { uploadCardImages } from '@/lib/client/imageUpload';
 import {
   deriveBoardTitleFromHtml,
   prependImageUrlsToHtmlContent,

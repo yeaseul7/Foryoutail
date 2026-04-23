@@ -6,7 +6,7 @@ import { updateProfile } from 'firebase/auth';
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { uploadCardImages } from '@/lib/client/cloudinary';
+import { uploadCardImages } from '@/lib/client/imageUpload';
 import EditingHeader from './EditingHeader';
 import EditingHeaderText from './EditingHeaderText';
 import EditingBtn from './EditingBtn';

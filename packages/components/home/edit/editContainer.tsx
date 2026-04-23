@@ -17,7 +17,7 @@ import { useAuth } from '@/lib/firebase/auth';
 import Loading from '@/packages/components/base/Loading';
 import NotFound from '@/packages/components/base/NotFound';
 import WriteNotice from '../write/wrtieGuidLine';
-import { uploadCardImages } from '@/lib/client/cloudinary';
+import { uploadCardImages } from '@/lib/client/imageUpload';
 import {
   deriveBoardTitleFromHtml,
   prependImageUrlsToHtmlContent,

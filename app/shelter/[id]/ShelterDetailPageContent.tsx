@@ -28,7 +28,6 @@ export default function ShelterDetailPageContent({
   const [error, setError] = useState<string | null>(null);
   const [animalImgList, setAnimalImgList] = useState<string[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [emptyAnimationData, setEmptyAnimationData] = useState<object | null>(null);
   const [shelterInfo, setShelterInfo] = useState<ShelterInfoItem | null>(null);
 
   useEffect(() => {
@@ -93,13 +92,6 @@ export default function ShelterDetailPageContent({
     fetchShelterInfo();
   }, [animalData?.careRegNo]);
 
-  useEffect(() => {
-    fetch('/static/lottie/search_empty.json')
-      .then((res) => res.json())
-      .then((data) => setEmptyAnimationData(data))
-      .catch((err) => console.error('Failed to load animation:', err));
-  }, []);
-
   const mainImage = useMemo(() => {
     if (animalImgList.length > 0) {
       return animalImgList[selectedImageIndex];
@@ -138,7 +130,6 @@ export default function ShelterDetailPageContent({
   if (error || !animalData) {
     return (
       <Notfound_ad_animal
-        emptyAnimationData={emptyAnimationData}
         error={error || '동물 정보를 찾을 수 없습니다.'}
         router={router}
       />

@@ -1,16 +1,4 @@
 'use client';
-import {
-  autoUpdate,
-  flip,
-  FloatingPortal,
-  offset,
-  shift,
-  useClick,
-  useDismiss,
-  useFloating,
-  useInteractions,
-  useRole,
-} from '@floating-ui/react';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   MdArrowDropDown,
@@ -107,35 +95,6 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
   const [sidoList, setSidoList] = useState<SidoItem[]>([]);
 
-  const { floatingStyles: datePopoverStyles, refs: datePopoverRefs, context: datePopoverContext } = useFloating({
-    open: dateRangeOpen,
-    onOpenChange: (open) => {
-      setDateRangeOpen(open);
-      if (open) setOpenDropdown(null);
-    },
-    placement: 'bottom-start',
-    whileElementsMounted: autoUpdate,
-    middleware: [offset(8), flip(), shift({ padding: 8 })],
-  });
-
-  const dateClick = useClick(datePopoverContext);
-  const dateDismiss = useDismiss(datePopoverContext);
-  const dateRole = useRole(datePopoverContext);
-  const { getReferenceProps: getDateReferenceProps, getFloatingProps: getDateFloatingProps } =
-    useInteractions([dateClick, dateDismiss, dateRole]);
-  const setDateReference = useCallback(
-    (node: HTMLButtonElement | null) => {
-      datePopoverRefs.setReference(node);
-    },
-    [datePopoverRefs],
-  );
-  const setDateFloating = useCallback(
-    (node: HTMLDivElement | null) => {
-      datePopoverRefs.setFloating(node);
-    },
-    [datePopoverRefs],
-  );
-
   useEffect(() => {
     if (typeof window === 'undefined') return;
     queueMicrotask(() => {
@@ -151,14 +110,17 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
   }, []);
 
   useEffect(() => {
-    if (!openDropdown) return;
+    if (!openDropdown && !dateRangeOpen) return;
     const onDocMouseDown = (e: MouseEvent) => {
       const el = e.target as HTMLElement | null;
-      if (!el?.closest('[data-filter-dropdown-root]')) setOpenDropdown(null);
+      if (!el?.closest('[data-filter-dropdown-root]')) {
+        setOpenDropdown(null);
+        setDateRangeOpen(false);
+      }
     };
     document.addEventListener('mousedown', onDocMouseDown);
     return () => document.removeEventListener('mousedown', onDocMouseDown);
-  }, [openDropdown]);
+  }, [openDropdown, dateRangeOpen]);
 
   const derivedStartDate = useMemo(() => {
     if (filters.bgnde && filters.bgnde.length === 8) {
@@ -369,13 +331,14 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
             )}
 
             {/* 접수일: 한 컨트롤에서 from~to (팝오버) — 가로 2비율 */}
-            <div className={filterDateFieldWrapClass}>
+            <div className={filterDateFieldWrapClass} data-filter-dropdown-root>
               <button
                 type="button"
-                ref={setDateReference}
-                {...getDateReferenceProps({
-                  className: filterPillButtonClass,
-                })}
+                onClick={() => {
+                  setOpenDropdown(null);
+                  setDateRangeOpen((open) => !open);
+                }}
+                className={filterPillButtonClass}
               >
                 <span className={filterPillLeadClass}>
                   <MdCalendarToday className={filterPillIconClass} aria-hidden />
@@ -389,48 +352,38 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
                 />
               </button>
               {dateRangeOpen && (
-                <FloatingPortal>
-                  <div
-                    data-date-range-popover
-                    ref={setDateFloating}
-                    style={datePopoverStyles}
-                    {...getDateFloatingProps({
-                      className:
-                        'z-[100] w-[min(100vw-2rem,20rem)] rounded-2xl border border-gray-200/95 bg-white p-4 shadow-xl outline-none',
-                    })}
-                  >
-                    <p className={datePopoverLabelClass}>시작일</p>
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={handleStartDateChange}
-                      className={datePopoverInputClass}
-                    />
-                    <p className={datePopoverLabelEndClass}>종료일</p>
-                    <input
-                      type="date"
-                      value={endDate}
-                      onChange={handleEndDateChange}
-                      className={datePopoverInputClass}
-                    />
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={clearDateRangeInPopover}
-                        className="rounded-full border border-gray-300 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
-                      >
-                        기간 지우기
-                      </button>
-                      <button
-                        type="button"
-                        onClick={commitDateRange}
-                        className="rounded-full bg-primary1 px-4 py-2 text-sm font-semibold text-white hover:opacity-95"
-                      >
-                        적용
-                      </button>
-                    </div>
+                <div className="absolute left-0 top-full z-[100] mt-2 w-[min(100vw-2rem,20rem)] rounded-2xl border border-gray-200/95 bg-white p-4 shadow-xl outline-none">
+                  <p className={datePopoverLabelClass}>시작일</p>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={handleStartDateChange}
+                    className={datePopoverInputClass}
+                  />
+                  <p className={datePopoverLabelEndClass}>종료일</p>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={handleEndDateChange}
+                    className={datePopoverInputClass}
+                  />
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={clearDateRangeInPopover}
+                      className="rounded-full border border-gray-300 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                    >
+                      기간 지우기
+                    </button>
+                    <button
+                      type="button"
+                      onClick={commitDateRange}
+                      className="rounded-full bg-primary1 px-4 py-2 text-sm font-semibold text-white hover:opacity-95"
+                    >
+                      적용
+                    </button>
                   </div>
-                </FloatingPortal>
+                </div>
               )}
             </div>
 

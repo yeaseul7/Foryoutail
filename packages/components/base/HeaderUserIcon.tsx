@@ -1,5 +1,4 @@
 'use client';
-import { MdArrowDropDown } from 'react-icons/md';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import UserProfile from '../common/UserProfile';
 
@@ -26,7 +25,9 @@ export default function HeaderUserIcon({
         existName={false}
         iconSize="text-xl"
       />
-      <MdArrowDropDown className="ml-1 text-text3 transition-all duration-125 ease-in -mr-1.75 text-2xl group-hover:text-text1" />
+      <span className="ml-1 text-text3 transition-all duration-125 ease-in -mr-1.75 text-lg group-hover:text-text1">
+        ▾
+      </span>
     </button>
   );
 }
