@@ -1,5 +1,6 @@
-import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+'use client';
+
+import { useParams } from 'next/navigation';
 import PageTemplate from "@/packages/components/base/PageTemplate";
 import { ShelterInfoItem } from '@/packages/type/shelterTyps';
 import type {
@@ -7,126 +8,67 @@ import type {
 } from '@/packages/type/shelterAnimalTypes';
 import { fetchShelterInfoByCareRegNo } from '@/lib/client/shelter-info';
 import ShelterInfoComponent from '@/packages/components/home/shelterList/ShelterInfoComponent';
-import { loadAllShelterAnimalsFromFirestore } from '@/lib/domain/shelter/shelter-animals';
-
-import {
-    getBaseUrl,
-    generateMetadata as generateMetadataUtil,
-    generateDefaultMetadata,
-} from '@/packages/utils/metadata';
 import PageFooter from '@/packages/components/base/PageFooter';
+import { useEffect, useState } from 'react';
+import Loading from '@/packages/components/base/Loading';
+import { fetchShelterAnimals } from '@/lib/client/shelter-data';
 
-export const runtime = 'edge';
-
-interface AnimalShelterPageProps {
-    params: Promise<{ id: string }>;
-}
-
-const baseUrl = getBaseUrl();
-
-async function fetchShelterInfo(careRegNo: string): Promise<ShelterInfoItem | null> {
-    try {
-        return await fetchShelterInfoByCareRegNo(careRegNo, { baseUrl, cache: 'no-store' });
-    } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        console.error('보호소 정보 조회 실패:', message);
-        return null;
-    }
-}
-
-async function fetchShelterAnimals(careRegNo: string): Promise<ShelterAnimalItem[]> {
-    try {
-        const suffix = `-${careRegNo}`;
-        const animals = await loadAllShelterAnimalsFromFirestore();
-        return animals
-            .filter((item) => item.careRegNo === careRegNo || `${item.desertionNo}-${item.careRegNo}`.endsWith(suffix))
-            .sort((a, b) => {
-                const aNum = parseInt(String(a.noticeSdt || a.happenDt || '0').replace(/\D/g, ''), 10) || 0;
-                const bNum = parseInt(String(b.noticeSdt || b.happenDt || '0').replace(/\D/g, ''), 10) || 0;
-                return bNum - aNum;
-            });
-    } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        console.error('shelterAnimals 조회 실패:', message);
-        return [];
-    }
-}
-
-export async function generateMetadata({
-    params,
-}: {
-    params: Promise<{ id: string }>;
-}): Promise<Metadata> {
-    const { id } = await params;
-    const baseUrl = getBaseUrl();
-    const pageUrl = `${baseUrl}/animalShelter/${id}`;
+export default function AnimalShelterPage() {
+    const params = useParams<{ id: string }>();
+    const id = params.id;
 
     const careRegNo = (id ?? '').trim();
-    if (!careRegNo) {
-        return generateDefaultMetadata(
-            '보호소 정보 | 포유테일',
-            '보호소 정보 및 입양 대기 중인 친구들을 확인해보세요.',
-            pageUrl,
-            { type: 'website' },
-        );
-    }
+    const [shelter, setShelter] = useState<ShelterInfoItem | null>(null);
+    const [animals, setAnimals] = useState<ShelterAnimalItem[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    try {
-        const shelter = await fetchShelterInfo(careRegNo);
+    useEffect(() => {
+        let ignore = false;
 
-        if (shelter) {
-            const shelterName = shelter.careNm || '보호소';
-            const title = `${shelterName} | 포유테일`;
-
-            let description = '';
-            if (shelter.careAddr) {
-                description = `${shelterName} - ${shelter.careAddr}. 입양 대기 중인 친구들을 만나보세요.`;
-            } else {
-                description = `${shelterName}에서 입양 대기 중인 친구들을 만나보세요.`;
+        async function loadData() {
+            if (!careRegNo) {
+                setLoading(false);
+                return;
             }
 
-            return generateMetadataUtil({
-                title,
-                description,
-                url: pageUrl,
-                type: 'website',
-                includeCanonical: true,
-                includeTwitterCreator: true,
-                imageAlt: shelterName,
-            });
+            try {
+                setLoading(true);
+                const [shelterData, animalData] = await Promise.all([
+                    fetchShelterInfoByCareRegNo(careRegNo, { cache: 'no-store' }),
+                    fetchShelterAnimals({
+                        care_reg_no: careRegNo,
+                        pageNo: 1,
+                        numOfRows: 1000,
+                    }),
+                ]);
+
+                if (!ignore) {
+                    setShelter(shelterData);
+                    setAnimals(animalData);
+                }
+            } catch (err) {
+                const message = err instanceof Error ? err.message : String(err);
+                console.error('보호소 상세 조회 실패:', message);
+                if (!ignore) {
+                    setShelter(null);
+                    setAnimals([]);
+                }
+            } finally {
+                if (!ignore) setLoading(false);
+            }
         }
-    } catch (error) {
-        console.error('메타데이터 생성 중 오류:', error);
-    }
 
-    return generateDefaultMetadata(
-        '보호소 정보 | 포유테일',
-        '보호소 정보 및 입양 대기 중인 친구들을 확인해보세요.',
-        pageUrl,
-        {
-            type: 'website',
-        },
-    );
-}
-
-export default async function AnimalShelterPage({ params }: AnimalShelterPageProps) {
-    const { id } = await params;
-
-    const careRegNo = (id ?? '').trim();
-    if (!careRegNo) {
-        notFound();
-    }
-
-    const [shelter, animals] = await Promise.all([
-        fetchShelterInfo(careRegNo),
-        fetchShelterAnimals(careRegNo),
-    ]);
+        loadData();
+        return () => {
+            ignore = true;
+        };
+    }, [careRegNo]);
 
     return (
         <div className="w-full min-h-screen font-sans bg-white">
             <main className="flex flex-col justify-between items-center w-full min-h-screen bg-whitesm:items-start">
                 <PageTemplate>
-                    <ShelterInfoComponent shelter={shelter} animals={animals} />
+                    {loading ? <Loading /> : <ShelterInfoComponent shelter={shelter} animals={animals} />}
                 </PageTemplate>
                 <PageFooter />
             </main>

@@ -1,13 +1,8 @@
 import { Suspense } from 'react';
 import PageTemplate from '@/packages/components/base/PageTemplate';
 import PageFooter from '@/packages/components/base/PageFooter';
-import ShelterPostsServer from '@/packages/components/shelter/ShelterPostsServer';
+import ShelterPostsClient from '@/packages/components/shelter/ShelterPostsClient';
 import AbandonedCardSkeleton from '@/packages/components/skeleton/AbandonedCardSkeleton';
-
-export const runtime = 'edge';
-
-/** 공공 API no-store fetch + useSearchParams로 정적 프리렌더 불가 */
-export const dynamic = 'force-dynamic';
 
 function ShelterPostsFallback() {
   return (
@@ -29,7 +24,7 @@ export default function Shelter() {
     <main className="page-container-full">
       <PageTemplate>
         <Suspense fallback={<ShelterPostsFallback />}>
-          <ShelterPostsServer />
+          <ShelterPostsClient initialData={{ items: [], hasMore: true }} />
         </Suspense>
       </PageTemplate>
       <PageFooter />

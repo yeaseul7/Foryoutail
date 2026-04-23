@@ -191,6 +191,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
   const listQuickFilterRef = useRef<ListQuickFilterId | null>(null);
   const listQuickNextApiPageRef = useRef(1);
   const shelterAnimalDataRef = useRef(shelterAnimalData);
+  const loadedInitialRef = useRef(initialData.items.length > 0);
 
   useEffect(() => {
     listQuickFilterRef.current = listQuickFilter;
@@ -512,6 +513,13 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
       orgNm: orgNm || null,
     });
   }, [searchParams, handleFilterChange]);
+
+  useEffect(() => {
+    if (loadedInitialRef.current || appliedUrlQueryRef.current) return;
+    loadedInitialRef.current = true;
+    setLoading(true);
+    void handleFetchShelterAnimalData(1, true, filtersRef.current);
+  }, [handleFetchShelterAnimalData]);
 
   const handleLoadMorePage = useCallback(() => {
     if (!hasMoreRef.current || isLoadingMoreRef.current || isFilterRequestInProgress.current) return;
