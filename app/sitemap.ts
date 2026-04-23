@@ -1,7 +1,5 @@
 import { MetadataRoute } from 'next';
-import { getBoardsData } from '@/lib/api/post';
-import { collection, getDocs } from 'firebase/firestore';
-import { firestore } from '@/lib/firebase/firebase';
+import { listFirestoreCollection } from '@/lib/server/firestore-rest';
 
 const baseUrl =
   process.env.NEXT_PUBLIC_BASE_URL ||
@@ -13,6 +11,11 @@ const baseUrl =
 
 function getDateFromTimestamp(timestamp: unknown): Date {
   if (!timestamp) return new Date();
+
+  if (typeof timestamp === 'string') {
+    const date = new Date(timestamp);
+    return Number.isNaN(date.getTime()) ? new Date() : date;
+  }
 
   if (
     typeof timestamp === 'object' &&
@@ -51,10 +54,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1,
     },
     {
-      url: `${baseUrl}/search`,
+      url: `${baseUrl}/community`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
-      priority: 0.5,
+      priority: 0.7,
     },
     {
       url: `${baseUrl}/shelter`,
@@ -62,21 +65,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'daily',
       priority: 0.8,
     },
+    {
+      url: `${baseUrl}/animalShelter`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/search-animal`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
   ];
 
   let dynamicPages: MetadataRoute.Sitemap = [];
 
   try {
-    const [posts, usersSnapshot] = await Promise.all([
-      getBoardsData(),
-      getDocs(collection(firestore, 'users')),
+    const [posts, users] = await Promise.all([
+      listFirestoreCollection('boards', 1000, { cache: 'force-cache' }),
+      listFirestoreCollection('users', 1000, { cache: 'force-cache' }),
     ]);
 
     const postPages: MetadataRoute.Sitemap = posts.map((post) => {
-      const lastModified = post.updatedAt
-        ? getDateFromTimestamp(post.updatedAt)
-        : post.createdAt
-          ? getDateFromTimestamp(post.createdAt)
+      const lastModified = post.data.updatedAt
+        ? getDateFromTimestamp(post.data.updatedAt)
+        : post.data.createdAt
+          ? getDateFromTimestamp(post.data.createdAt)
           : new Date();
 
       return {
@@ -87,9 +102,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       };
     });
 
-    const userPages: MetadataRoute.Sitemap = usersSnapshot.docs.map(
+    const userPages: MetadataRoute.Sitemap = users.map(
       (userDoc) => {
-        const userData = userDoc.data();
+        const userData = userDoc.data;
         const lastModified = userData.updatedAt
           ? getDateFromTimestamp(userData.updatedAt)
           : userData.createdAt

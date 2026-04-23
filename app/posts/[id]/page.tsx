@@ -1,11 +1,11 @@
 'use client';
 
-import PageTemplate from '@/packages/ui/components/base/PageTemplate';
-import PostScrollList from '@/packages/ui/components/home/post/PostScrollList';
-import UserHeader from '@/packages/ui/components/home/profile/UserHeader';
-import ProfileSwitchTag, { type ProfileCategory } from '@/packages/ui/components/home/ProfileSwitchTag';
-import LikedAnimalList from '@/packages/ui/components/shelter/LikedAnimalList';
-import FavoriteShelterList from '@/packages/ui/components/shelter/FavoriteShelterList';
+import PageTemplate from '@/packages/components/base/PageTemplate';
+import PostScrollList from '@/packages/components/home/post/PostScrollList';
+import UserHeader from '@/packages/components/home/profile/UserHeader';
+import ProfileSwitchTag, { type ProfileCategory } from '@/packages/components/home/ProfileSwitchTag';
+import LikedAnimalList from '@/packages/components/shelter/LikedAnimalList';
+import FavoriteShelterList from '@/packages/components/shelter/FavoriteShelterList';
 import { useAuth } from '@/lib/firebase/auth';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';

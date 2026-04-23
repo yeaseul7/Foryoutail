@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   getFirestoreDocument,
   runFirestoreCollectionQuery,
-} from '@/lib/firebase/firestore-rest';
+} from '@/lib/server/firestore-rest';
 import type { ShelterInfoItem } from '@/packages/type/shelterTyps';
 import { sidoLocation } from '@/static/data/sidoLocation';
 

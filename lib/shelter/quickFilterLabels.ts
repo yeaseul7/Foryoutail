@@ -1,4 +1,4 @@
-import type { QuickFilterKey } from '@/lib/api/shelter';
+import type { QuickFilterKey } from '@/lib/client/shelter';
 import { MdChildCare, MdGroups, MdLocationOn, MdSentimentSatisfied } from 'react-icons/md';
 
 /** 퀵 필터 표시 문구 (홈 히어로·입양 목록 요약 등 공통) */

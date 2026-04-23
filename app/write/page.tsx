@@ -1,14 +1,14 @@
 'use client';
-import PageTemplate from '@/packages/ui/components/base/PageTemplate';
+import PageTemplate from '@/packages/components/base/PageTemplate';
 import dynamic from 'next/dynamic';
-import WriteContainerSkeleton from '@/packages/ui/components/base/WriteContainerSkeleton';
-import PageFooter from '@/packages/ui/components/base/PageFooter';
+import WriteContainerSkeleton from '@/packages/components/skeleton/WriteContainerSkeleton';
+import PageFooter from '@/packages/components/base/PageFooter';
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type { PostBoardCategory } from '@/packages/type/postType';
 
 const WriteContainer = dynamic(
-  () => import('@/packages/ui/components/home/write/WriteContainer'),
+  () => import('@/packages/components/home/write/WriteContainer'),
   {
     ssr: false,
     loading: () => <WriteContainerSkeleton />

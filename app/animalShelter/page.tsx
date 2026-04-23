@@ -1,6 +1,6 @@
-import PageFooter from "@/packages/ui/components/base/PageFooter";
-import PageTemplate from "@/packages/ui/components/base/PageTemplate";
-import ShelterPosts from "@/packages/ui/components/home/shelterList/ShelterPosts";
+import PageFooter from "@/packages/components/base/PageFooter";
+import PageTemplate from "@/packages/components/base/PageTemplate";
+import ShelterPosts from "@/packages/components/home/shelterList/ShelterPosts";
 
 export default function AnimalShelter() {
     return (

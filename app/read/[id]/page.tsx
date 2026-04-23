@@ -1,8 +1,8 @@
 import { Metadata } from 'next';
-import dynamic from 'next/dynamic';
-import { getPostById } from '@/lib/api/post';
-import PageTemplate from '@/packages/ui/components/base/PageTemplate';
-import PageFooter from '@/packages/ui/components/base/PageFooter';
+import { getPostById } from '@/lib/domain/community/post';
+import PageTemplate from '@/packages/components/base/PageTemplate';
+import PageFooter from '@/packages/components/base/PageFooter';
+import ReadPostContentClientOnly from '@/packages/components/home/read/ReadPostContentClientOnly';
 import {
   getBaseUrl,
   extractText,
@@ -11,18 +11,7 @@ import {
   generateDefaultMetadata,
 } from '@/packages/utils/metadata';
 
-import ReadPostContentSkeleton from '@/packages/ui/components/base/ReadPostContentSkeleton';
-
 export const runtime = 'edge';
-
-// Tiptap을 사용하는 ReadPostContent를 동적 import로 지연 로드
-const ReadPostContent = dynamic(
-  () => import('@/packages/ui/components/home/read/ReadPostContent'),
-  {
-    ssr: true,
-    loading: () => <ReadPostContentSkeleton />
-  }
-);
 
 export async function generateMetadata({
   params,
@@ -76,7 +65,7 @@ export default async function ReadPostPage({
   return (
     <main className="page-container-full">
       <PageTemplate visibleHeaderButtons={true}>
-        <ReadPostContent postId={postId} initialPost={post} />
+        <ReadPostContentClientOnly postId={postId} initialPost={post} />
       </PageTemplate>
       <PageFooter />
     </main>

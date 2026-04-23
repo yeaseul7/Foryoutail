@@ -1,7 +1,7 @@
 import { doc, getDoc } from 'firebase/firestore';
 import { firestore } from '@/lib/firebase/firebase';
 import { MappedHistoryData } from '@/packages/type/history';
-import { getHistoryRecent } from '@/lib/api/hisotry';
+import { getHistoryRecent } from '@/lib/domain/community/history';
 
 /**
  * 히스토리를 조회하고 사용자 정보와 게시물 정보를 매핑

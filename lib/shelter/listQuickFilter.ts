@@ -2,7 +2,7 @@ import {
   fetchShelterAnimalData,
   isShelterAnimalListable,
   type AnimalFilterState,
-} from '@/lib/api/shelter';
+} from '@/lib/client/shelter';
 import type { ShelterAnimalItem } from '@/packages/type/postType';
 
 export type ListQuickFilterId = 'birthYear' | 'noticeEnding' | 'recentReg' | 'neutered';

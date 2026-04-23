@@ -1,9 +1,8 @@
 import { Suspense } from 'react';
-import PageTemplate from '@/packages/ui/components/base/PageTemplate';
-import PageFooter from '@/packages/ui/components/base/PageFooter';
-import ShelterPostsServer from '@/packages/ui/components/shelter/ShelterPostsServer';
-import AbandonedCardSkeleton from '@/packages/ui/components/base/AbandonedCardSkeleton';
-import PreloadSearchModel from './PreloadSearchModel';
+import PageTemplate from '@/packages/components/base/PageTemplate';
+import PageFooter from '@/packages/components/base/PageFooter';
+import ShelterPostsServer from '@/packages/components/shelter/ShelterPostsServer';
+import AbandonedCardSkeleton from '@/packages/components/skeleton/AbandonedCardSkeleton';
 
 export const runtime = 'edge';
 
@@ -29,7 +28,6 @@ export default function Shelter() {
   return (
     <main className="page-container-full">
       <PageTemplate>
-        <PreloadSearchModel />
         <Suspense fallback={<ShelterPostsFallback />}>
           <ShelterPostsServer />
         </Suspense>

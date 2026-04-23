@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { ShelterDataFirestoreParams } from '@/lib/utils/shelterAnimalsFirestore';
+import type { ShelterDataFirestoreParams } from '@/lib/domain/shelter/shelter-animals';
 import {
   buildShelterDataJsonForDesertionNo,
   buildShelterDataJsonFromQueryResult,
   queryShelterAnimalsFromFirestore,
-} from '@/lib/utils/shelterAnimalsFirestore';
+} from '@/lib/domain/shelter/shelter-animals';
 
 export const runtime = 'edge';
 
