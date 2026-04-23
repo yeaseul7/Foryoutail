@@ -5,6 +5,10 @@ import { useState, useMemo, useCallback } from 'react';
 import { ShelterAnimalItem } from '@/packages/type/postType';
 import getOptimizedCloudinaryUrl from '@/packages/utils/optimization';
 import {
+  normalizeAnimalImageUrl,
+  shouldBypassNextImageOptimization,
+} from '@/packages/utils/imageSource';
+import {
   HiCalendar,
   HiCalendarDays,
   HiClock,
@@ -58,7 +62,7 @@ export default function AbandonedCard({
     if (currentImageUrl.includes('res.cloudinary.com')) {
       return getOptimizedCloudinaryUrl(currentImageUrl, 150, 150);
     }
-    return currentImageUrl;
+    return normalizeAnimalImageUrl(currentImageUrl);
   }, [currentImageUrl]);
 
   const handleImageError = useCallback(() => {
@@ -88,15 +92,10 @@ export default function AbandonedCard({
     return thumbnailImage || defaultImage;
   }, [availableImages.length, currentImageIndex, thumbnailImage, defaultImage]);
 
-  const isExternalImage = useMemo(() => {
-    if (!currentImageUrl) return false;
-    if (currentImageUrl.includes('res.cloudinary.com')) return true;
-    if (currentImageUrl.includes('openapi.animal.go.kr') || currentImageUrl.includes('www.animal.go.kr')) {
-      return false;
-    }
-    if (displayImage === defaultImage) return true;
-    return false;
-  }, [currentImageUrl, displayImage, defaultImage]);
+  const shouldUseUnoptimizedImage = useMemo(
+    () => shouldBypassNextImageOptimization(displayImage),
+    [displayImage],
+  );
 
   /** 공고종료·입양완료 등 processState에 '종료'가 포함된 경우 */
   const isProcessEnded = useMemo(() => {
@@ -195,9 +194,7 @@ export default function AbandonedCard({
           fill
           className="object-cover"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 20vw"
-          unoptimized={
-            isExternalImage || displayImage === defaultImage || undefined
-          }
+          unoptimized={shouldUseUnoptimizedImage}
           loading="lazy"
           onError={handleImageError}
         />

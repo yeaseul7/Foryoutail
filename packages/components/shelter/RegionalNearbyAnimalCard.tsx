@@ -5,6 +5,10 @@ import { useRouter } from 'next/navigation';
 import type { ShelterAnimalItem } from '@/packages/type/postType';
 import getOptimizedCloudinaryUrl from '@/packages/utils/optimization';
 import {
+  normalizeAnimalImageUrl,
+  shouldBypassNextImageOptimization,
+} from '@/packages/utils/imageSource';
+import {
   getFirstImageUrl,
   getKindLabel,
 } from '@/packages/components/shelter/horizontalAnimalCarousel';
@@ -33,7 +37,7 @@ export default function RegionalNearbyAnimalCard({ item }: { item: ShelterAnimal
   const imageUrl = getFirstImageUrl(item);
   const displayUrl = imageUrl?.includes('res.cloudinary.com')
     ? getOptimizedCloudinaryUrl(imageUrl, 720, 720)
-    : imageUrl || '/static/images/defaultDog.png';
+    : normalizeAnimalImageUrl(imageUrl || '/static/images/defaultDog.png');
   const detailLine = getPrimaryTitle(item);
   const headlineLine = getHeadlineLine(item);
 
@@ -57,7 +61,7 @@ export default function RegionalNearbyAnimalCard({ item }: { item: ShelterAnimal
           fill
           className="object-cover"
           sizes="(max-width: 640px) 168px, 196px"
-          unoptimized={displayUrl === '/static/images/defaultDog.png'}
+          unoptimized={shouldBypassNextImageOptimization(displayUrl)}
           loading="lazy"
         />
       </div>

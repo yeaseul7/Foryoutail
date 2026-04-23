@@ -6,6 +6,7 @@ import { HiHeart, HiOutlineHeart } from 'react-icons/hi2';
 import { useRouter } from 'next/navigation';
 import { IoIosCalendar } from 'react-icons/io';
 import { useShelterLike } from '@/hooks/useShelterLike';
+import { normalizeAnimalImageUrl } from '@/packages/utils/imageSource';
 
 export default function WatingAnimalCard({ animal }: { animal: ShelterAnimalItem }) {
   const router = useRouter();
@@ -35,7 +36,7 @@ export default function WatingAnimalCard({ animal }: { animal: ShelterAnimalItem
     return happenDt;
   };
 
-  const imageUrl = animal.popfile1 || '/static/images/defaultDog.png';
+  const imageUrl = normalizeAnimalImageUrl(animal.popfile1 || '/static/images/defaultDog.png');
   const animalName = animal.kindNm || animal.kindFullNm || '이름 없음';
   const age = getAgeText(animal.age);
   const breed = animal.kindNm || '품종 미상';

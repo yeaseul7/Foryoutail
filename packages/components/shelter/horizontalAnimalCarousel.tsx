@@ -8,6 +8,10 @@ import type { ShelterAnimalItem } from '@/packages/type/postType';
 import getOptimizedCloudinaryUrl from '@/packages/utils/optimization';
 import { useShelterLike } from '@/hooks/useShelterLike';
 import { MdShare } from 'react-icons/md';
+import {
+  normalizeAnimalImageUrl,
+  shouldBypassNextImageOptimization,
+} from '@/packages/utils/imageSource';
 
 /** 720, 3.1k 형태 (참고 UI용) */
 export function formatCompactLikeCount(n: number): string {
@@ -125,7 +129,7 @@ export function HorizontalAnimalPhotoCard({
   const imageUrl = getFirstImageUrl(item);
   const displayUrl = imageUrl?.includes('res.cloudinary.com')
     ? getOptimizedCloudinaryUrl(imageUrl, 400, 500)
-    : imageUrl || '/static/images/defaultDog.png';
+    : normalizeAnimalImageUrl(imageUrl || '/static/images/defaultDog.png');
   const region = getShortRegion(item);
   const breedLabel = item.kindNm?.trim() || getKindLabel(item);
   const baseLikeCount =
@@ -160,7 +164,7 @@ export function HorizontalAnimalPhotoCard({
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           sizes="250px"
-          unoptimized={displayUrl === '/static/images/defaultDog.png'}
+          unoptimized={shouldBypassNextImageOptimization(displayUrl)}
           loading="lazy"
         />
         {item.desertionNo?.trim() ? (
@@ -216,7 +220,7 @@ export function HorizontalAnimalCard({ item }: { item: ShelterAnimalItem }) {
   const imageUrl = getFirstImageUrl(item);
   const displayUrl = imageUrl?.includes('res.cloudinary.com')
     ? getOptimizedCloudinaryUrl(imageUrl, 400, 500)
-    : imageUrl || '/static/images/defaultDog.png';
+    : normalizeAnimalImageUrl(imageUrl || '/static/images/defaultDog.png');
   const isNew = isNewNotice(item);
   const region = getShortRegion(item);
   const breedLabel = item.kindNm?.trim() || getKindLabel(item);
@@ -244,7 +248,7 @@ export function HorizontalAnimalCard({ item }: { item: ShelterAnimalItem }) {
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           sizes="250px"
-          unoptimized={displayUrl === '/static/images/defaultDog.png'}
+          unoptimized={shouldBypassNextImageOptimization(displayUrl)}
           loading="lazy"
         />
 
