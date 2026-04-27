@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/firebase/auth';
 import { firestore } from '@/lib/firebase/firebase';
@@ -231,7 +232,16 @@ export default function RegisterPage() {
               className="w-4 h-4 border-gray-300 rounded text-primary1 focus:ring-primary1"
             />
             <label htmlFor="agree" className="text-sm text-text1">
-              <span>이용약관과 개인정보취급방침에 동의합니다.</span>
+              <span>
+                <Link href="/terms" className="text-primary1 hover:underline">
+                  이용약관
+                </Link>
+                {' 및 '}
+                <Link href="/privacy" className="text-primary1 hover:underline">
+                  개인정보처리방침
+                </Link>
+                에 동의합니다.
+              </span>
             </label>
           </div>
 

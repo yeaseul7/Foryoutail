@@ -9,6 +9,10 @@ const FOOTER_LINKS = {
     { label: '커뮤니티', href: '/community' },
     { label: '카드뉴스', href: '/card_news' },
   ],
+  정책: [
+    { label: '개인정보처리방침', href: '/privacy' },
+    { label: '서비스 이용약관', href: '/terms' },
+  ],
 } as const;
 
 export default function PageFooter() {
