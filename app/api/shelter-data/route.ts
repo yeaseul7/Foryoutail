@@ -6,8 +6,6 @@ import {
   queryShelterAnimals,
 } from '@/lib/domain/shelter/shelter-animals';
 
-export const runtime = 'edge';
-
 function parseShelterDataParams(searchParams: URLSearchParams): ShelterDataQueryParams {
   const params: ShelterDataQueryParams = {};
   if (searchParams.has('bgnde')) params.bgnde = searchParams.get('bgnde')!;

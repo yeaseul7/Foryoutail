@@ -7,8 +7,6 @@ import type {
   ShelterAnimalRow,
 } from '@/packages/type/shelterAnimalTypes';
 
-export const runtime = 'edge';
-
 const DEFAULT_LIMIT = 5;
 
 interface TopLikedAnimalRow {

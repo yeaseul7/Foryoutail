@@ -5,8 +5,6 @@ import {
   syncPublicUserByEmailAwareUpsert,
 } from '@/lib/server/supabase-admin';
 
-export const runtime = 'edge';
-
 interface SyncUserBody {
   id?: string;
   email?: string | null;

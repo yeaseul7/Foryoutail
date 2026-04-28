@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export const runtime = 'edge';
-
 // API 응답 타입 정의
 interface SidoItem {
   SIDO_CD: string;

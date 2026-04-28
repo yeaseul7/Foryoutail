@@ -3,8 +3,6 @@ import { createSupabaseAdminClient } from '@/lib/server/supabase-admin';
 import type { ShelterInfoItem } from '@/packages/type/shelterTyps';
 import { sidoLocation } from '@/static/data/sidoLocation';
 
-export const runtime = 'edge';
-
 interface ShelterInfoParams {
   id?: string;
   care_reg_no?: string;
