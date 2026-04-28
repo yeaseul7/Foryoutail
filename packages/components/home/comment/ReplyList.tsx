@@ -1,9 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { firestore } from '@/lib/firebase/firebase';
+import { supabase } from '@/lib/supabase/client';
 import { ReplyData } from '@/packages/type/commentType';
-import type { CommentCollectionName } from './CommentList';
 import ReplyContainer from './ReplyContainer';
 import ReplyWrite from './ReplyWrite';
 import DecorateHr from '../../base/DecorateHr';
@@ -12,12 +10,10 @@ import { useClickOutside } from '@/packages/utils/clickEvent';
 export default function ReplyList({
   postId,
   commentId,
-  collectionName = 'boards',
   onReplyListClosed,
 }: {
   postId: string;
   commentId: string;
-  collectionName?: CommentCollectionName;
   onReplyListClosed: () => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -31,33 +27,55 @@ export default function ReplyList({
       }
 
       try {
-        const repliesCollection = collection(
-          firestore,
-          collectionName,
-          postId,
-          'comments',
-          commentId,
-          'replies',
-        );
-        const q = query(repliesCollection, orderBy('createdAt', 'desc'));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-          const repliesList = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          })) as unknown as ReplyData[];
-          setReplies(repliesList);
-          setLoading(false);
-        });
+        const { data, error } = await supabase
+          .from('comments')
+          .select('id, author_id, content, created_at')
+          .eq('post_id', postId)
+          .eq('parent_id', commentId)
+          .order('created_at', { ascending: false });
 
-        return () => unsubscribe();
+        if (error) {
+          throw error;
+        }
+
+        const repliesList = (data ?? []).map((row) => ({
+          id: row.id,
+          authorId: row.author_id ?? '',
+          content: row.content,
+          createdAt: row.created_at
+            ? {
+                seconds: Math.floor(new Date(row.created_at).getTime() / 1000),
+                nanoseconds: 0,
+              }
+            : null,
+          likes: 0,
+        })) as ReplyData[];
+
+        setReplies(repliesList);
       } catch (error) {
         console.error('대댓글 조회 중 오류 발생:', error);
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchReplies();
-  }, [postId, commentId, collectionName]);
+    void fetchReplies();
+
+    const handleChanged = (event: Event) => {
+      const detail = (
+        event as CustomEvent<{ postId?: string; commentId?: string }>
+      ).detail;
+      if (detail?.postId === postId && detail?.commentId === commentId) {
+        setLoading(true);
+        void fetchReplies();
+      }
+    };
+
+    window.addEventListener('community-comments:changed', handleChanged);
+    return () => {
+      window.removeEventListener('community-comments:changed', handleChanged);
+    };
+  }, [postId, commentId]);
 
   useClickOutside(containerRef, () => onReplyListClosed());
 
@@ -80,12 +98,11 @@ export default function ReplyList({
             replyData={reply}
             postId={postId}
             commentId={commentId}
-            collectionName={collectionName}
           />
           {index !== replies.length - 1 && <DecorateHr />}
         </div>
       ))}
-      <ReplyWrite postId={postId} commentId={commentId} collectionName={collectionName} />
+      <ReplyWrite postId={postId} commentId={commentId} />
     </div>
   );
 }

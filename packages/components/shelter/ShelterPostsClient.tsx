@@ -17,6 +17,28 @@ interface ShelterPostsClientProps {
   initialData: FetchShelterAnimalDataResult;
 }
 
+function dedupeShelterAnimals(
+  items: ShelterAnimalItem[],
+): ShelterAnimalItem[] {
+  const map = new Map<string, ShelterAnimalItem>();
+
+  items.forEach((item) => {
+    const desertionNo = item.desertionNo?.trim();
+    const noticeNo = item.noticeNo?.trim();
+    const key = `${desertionNo || ''}::${noticeNo || ''}`;
+
+    if (!desertionNo && !noticeNo) {
+      return;
+    }
+
+    if (!map.has(key)) {
+      map.set(key, item);
+    }
+  });
+
+  return [...map.values()];
+}
+
 const LIST_QUICK_BUTTONS: {
   id: ListQuickFilterId;
   emoji: string;
@@ -191,6 +213,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
   const listQuickFilterRef = useRef<ListQuickFilterId | null>(null);
   const listQuickNextApiPageRef = useRef(1);
   const shelterAnimalDataRef = useRef(shelterAnimalData);
+  const loadedInitialRef = useRef(initialData.items.length > 0);
 
   useEffect(() => {
     listQuickFilterRef.current = listQuickFilter;
@@ -224,11 +247,11 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
         const filterParams = currentFilters || filtersRef.current;
         const result = await fetchShelterAnimalData(page, filterParams);
         if (isInitial) {
-          setShelterAnimalData(result.items);
+          setShelterAnimalData(dedupeShelterAnimals(result.items));
           setHasMore(result.hasMore);
         } else {
           setShelterAnimalData((prev) => {
-            const newData = [...prev, ...result.items];
+            const newData = dedupeShelterAnimals([...prev, ...result.items]);
             setHasMore(result.hasMore);
             return newData;
           });
@@ -274,7 +297,9 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
         7,
       );
       listQuickNextApiPageRef.current = nextPage;
-      setShelterAnimalData((prev) => [...prev, ...picked]);
+      setShelterAnimalData((prev) =>
+        dedupeShelterAnimals([...prev, ...picked]),
+      );
       setHasMore(!exhausted);
     } catch (e) {
       console.error('빠른 필터 추가 로드 실패:', e);
@@ -337,7 +362,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
             7,
           );
           listQuickNextApiPageRef.current = nextPage;
-          setShelterAnimalData(picked);
+          setShelterAnimalData(dedupeShelterAnimals(picked));
           setHasMore(!exhausted);
         } else {
           const result = await fetchShelterAnimalData(1, snap);
@@ -512,6 +537,13 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
       orgNm: orgNm || null,
     });
   }, [searchParams, handleFilterChange]);
+
+  useEffect(() => {
+    if (loadedInitialRef.current || appliedUrlQueryRef.current) return;
+    loadedInitialRef.current = true;
+    setLoading(true);
+    void handleFetchShelterAnimalData(1, true, filtersRef.current);
+  }, [handleFetchShelterAnimalData]);
 
   const handleLoadMorePage = useCallback(() => {
     if (!hasMoreRef.current || isLoadingMoreRef.current || isFilterRequestInProgress.current) return;
@@ -716,8 +748,12 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
                       role="list"
                       aria-label="입양 공고 목록"
                     >
-                      {shelterAnimalData.map((item) => (
-                        <div key={item.desertionNo} role="listitem" className="min-w-0">
+                      {shelterAnimalData.map((item, index) => (
+                        <div
+                          key={`${item.desertionNo}-${item.noticeNo ?? index}`}
+                          role="listitem"
+                          className="min-w-0"
+                        >
                           <AbandonedCard shelterAnimal={item} />
                         </div>
                       ))}

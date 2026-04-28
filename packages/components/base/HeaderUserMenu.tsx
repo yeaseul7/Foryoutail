@@ -1,5 +1,5 @@
 'use client';
-import { useAuth } from '@/lib/firebase/auth';
+import { useAuth } from '@/lib/supabase/auth';
 import { useClickOutsideModal } from '@/packages/utils/clickEvent';
 import { useRouter } from 'next/navigation';
 import { useCallback, useRef } from 'react';

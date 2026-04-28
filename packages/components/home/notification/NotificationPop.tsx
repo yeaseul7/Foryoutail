@@ -1,5 +1,5 @@
 'use client';
-import { useAuth } from '@/lib/firebase/auth';
+import { useAuth } from '@/lib/supabase/auth';
 import { MappedHistoryData } from '@/packages/type/history';
 import { useClickOutside } from '@/packages/utils/clickEvent';
 import { getAndMappingHistoryToCommentData } from '@/packages/utils/history/history';

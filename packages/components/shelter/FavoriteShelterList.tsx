@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
-import { firestore } from '@/lib/firebase/firebase';
 import type { ShelterInfoItem } from '@/packages/type/shelterTyps';
+import { fetchShelterInfoById } from '@/lib/client/shelter-info';
+import { fetchShelterFavoriteIds } from '@/lib/client/shelter-favorites';
 
 interface FavoriteShelterListProps {
   userId?: string;
@@ -24,8 +24,7 @@ export default function FavoriteShelterList({ userId }: FavoriteShelterListProps
 
       setLoading(true);
       try {
-        const favSnap = await getDocs(collection(firestore, 'users', userId, 'Favorites'));
-        const shelterIds = favSnap.docs.map((d) => d.id).filter(Boolean);
+        const shelterIds = await fetchShelterFavoriteIds(userId);
         if (shelterIds.length === 0) {
           setItems([]);
           setLoading(false);
@@ -34,11 +33,8 @@ export default function FavoriteShelterList({ userId }: FavoriteShelterListProps
 
         const rows = await Promise.all(
           shelterIds.map(async (id) => {
-            const byId = await getDoc(doc(firestore, 'shelter-info', id));
-            if (byId.exists()) {
-              return byId.data() as ShelterInfoItem;
-            }
-            return { careRegNo: id, careNm: '보호소' } as ShelterInfoItem;
+            const byId = await fetchShelterInfoById(id);
+            return byId ?? ({ id, careNm: '보호소' } as ShelterInfoItem);
           }),
         );
         setItems(rows);

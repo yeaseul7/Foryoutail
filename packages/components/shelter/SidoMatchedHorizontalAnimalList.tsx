@@ -319,8 +319,12 @@ export default function SidoMatchedHorizontalAnimalList() {
     <section className={SECTION_SHELL}>
       <SectionToolbar title={sectionTitle} onScroll={scrollByCard} />
       <HorizontalScroller scrollerRef={scrollerRef} asList>
-        {items.map((item) => (
-          <div key={item.desertionNo} className="snap-center" role="listitem">
+        {items.map((item, index) => (
+          <div
+            key={`${item.desertionNo}-${item.noticeNo ?? index}`}
+            className="snap-center"
+            role="listitem"
+          >
             <RegionalNearbyAnimalCard item={item} />
           </div>
         ))}

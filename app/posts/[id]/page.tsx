@@ -6,7 +6,7 @@ import UserHeader from '@/packages/components/home/profile/UserHeader';
 import ProfileSwitchTag, { type ProfileCategory } from '@/packages/components/home/ProfileSwitchTag';
 import LikedAnimalList from '@/packages/components/shelter/LikedAnimalList';
 import FavoriteShelterList from '@/packages/components/shelter/FavoriteShelterList';
-import { useAuth } from '@/lib/firebase/auth';
+import { useAuth } from '@/lib/supabase/auth';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 

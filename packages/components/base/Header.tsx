@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import HeaderUserIcon from './HeaderUserIcon';
 import HeaderUserMenu from './HeaderUserMenu';
-import { useAuth } from '@/lib/firebase/auth';
+import { useAuth } from '@/lib/supabase/auth';
 import { getUnreadHistoryCount } from '@/lib/domain/community/history';
 import Link from 'next/link';
 import NavLink from '../common/NavLink';

@@ -1,6 +1,5 @@
 'use client';
-import { firestore } from '@/lib/firebase/firebase';
-import { doc, getDoc, increment, updateDoc } from 'firebase/firestore';
+import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { IoIosArrowBack } from 'react-icons/io';
@@ -51,15 +50,55 @@ export default function ReadPostContent({
       }
 
       try {
-        const docRef = doc(firestore, 'boards', postId);
-        const docSnap = await getDoc(docRef);
+        const { data, error } = await supabase
+          .from('posts')
+          .select('id, author_id, title, content, likes_count, created_at, updated_at, main_image_url, category, tags, view_count')
+          .eq('id', postId)
+          .maybeSingle();
 
-        if (docSnap.exists()) {
-          const data = docSnap.data() as PostData;
-          setPost(data);
-        } else {
-          setError('게시물을 찾을 수 없습니다.');
+        if (error) {
+          throw error;
         }
+
+        if (!data) {
+          setError('게시물을 찾을 수 없습니다.');
+          return;
+        }
+
+        const createdAt = data.created_at
+          ? {
+              seconds: Math.floor(new Date(data.created_at).getTime() / 1000),
+              nanoseconds: 0,
+            }
+          : null;
+        const updatedAt = data.updated_at
+          ? {
+              seconds: Math.floor(new Date(data.updated_at).getTime() / 1000),
+              nanoseconds: 0,
+            }
+          : null;
+
+        setPost({
+          id: data.id,
+          authorId: data.author_id ?? '',
+          authorName: '',
+          authorPhotoURL: null,
+          title: data.title ?? '',
+          content: data.content ?? '',
+          tags: Array.isArray(data.tags) ? data.tags : [],
+          likes: data.likes_count ?? 0,
+          thumbnail: data.main_image_url ?? null,
+          createdAt,
+          updatedAt,
+          category:
+            data.category === 'daily' ||
+            data.category === 'question' ||
+            data.category === 'adoption' ||
+            data.category === 'pet-life'
+              ? data.category
+              : undefined,
+          viewCount: data.view_count ?? 0,
+        });
       } catch (e) {
         console.error('게시물 조회 중 오류 발생:', e);
         setError('게시물을 불러오는 중 오류가 발생했습니다.');
@@ -87,8 +126,9 @@ export default function ReadPostContent({
           return;
         }
 
-        const postRef = doc(firestore, 'boards', postId);
-        await updateDoc(postRef, { views: increment(1) });
+        await fetch(`/api/posts/${encodeURIComponent(postId)}/view`, {
+          method: 'POST',
+        });
 
         const nextViewed = [...viewedPosts, postId].slice(-300);
         localStorage.setItem(VIEWED_POSTS_KEY, JSON.stringify(nextViewed));

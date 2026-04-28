@@ -1,4 +1,4 @@
-import { auth } from '@/lib/firebase/firebase';
+import { getSupabaseAccessToken } from '@/lib/supabase/client';
 
 const IMAGE_UPLOAD_URL =
   process.env.NODE_ENV === 'development'
@@ -10,7 +10,7 @@ export async function uploadCardImages(
   folder?: string
 ): Promise<string[]> {
   const urls: string[] = [];
-  const token = await auth.currentUser?.getIdToken();
+  const token = await getSupabaseAccessToken();
 
   for (const file of files) {
     const formData = new FormData();

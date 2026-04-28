@@ -1,5 +1,4 @@
-import { doc, getDoc } from 'firebase/firestore';
-import { firestore } from '@/lib/firebase/firebase';
+import { supabase } from '@/lib/supabase/client';
 import { MappedHistoryData } from '@/packages/type/history';
 import { getHistoryRecent } from '@/lib/domain/community/history';
 
@@ -22,49 +21,63 @@ export async function getAndMappingHistoryToCommentData(
 
     const userInfoMap = new Map<
       string,
-      { displayName?: string; nickname?: string; photoURL?: string }
+      { nickname?: string | null; photoURL?: string | null }
     >();
 
-    await Promise.all(
-      uniqueActorIds.map(async (actorId) => {
-        try {
-          const userDoc = await getDoc(doc(firestore, 'users', actorId));
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            userInfoMap.set(actorId, {
-              displayName: userData?.displayName,
-              nickname: userData?.nickname,
-              photoURL: userData?.photoURL,
+    if (uniqueActorIds.length > 0) {
+      try {
+        const response = await fetch(
+          `/api/supabase/users/sync?ids=${encodeURIComponent(
+            uniqueActorIds.join(','),
+          )}`,
+        );
+        if (response.ok) {
+          const body = (await response.json()) as {
+            users?: Array<{
+              id: string;
+              nickname: string | null;
+              profile_img: string | null;
+            }>;
+          };
+          body.users?.forEach((user) => {
+            userInfoMap.set(user.id, {
+              nickname: user.nickname,
+              photoURL: user.profile_img,
             });
-          }
-        } catch (error) {
-          console.error(`사용자 ${actorId} 정보 가져오기 실패:`, error);
+          });
         }
-      }),
-    );
+      } catch (error) {
+        console.error('Supabase 사용자 정보 가져오기 실패:', error);
+      }
+    }
 
     const postInfoMap = new Map<string, { title?: string }>();
 
-    await Promise.all(
-      uniquePostIds.map(async (postId) => {
-        try {
-          const postDoc = await getDoc(doc(firestore, 'boards', postId));
-          if (postDoc.exists()) {
-            const postData = postDoc.data();
-            postInfoMap.set(postId, {
-              title: postData?.title,
-            });
-          }
-        } catch (error) {
-          console.error(`게시물 ${postId} 정보 가져오기 실패:`, error);
+    if (uniquePostIds.length > 0) {
+      try {
+        const { data, error } = await supabase
+          .from('posts')
+          .select('id, title')
+          .in('id', uniquePostIds);
+
+        if (error) {
+          throw error;
         }
-      }),
-    );
+
+        (data ?? []).forEach((row) => {
+          postInfoMap.set(row.id, {
+            title: row.title ?? '',
+          });
+        });
+      } catch (error) {
+        console.error('게시물 제목 가져오기 실패:', error);
+      }
+    }
 
     return history.map((historyItem) => {
       const userData = userInfoMap.get(historyItem.actorId);
       const authorName =
-        userData?.displayName || userData?.nickname || '존재하지 않는 사용자';
+        userData?.nickname || '존재하지 않는 사용자';
       const authorPhotoURL = userData?.photoURL || '';
 
       const actionType =
@@ -86,7 +99,7 @@ export async function getAndMappingHistoryToCommentData(
         postId: historyItem.postId,
         action: historyItem.action,
         actionType,
-        createdAt: historyItem.createdAt.toDate(),
+        createdAt: new Date(historyItem.createdAt),
         isRead: historyItem.isRead,
       };
     });

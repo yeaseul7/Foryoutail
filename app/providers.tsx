@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { AuthProvider } from '@/lib/firebase/auth';
+import { AuthProvider } from '@/lib/supabase/auth';
 
 const LocationDataProvider = dynamic(
   () => import('@/packages/components/base/LocationDataProvider'),

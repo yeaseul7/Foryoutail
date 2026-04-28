@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
 import bundleAnalyzer from '@next/bundle-analyzer';
 
 const withBundleAnalyzer = bundleAnalyzer({
@@ -78,15 +79,22 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'k.kakaocdn.net',
       },
+      {
+        protocol: 'https',
+        hostname: 'uqaaeqpdcezjpqtbybnm.supabase.co',
+      },
     ],
     minimumCacheTTL: 60 * 60 * 24,
   },
   experimental: {
     optimizePackageImports: [
       'react-icons',
-      'firebase',
     ],
   },
 };
 
 export default withBundleAnalyzer(nextConfig);
+
+if (process.env.NODE_ENV === 'development') {
+  initOpenNextCloudflareForDev();
+}

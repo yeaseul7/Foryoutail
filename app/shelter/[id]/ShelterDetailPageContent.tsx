@@ -12,7 +12,7 @@ import AnimalImgCard from '@/packages/components/shelter/AnimalImgCard';
 import AnimalInfoCard from '@/packages/components/shelter/AnimalInfoCard';
 import PageFooter from '@/packages/components/base/PageFooter';
 import { fetchShelterInfoByCareRegNo } from '@/lib/client/shelter-info';
-import { getShelterAnimalByDesertionNo } from '@/lib/domain/shelter/shelter-animals';
+import { fetchShelterAnimalByDesertionNo } from '@/lib/client/shelter-data';
 import ShelterOperationInfoComponent from '@/packages/components/common/AnimalNotice';
 
 interface ShelterDetailPageContentProps {
@@ -40,7 +40,7 @@ export default function ShelterDetailPageContent({
 
       try {
         setLoading(true);
-        const row = await getShelterAnimalByDesertionNo(desertionNo);
+        const row = await fetchShelterAnimalByDesertionNo(desertionNo);
         if (row) {
           setAnimalData(row);
         } else {

@@ -1,14 +1,15 @@
-import type { Timestamp } from 'firebase/firestore';
+type TimestampLike = { toDate: () => Date };
+type TimestampObject = { seconds: number; nanoseconds: number };
 
 // Timestamp 또는 일반 객체를 Date로 변환하는 헬퍼 함수
 function toDate(
-  timestamp: Timestamp | { seconds: number; nanoseconds: number } | null,
+  timestamp: TimestampLike | TimestampObject | null,
 ): Date | null {
   if (!timestamp) return null;
 
   // Timestamp 객체인 경우
-  if (typeof (timestamp as Timestamp).toDate === 'function') {
-    return (timestamp as Timestamp).toDate();
+  if (typeof (timestamp as TimestampLike).toDate === 'function') {
+    return (timestamp as TimestampLike).toDate();
   }
 
   // 일반 객체 { seconds, nanoseconds }인 경우
@@ -28,7 +29,7 @@ export const formatDateToKorean = (timestamp: string | undefined): string => {
 };
 
 export const formatDate = (
-  timestamp: Timestamp | { seconds: number; nanoseconds: number } | null,
+  timestamp: TimestampLike | TimestampObject | null,
 ): string => {
   const date = toDate(timestamp);
   if (!date) return '';
@@ -58,7 +59,7 @@ export const formatDate = (
 
 // 날짜를 간단한 형식으로 포맷하는 함수 (예: 2024.01.01)
 export const formatDateSimple = (
-  timestamp: Timestamp | { seconds: number; nanoseconds: number } | null,
+  timestamp: TimestampLike | TimestampObject | null,
 ): string => {
   const date = toDate(timestamp);
   if (!date) return '';
@@ -67,7 +68,7 @@ export const formatDateSimple = (
 
 // 메타데이터용 날짜 포맷 (예: 2023.10.24)
 export const formatDateMeta = (
-  timestamp: Timestamp | { seconds: number; nanoseconds: number } | null,
+  timestamp: TimestampLike | TimestampObject | null,
 ): string => {
   const date = toDate(timestamp);
   if (!date) return '';

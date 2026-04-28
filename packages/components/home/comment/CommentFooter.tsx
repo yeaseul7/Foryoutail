@@ -1,188 +1,71 @@
 'use client';
 import { useState, useEffect } from 'react';
-import {
-  doc,
-  updateDoc,
-  increment,
-  getDoc,
-  setDoc,
-  deleteDoc,
-  collection,
-  serverTimestamp,
-  onSnapshot,
-} from 'firebase/firestore';
-import { firestore } from '@/lib/firebase/firebase';
-import { useAuth } from '@/lib/firebase/auth';
+import { supabase } from '@/lib/supabase/client';
 import { CommentData } from '@/packages/type/commentType';
-import type { CommentCollectionName } from './CommentList';
-import { BsHeart, BsHeartFill, BsPlusSquare } from 'react-icons/bs';
+import { BsHeart, BsPlusSquare } from 'react-icons/bs';
 import ReplyWrite from './ReplyWrite';
 import ReplyList from './ReplyList';
-import { createHistory, deleteHistoryByCommentLike } from '@/lib/domain/community/history';
 
 export default function CommentFooter({
   commentData,
   postId,
-  collectionName = 'boards',
 }: {
   commentData: CommentData;
   postId: string;
-  collectionName?: CommentCollectionName;
 }) {
-  const { user } = useAuth();
   const [likes, setLikes] = useState<number>(commentData.likes || 0);
-  const [isLiked, setIsLiked] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
-  const [isUpdating, setIsUpdating] = useState(false);
   const [isReplyWriting, setIsReplyWriting] = useState(false);
   const [isReplyListOpen, setIsReplyListOpen] = useState(false);
   const [replyCount, setReplyCount] = useState<number>(0);
   useEffect(() => {
-    const fetchLikeStatus = async () => {
-      if (!postId || !commentData.id) {
-        setLoading(false);
-        return;
-      }
-
+    const fetchReplyCount = async () => {
       try {
-        const commentRef = doc(
-          firestore,
-          collectionName,
-          postId,
-          'comments',
-          commentData.id,
-        );
-        const commentDoc = await getDoc(commentRef);
-        if (commentDoc.exists()) {
-          const data = commentDoc.data();
-          const likesCount = data.likes || 0;
-          setLikes(likesCount);
+        const { count, error } = await supabase
+          .from('comments')
+          .select('id', { count: 'exact', head: true })
+          .eq('post_id', postId)
+          .eq('parent_id', commentData.id);
+
+        if (error) {
+          throw error;
         }
 
-        if (user) {
-          const likeListCollection = collection(
-            firestore,
-            collectionName,
-            postId,
-            'comments',
-            commentData.id,
-            'likeList',
-          );
-          const userLikeDoc = doc(likeListCollection, user.uid);
-          const userLikeSnapshot = await getDoc(userLikeDoc);
-          setIsLiked(userLikeSnapshot.exists());
-        } else {
-          setIsLiked(false);
-        }
+        setReplyCount(count ?? 0);
+        setLikes(0);
       } catch (error) {
-        console.error('댓글 좋아요 정보 가져오기 실패:', error);
+        console.error('대댓글 개수 조회 실패:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchLikeStatus();
-  }, [postId, commentData.id, user, collectionName]);
+    void fetchReplyCount();
 
-  useEffect(() => {
-    if (!postId || !commentData.id) return;
+    const handleChanged = (event: Event) => {
+      const detail = (
+        event as CustomEvent<{ postId?: string; commentId?: string }>
+      ).detail;
+      if (
+        detail?.postId === postId &&
+        (!detail?.commentId || detail.commentId === commentData.id)
+      ) {
+        void fetchReplyCount();
+      }
+    };
 
-    const repliesCollection = collection(
-      firestore,
-      collectionName,
-      postId,
-      'comments',
-      commentData.id,
-      'replies',
-    );
-
-    const unsubscribe = onSnapshot(repliesCollection, (snapshot) => {
-      setReplyCount(snapshot.size);
-    });
-
-    return () => unsubscribe();
-  }, [postId, commentData.id, collectionName]);
+    window.addEventListener('community-comments:changed', handleChanged);
+    return () => {
+      window.removeEventListener('community-comments:changed', handleChanged);
+    };
+  }, [postId, commentData.id]);
 
   const handleReply = () => {
     setIsReplyWriting((prev) => !prev);
   };
 
-  const handleLike = async () => {
-    if (!user) {
-      alert('좋아요를 누르려면 로그인이 필요합니다.');
-      return;
-    }
-
-    if (!postId || !commentData.id || isUpdating) return;
-
-    setIsUpdating(true);
-    try {
-      const commentRef = doc(
-        firestore,
-        collectionName,
-        postId,
-        'comments',
-        commentData.id,
-      );
-      const commentDoc = await getDoc(commentRef);
-
-      if (!commentDoc.exists()) {
-        alert('댓글을 찾을 수 없습니다.');
-        return;
-      }
-
-      const likeListCollection = collection(
-        firestore,
-        collectionName,
-        postId,
-        'comments',
-        commentData.id,
-        'likeList',
-      );
-      const userLikeDoc = doc(likeListCollection, user.uid);
-
-      if (isLiked) {
-        const commentDocData = commentDoc.data();
-        if (collectionName === 'boards' && commentDocData?.authorId) {
-          await deleteHistoryByCommentLike(commentData.id, postId, user.uid);
-        }
-        await deleteDoc(userLikeDoc);
-        await updateDoc(commentRef, {
-          likes: increment(-1),
-        });
-        setLikes((prev) => Math.max(0, prev - 1));
-        setIsLiked(false);
-      } else {
-        await setDoc(userLikeDoc, {
-          uid: user.uid,
-          isLiked: true,
-          createdAt: serverTimestamp(),
-        });
-        await updateDoc(commentRef, {
-          likes: increment(1),
-        });
-        setLikes((prev) => prev + 1);
-        setIsLiked(true);
-
-        const commentDocData = commentDoc.data();
-        if (collectionName === 'boards' && commentDocData?.authorId) {
-          await createHistory(
-            commentDocData.authorId,
-            user.uid,
-            'like',
-            'comment',
-            commentData.id,
-            postId,
-            commentData.id,
-          );
-        }
-      }
-    } catch (error) {
-      console.error('댓글 좋아요 업데이트 실패:', error);
-      alert('좋아요 처리 중 오류가 발생했습니다.');
-    } finally {
-      setIsUpdating(false);
-    }
+  const handleLike = () => {
+    alert('댓글 좋아요는 아직 별도 테이블이 필요합니다.');
   };
 
   if (loading) {
@@ -222,11 +105,9 @@ export default function CommentFooter({
         </div>
         <button
           onClick={handleLike}
-          disabled={isUpdating}
-          className={`flex gap-1 items-center transition-opacity disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-75 ${isLiked ? 'text-red-500' : 'text-primary1'
-            }`}
+          className="flex gap-1 items-center text-gray-300 cursor-not-allowed"
         >
-          {isLiked ? <BsHeartFill /> : <BsHeart />}
+          <BsHeart />
           {likes > 0 && <span className="text-sm">{likes}</span>}
         </button>
       </div>
@@ -235,7 +116,6 @@ export default function CommentFooter({
         <ReplyWrite
           postId={postId}
           commentId={commentData.id}
-          collectionName={collectionName}
           onReplySubmitted={() => setIsReplyWriting(false)}
         />
       )}
@@ -243,7 +123,6 @@ export default function CommentFooter({
         <ReplyList
           postId={postId}
           commentId={commentData.id}
-          collectionName={collectionName}
           onReplyListClosed={() => setIsReplyListOpen(false)}
         />
       )}

@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
-import { firestore } from '@/lib/firebase/firebase';
-import { useAuth } from '@/lib/firebase/auth';
+import { useAuth } from '@/lib/supabase/auth';
 
 interface UserProfileData {
   photoURL: string | null;
@@ -44,13 +42,25 @@ export function useUserProfile(
       setError(null);
 
       try {
-        const userDoc = await getDoc(doc(firestore, 'users', targetUserId));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setPhotoURL(userData?.photoURL || null);
+        const response = await fetch(
+          `/api/supabase/users/sync?id=${encodeURIComponent(targetUserId)}`,
+        );
+        if (!response.ok) {
+          throw new Error('사용자 조회에 실패했습니다.');
+        }
+        const userData = (await response.json()) as {
+          exists?: boolean;
+          user?: {
+            id: string;
+            email: string | null;
+            nickname: string | null;
+            profile_img: string | null;
+          } | null;
+        };
+        if (userData.user) {
+          setPhotoURL(userData.user.profile_img || null);
           setNickname(
-            userData?.nickname ||
-              userData?.displayName ||
+            userData.user.nickname ||
               (targetUserId === user?.uid ? user.displayName : null) ||
               fallbackName ||
               '탈퇴한 사용자',
@@ -104,66 +114,79 @@ export function useUserProfiles(
     const fetchAuthorInfo = async () => {
       const uniqueAuthorIds = [
         ...new Set(
-          userIds.filter((id): id is string => id !== null && id !== undefined),
+          userIds
+            .filter((id): id is string => typeof id === 'string')
+            .map((id) => id.trim())
+            .filter(Boolean),
         ),
       ];
 
       if (uniqueAuthorIds.length === 0) return;
 
-      setAuthorInfoMap((prevMap) => {
-        const authorIdsToFetch = uniqueAuthorIds.filter(
-          (authorId) => !prevMap.has(authorId),
+      const authorIdsToFetch = uniqueAuthorIds.filter(
+        (authorId) => !authorInfoMap.has(authorId),
+      );
+
+      if (authorIdsToFetch.length === 0) return;
+
+      try {
+        const response = await fetch(
+          `/api/supabase/users/sync?ids=${encodeURIComponent(
+            authorIdsToFetch.join(','),
+          )}`,
+        );
+        if (!response.ok) {
+          throw new Error('사용자 목록 조회에 실패했습니다.');
+        }
+
+        const result = (await response.json()) as {
+          users?: Array<{
+            id: string;
+            nickname: string | null;
+            profile_img: string | null;
+          }>;
+        };
+
+        const nextMap = new Map(authorInfoMap);
+        const fetchedMap = new Map(
+          (result.users ?? []).map((item) => [item.id, item]),
         );
 
-        if (authorIdsToFetch.length === 0) return prevMap;
+        authorIdsToFetch.forEach((authorId) => {
+          const fetched = fetchedMap.get(authorId);
+          if (fetched) {
+            nextMap.set(authorId, {
+              nickname:
+                fetched.nickname ||
+                (authorId === user?.uid ? user.displayName : null) ||
+                '탈퇴한 사용자',
+              photoURL: fetched.profile_img || null,
+            });
+            return;
+          }
 
-        const newAuthorInfoMap = new Map(prevMap);
-        Promise.all(
-          authorIdsToFetch.map(async (authorId) => {
-            try {
-              const userDoc = await getDoc(doc(firestore, 'users', authorId));
-              if (userDoc.exists()) {
-                const userData = userDoc.data();
-                newAuthorInfoMap.set(authorId, {
-                  nickname:
-                    userData?.nickname ||
-                    userData?.displayName ||
-                    (authorId === user?.uid ? user.displayName : null) ||
-                    '탈퇴한 사용자',
-                  photoURL: userData?.photoURL || null,
-                });
-              } else {
-                // Firestore에 데이터가 없으면 Firebase Auth 정보 또는 기본값 사용
-                if (authorId === user?.uid) {
-                  newAuthorInfoMap.set(authorId, {
-                    nickname: user.displayName || 'User',
-                    photoURL: user.photoURL || null,
-                  });
-                } else {
-                  newAuthorInfoMap.set(authorId, {
-                    nickname: '탈퇴한 사용자',
-                    photoURL: null,
-                  });
-                }
-              }
-            } catch (error) {
-              console.error(`작성자 ${authorId} 정보 가져오기 실패:`, error);
-              newAuthorInfoMap.set(authorId, {
-                nickname: '탈퇴한 사용자',
-                photoURL: null,
-              });
-            }
-          }),
-        ).then(() => {
-          setAuthorInfoMap(new Map(newAuthorInfoMap));
+          if (authorId === user?.uid) {
+            nextMap.set(authorId, {
+              nickname: user.displayName || 'User',
+              photoURL: user.photoURL || null,
+            });
+            return;
+          }
+
+          nextMap.set(authorId, {
+            nickname: '탈퇴한 사용자',
+            photoURL: null,
+          });
         });
 
-        return prevMap;
-      });
+        setAuthorInfoMap(nextMap);
+      } catch (error) {
+        console.error('작성자 정보 일괄 가져오기 실패:', error);
+      }
     };
 
     fetchAuthorInfo();
-  }, [userIds, user]);
+  }, [authorInfoMap, userIds, user]);
 
   return authorInfoMap;
 }

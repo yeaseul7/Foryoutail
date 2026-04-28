@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { ShelterDataFirestoreParams } from '@/lib/domain/shelter/shelter-animals';
+import type { ShelterDataQueryParams } from '@/lib/domain/shelter/shelter-animals';
 import {
   buildShelterDataJsonForDesertionNo,
   buildShelterDataJsonFromQueryResult,
-  queryShelterAnimalsFromFirestore,
+  queryShelterAnimals,
 } from '@/lib/domain/shelter/shelter-animals';
 
-export const runtime = 'edge';
-
-function parseShelterDataParams(searchParams: URLSearchParams): ShelterDataFirestoreParams {
-  const params: ShelterDataFirestoreParams = {};
+function parseShelterDataParams(searchParams: URLSearchParams): ShelterDataQueryParams {
+  const params: ShelterDataQueryParams = {};
   if (searchParams.has('bgnde')) params.bgnde = searchParams.get('bgnde')!;
   if (searchParams.has('endde')) params.endde = searchParams.get('endde')!;
   if (searchParams.has('upkind')) params.upkind = searchParams.get('upkind')!;
@@ -46,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     const data = params.desertion_no?.trim()
       ? await buildShelterDataJsonForDesertionNo(params)
-      : buildShelterDataJsonFromQueryResult(await queryShelterAnimalsFromFirestore(params));
+      : buildShelterDataJsonFromQueryResult(await queryShelterAnimals(params));
 
     return NextResponse.json(data, {
       status: 200,

@@ -1,4 +1,5 @@
 export interface ShelterInfoItem {
+    id?: string;
     careNm?: string;
     careRegNo?: string;
     orgNm?: string;
@@ -28,6 +29,10 @@ export interface ShelterInfoItem {
     quarabtineCnt?: number;
     feedCnt?: number;
     dataStdDt?: string;
+    authorId?: string;
+    content?: string;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 /** 회원가입/프로필에서 저장하는 보호소 정보 */

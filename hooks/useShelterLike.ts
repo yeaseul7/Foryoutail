@@ -1,69 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import {
-  arrayRemove,
-  arrayUnion,
-  doc,
-  getDoc,
-  increment,
-  runTransaction,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { firestore } from '@/lib/firebase/firebase';
-import { useAuth } from '@/lib/firebase/auth';
+import { supabase } from '@/lib/supabase/client';
+import { useAuth } from '@/lib/supabase/auth';
 import type { ShelterAnimalItem } from '@/packages/type/postType';
-
-const LIKED_ANIMALS_COLLECTION = 'likedAnimals';
-
-function sanitizeForFirestore(
-  data: Record<string, unknown>,
-): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(data)) {
-    if (v !== undefined) out[k] = v;
-  }
-  return out;
-}
-
-function buildAbandonmentPayload(
-  animalData: ShelterAnimalItem | undefined,
-): Record<string, unknown> {
-  let firstImage: string | undefined;
-  if (animalData) {
-    for (let i = 1; i <= 8; i++) {
-      const popfile = animalData[`popfile${i}` as keyof ShelterAnimalItem] as
-        | string
-        | undefined;
-      if (popfile && typeof popfile === 'string' && popfile.trim() !== '') {
-        firstImage = popfile;
-        break;
-      }
-    }
-  }
-  return sanitizeForFirestore({
-    ...(animalData as Record<string, unknown>),
-    image: firstImage ?? null,
-    createdAt: serverTimestamp(),
-  });
-}
-
-/** likedAnimals 문서 본문(집계 필드 제외, 유기번호 명시) */
-function buildLikedAnimalBase(animalData: ShelterAnimalItem, desertionNo: string) {
-  const metaKeys = new Set([
-    'likedUserID',
-    'likedCount',
-    'likeCount',
-    'updatedAt',
-  ]);
-  const raw = { ...animalData, desertionNo } as Record<string, unknown>;
-  const stripped: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(raw)) {
-    if (metaKeys.has(k)) continue;
-    stripped[k] = v;
-  }
-  return sanitizeForFirestore(stripped);
-}
 
 export interface UseShelterLikeReturn {
   /** 현재 찜 여부 */
@@ -71,7 +11,7 @@ export interface UseShelterLikeReturn {
   /** 처리 중 여부 (중복 클릭 방지) */
   isUpdating: boolean;
   /**
-   * 찜 토글. 성공 시 Firestore `likedAnimals` 집계 기준 변화량 반환(-1, 0, 1).
+   * 찜 토글. 성공 시 `animal_likes` 집계 기준 변화량 반환(-1, 0, 1).
    * 실패·조기 종료 시 0.
    */
   handleLike: (e?: React.MouseEvent) => Promise<number>;
@@ -79,11 +19,10 @@ export interface UseShelterLikeReturn {
 
 /**
  * 유기동물 찜(좋아요) 공통 훅.
- * - users/{userId}/abandonment/{desertionNo} (개인 찜)
- * - likedAnimals/{desertionNo} (전역 집계: likedUserID[], likedCount, processState 갱신)
+ * - animal_likes(user_id, animal_id) 기반으로 현재 사용자의 좋아요 상태를 관리
  *
- * @param desertionNo 유기번호
- * @param animalData 저장할 동물 정보 (없으면 찜 저장·집계 반영 생략)
+ * @param desertionNo 상세 페이지 라우팅/호환용 식별자
+ * @param animalData 동물 정보. Supabase animals.id가 포함되어 있어야 함
  */
 export function useShelterLike(
   desertionNo: string | undefined,
@@ -93,8 +32,10 @@ export function useShelterLike(
   const [isLiked, setIsLiked] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
+  const animalId = (animalData?.id ?? '').trim();
+
   useEffect(() => {
-    if (!desertionNo || !user) {
+    if (!animalId || !desertionNo || !user) {
       setIsLiked(false);
       return;
     }
@@ -102,9 +43,15 @@ export function useShelterLike(
     let cancelled = false;
     (async () => {
       try {
-        const ref = doc(firestore, 'users', user.uid, 'abandonment', desertionNo);
-        const snap = await getDoc(ref);
-        if (!cancelled) setIsLiked(snap.exists());
+        const { data, error } = await supabase
+          .from('animal_likes')
+          .select('id')
+          .eq('user_id', user.uid)
+          .eq('animal_id', animalId)
+          .limit(1);
+
+        if (error) throw error;
+        if (!cancelled) setIsLiked((data ?? []).length > 0);
       } catch {
         if (!cancelled) setIsLiked(false);
       }
@@ -113,7 +60,7 @@ export function useShelterLike(
     return () => {
       cancelled = true;
     };
-  }, [desertionNo, user]);
+  }, [animalId, desertionNo, user]);
 
   const handleLike = async (e?: React.MouseEvent): Promise<number> => {
     e?.stopPropagation();
@@ -122,100 +69,35 @@ export function useShelterLike(
       alert('로그인이 필요합니다.');
       return 0;
     }
-    if (!desertionNo || isUpdating) return 0;
+    if (!desertionNo || !animalId || isUpdating) {
+      if (!animalId && animalData) {
+        alert('동물 ID가 없어 처리할 수 없습니다.');
+      }
+      return 0;
+    }
 
     setIsUpdating(true);
     try {
-      const abRef = doc(firestore, 'users', user.uid, 'abandonment', desertionNo);
-      const likedRef = doc(firestore, LIKED_ANIMALS_COLLECTION, desertionNo);
-
       if (isLiked) {
-        let countDelta = 0;
-        await runTransaction(firestore, async (transaction) => {
-          const likedSnap = await transaction.get(likedRef);
+        const { error } = await supabase
+          .from('animal_likes')
+          .delete()
+          .eq('user_id', user.uid)
+          .eq('animal_id', animalId);
 
-          if (!likedSnap.exists()) {
-            transaction.delete(abRef);
-            return;
-          }
-
-          const data = likedSnap.data() as Record<string, unknown>;
-          const likedIds = (data.likedUserID as string[] | undefined) ?? [];
-          if (!likedIds.includes(user.uid)) {
-            transaction.delete(abRef);
-            return;
-          }
-
-          transaction.delete(abRef);
-
-          const nextIds = likedIds.filter((id) => id !== user.uid);
-          if (nextIds.length === 0) {
-            transaction.delete(likedRef);
-            countDelta = -1;
-            return;
-          }
-
-          transaction.update(likedRef, {
-            likedUserID: arrayRemove(user.uid),
-            likedCount: increment(-1),
-            processState:
-              animalData?.processState ?? data.processState ?? null,
-            updatedAt: serverTimestamp(),
-          });
-          countDelta = -1;
-        });
+        if (error) throw error;
         setIsLiked(false);
-        return countDelta;
+        return -1;
       }
 
-      if (!animalData) {
-        alert('동물 정보를 불러온 뒤 다시 시도해 주세요.');
-        return 0;
-      }
-
-      const processState = animalData.processState ?? null;
-      const basePayload = buildLikedAnimalBase(animalData, desertionNo);
-
-      let countDelta = 0;
-      await runTransaction(firestore, async (transaction) => {
-        const likedSnap = await transaction.get(likedRef);
-
-        transaction.set(abRef, buildAbandonmentPayload(animalData));
-
-        if (!likedSnap.exists()) {
-          transaction.set(likedRef, {
-            ...basePayload,
-            likedUserID: [user.uid],
-            likedCount: 1,
-            processState,
-            updatedAt: serverTimestamp(),
-          });
-          countDelta = 1;
-          return;
-        }
-
-        const data = likedSnap.data() as Record<string, unknown>;
-        const likedIds = (data.likedUserID as string[] | undefined) ?? [];
-        if (likedIds.includes(user.uid)) {
-          transaction.update(likedRef, {
-            processState,
-            updatedAt: serverTimestamp(),
-            ...basePayload,
-          });
-          return;
-        }
-
-        transaction.update(likedRef, {
-          ...basePayload,
-          likedUserID: arrayUnion(user.uid),
-          likedCount: increment(1),
-          processState,
-          updatedAt: serverTimestamp(),
-        });
-        countDelta = 1;
+      const { error } = await supabase.from('animal_likes').insert({
+        user_id: user.uid,
+        animal_id: animalId,
       });
+
+      if (error) throw error;
       setIsLiked(true);
-      return countDelta;
+      return 1;
     } catch (error) {
       console.error('찜 처리 실패:', error);
       alert('처리 중 오류가 발생했습니다.');

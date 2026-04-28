@@ -1,7 +1,11 @@
 'use client';
+import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
-import { useAuth } from '@/lib/firebase/auth';
+import { useAuth } from '@/lib/supabase/auth';
 import { useClickOutsideModal } from '@/packages/utils/clickEvent';
+import googleLoginButton from '@/static/images/login/web_light_rd_na@3x.png';
+import githubLoginButton from '@/static/images/login/GitHub_Invertocat_Black.png';
+import kakaoLoginButton from '@/static/images/login/free-icon-kakao-talk-3991999.png';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -15,10 +19,9 @@ interface LoginModalProps {
 
 export default function LoginModal({ onClose }: LoginModalProps) {
   const { login, register, loginWithGoogle, loginWithGithub, loginWithKakao, user } = useAuth();
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const modalRef = useRef<HTMLDivElement>(null);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isGithubLoading, setIsGithubLoading] = useState(false);
   const [isKakaoLoading, setIsKakaoLoading] = useState(false);
@@ -36,34 +39,41 @@ export default function LoginModal({ onClose }: LoginModalProps) {
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedEmail = email.trim();
-    const trimmedPassword = password.trim();
-    if (!trimmedEmail || !trimmedPassword) {
-      setMessage('이메일과 비밀번호를 입력해주세요.');
-      return;
-    }
     if (!isValidEmail(trimmedEmail)) {
       setMessage('올바른 이메일 형식을 입력해주세요.');
       return;
     }
-    if (authMode === 'register' && trimmedPassword.length < 6) {
-      setMessage('비밀번호는 6자 이상이어야 합니다.');
+    if (!trimmedEmail) {
+      setMessage('이메일을 입력해주세요.');
       return;
     }
     setIsEmailLoading(true);
     setMessage('');
     try {
       if (authMode === 'login') {
-        await login(trimmedEmail, trimmedPassword);
+        await login(trimmedEmail);
+        setMessage('로그인 링크를 보냈습니다. 이메일에서 링크를 눌러 로그인해주세요.');
       } else {
-        await register(trimmedEmail, trimmedPassword);
+        const { needsEmailConfirmation } = await register(trimmedEmail);
+        if (needsEmailConfirmation) {
+          setMessage('회원가입 링크를 보냈습니다. 이메일에서 링크를 눌러 가입을 완료해주세요.');
+        }
       }
     } catch (error) {
       const msg = error instanceof Error ? error.message : '알 수 없는 오류';
-      if (msg.includes('auth/invalid-credential') || msg.includes('auth/wrong-password')) {
-        setMessage('이메일 또는 비밀번호가 올바르지 않습니다.');
-      } else if (msg.includes('auth/email-already-in-use')) {
+      if (
+        msg.includes('Email not confirmed')
+      ) {
+        setMessage('이메일 인증이 완료되지 않았습니다.');
+      } else if (
+        msg.includes('User not found') ||
+        msg.includes('user_not_found') ||
+        msg.includes('Signups not allowed for otp')
+      ) {
+        setMessage('가입되지 않은 이메일입니다. 회원가입을 먼저 진행해주세요.');
+      } else if (msg.includes('User already registered')) {
         setMessage('이미 사용 중인 이메일입니다. 로그인해주세요.');
-      } else if (msg.includes('auth/invalid-email')) {
+      } else if (msg.includes('Unable to validate email address')) {
         setMessage('올바른 이메일 형식을 입력해주세요.');
       } else {
         setMessage(authMode === 'login' ? `로그인 실패: ${msg}` : `회원가입 실패: ${msg}`);
@@ -144,21 +154,11 @@ export default function LoginModal({ onClose }: LoginModalProps) {
               disabled={isLoading}
             />
           </div>
-          <div>
-            <label htmlFor="login-password" className="block mb-1 text-sm font-medium text-text2">
-              비밀번호
-            </label>
-            <input
-              id="login-password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={authMode === 'register' ? '6자 이상' : '비밀번호'}
-              autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
-              className="w-full px-3 py-2 border border-border3 rounded-md bg-element1 text-text1 placeholder:text-text3 focus:outline-none focus:ring-2 focus:ring-primary1/30 focus:border-primary1"
-              disabled={isLoading}
-            />
-          </div>
+          <p className="text-sm leading-6 text-text3">
+            {authMode === 'login'
+              ? '로그인 링크를 이메일로 보내드립니다. 링크를 누르면 바로 로그인됩니다.'
+              : '회원가입 링크를 이메일로 보내드립니다. 링크를 누르면 바로 가입이 완료됩니다.'}
+          </p>
           {message && (
             <p className="text-sm text-red-600" role="alert">
               {message}
@@ -185,48 +185,54 @@ export default function LoginModal({ onClose }: LoginModalProps) {
           <span className="flex-1 h-px bg-border3" />
         </div>
 
-        <div className="flex gap-4 justify-center">
+        <div className="mx-auto grid w-full max-w-[420px] grid-cols-3 place-items-center gap-6 sm:gap-8">
           <button
             type="button"
             onClick={handleGoogleLogin}
             disabled={isLoading}
-            className="flex justify-center items-center disabled:opacity-60 disabled:cursor-not-allowed"
+            className="inline-flex h-16 w-16 items-center justify-center transition disabled:opacity-60 disabled:cursor-not-allowed"
             aria-label="Google로 로그인"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border3 text-sm font-semibold hover:bg-gray-50 transition-colors">
-              G
-            </div>
+            <Image
+              src={googleLoginButton}
+              alt="Google 로그인"
+              className="h-14 w-14 object-contain"
+            />
           </button>
           <button
             type="button"
             onClick={handleGithubLogin}
             disabled={isLoading}
-            className="flex justify-center items-center disabled:opacity-60 disabled:cursor-not-allowed"
+            className="inline-flex h-16 w-16 items-center justify-center transition disabled:opacity-60 disabled:cursor-not-allowed"
             aria-label="Github로 로그인"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border3 text-sm font-semibold hover:bg-gray-50 transition-colors">
-              GH
-            </div>
+            <Image
+              src={githubLoginButton}
+              alt="GitHub 로그인"
+              className="h-14 w-14 object-contain"
+            />
           </button>
           <button
             type="button"
             onClick={handleKakaoLogin}
             disabled={isLoading}
-            className="flex justify-center items-center disabled:opacity-60 disabled:cursor-not-allowed"
+            className="inline-flex h-16 w-16 items-center justify-center transition disabled:opacity-60 disabled:cursor-not-allowed"
             aria-label="카카오로 로그인"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border3 bg-[#FEE500] text-sm font-semibold text-[#191919] hover:bg-[#FEE500]/80 transition-colors">
-              K
-            </div>
+            <Image
+              src={kakaoLoginButton}
+              alt="카카오 로그인"
+              className="h-14 w-auto object-contain"
+            />
           </button>
         </div>
 
         {authMode === 'login' ? (
-          <div className="flex justify-end mt-6 text-text3 text-sm">
-            아직 회원이 아니신가요?{' '}
+          <div className="mt-8 flex items-center justify-center gap-1 text-sm text-text3">
+            <span>아직 회원이 아니신가요?</span>
             <button
               type="button"
-              className="pl-1 text-primary1 hover:text-primary2 font-medium"
+              className="font-medium text-primary1 hover:text-primary2"
               onClick={() => {
                 setAuthMode('register');
                 setMessage('');
@@ -236,11 +242,11 @@ export default function LoginModal({ onClose }: LoginModalProps) {
             </button>
           </div>
         ) : (
-          <div className="flex justify-end mt-6 text-text3 text-sm">
-            이미 회원이신가요?{' '}
+          <div className="mt-8 flex items-center justify-center gap-1 text-sm text-text3">
+            <span>이미 회원이신가요?</span>
             <button
               type="button"
-              className="pl-1 text-primary1 hover:text-primary2 font-medium"
+              className="font-medium text-primary1 hover:text-primary2"
               onClick={() => {
                 setAuthMode('login');
                 setMessage('');

@@ -11,9 +11,8 @@ import {
 } from '@/lib/community/boardWriteGuidelineStorage';
 import { Dispatch, SetStateAction, useEffect, useState, useSyncExternalStore } from 'react';
 import type { PostBoardCategory, PostCategoryStored, PostData } from '@/packages/type/postType';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { firestore } from '@/lib/firebase/firebase';
-import { useAuth } from '@/lib/firebase/auth';
+import { useAuth } from '@/lib/supabase/auth';
+import { supabase } from '@/lib/supabase/client';
 import Loading from '@/packages/components/base/Loading';
 import NotFound from '@/packages/components/base/NotFound';
 import WriteNotice from '../write/wrtieGuidLine';
@@ -44,6 +43,51 @@ export default function EditContainer({ className }: { className?: string }) {
     if (raw === 'adoption' || raw === 'question' || raw === 'daily') return raw;
     return 'daily';
   };
+
+  const mapPostRow = (row: {
+    id: string;
+    author_id: string | null;
+    title: string;
+    content: string | null;
+    likes_count: number | null;
+    created_at: string | null;
+    updated_at: string | null;
+    main_image_url: string | null;
+    category?: string | null;
+    tags?: string[] | null;
+    view_count?: number | null;
+  }): PostData => {
+    const toTs = (value: string | null) =>
+      value
+        ? {
+            seconds: Math.floor(new Date(value).getTime() / 1000),
+            nanoseconds: 0,
+          }
+        : null;
+
+    return {
+      id: row.id,
+      authorId: row.author_id ?? '',
+      authorName: '',
+      authorPhotoURL: null,
+      title: row.title ?? '',
+      content: row.content ?? '',
+      tags: Array.isArray(row.tags) ? row.tags : [],
+      likes: row.likes_count ?? 0,
+      thumbnail: row.main_image_url ?? null,
+      createdAt: toTs(row.created_at),
+      updatedAt: toTs(row.updated_at),
+      category:
+        row.category === 'daily' ||
+        row.category === 'question' ||
+        row.category === 'adoption' ||
+        row.category === 'pet-life'
+          ? row.category
+          : undefined,
+      viewCount: row.view_count ?? 0,
+    };
+  };
+
   useEffect(() => {
     const fetchPost = async () => {
       if (!postId) {
@@ -53,14 +97,20 @@ export default function EditContainer({ className }: { className?: string }) {
       }
 
       try {
-        const docRef = doc(firestore, 'boards', postId);
-        const docSnap = await getDoc(docRef);
+        const { data, error } = await supabase
+          .from('posts')
+          .select('id, author_id, title, content, likes_count, created_at, updated_at, main_image_url, category, tags, view_count')
+          .eq('id', postId)
+          .maybeSingle();
 
-        if (docSnap.exists()) {
-          const data = docSnap.data() as PostData;
-          setPost({ ...data, id: docSnap.id });
-          // 카테고리 초기값 설정
-          setWriteCategory(normalizeBoardCategory(data.category));
+        if (error) {
+          throw error;
+        }
+
+        if (data) {
+          const mapped = mapPostRow(data);
+          setPost(mapped);
+          setWriteCategory(normalizeBoardCategory(mapped.category));
         } else {
           setError('게시물을 찾을 수 없습니다.');
         }
@@ -91,37 +141,42 @@ export default function EditContainer({ className }: { className?: string }) {
 
     try {
       let content = post.content ?? '';
+      let mainImageUrl = post.thumbnail ?? null;
       if (coverDraftFiles.length > 0) {
         const urls = await uploadCardImages(coverDraftFiles, 'boards');
         content = prependImageUrlsToHtmlContent(urls, content);
+        mainImageUrl = urls[0] ?? mainImageUrl;
       }
 
       const trimmedTitle = (post.title ?? '').trim();
       const title =
         trimmedTitle || deriveBoardTitleFromHtml(content);
 
-      await updateDoc(doc(firestore, 'boards', postId), {
-        title,
-        content,
-        tags: post.tags ?? [],
-        category: writeCategory,
-        updatedAt: serverTimestamp(),
-      });
+      const { error } = await supabase
+        .from('posts')
+        .update({
+          title,
+          content,
+          tags: post.tags ?? [],
+          category: writeCategory,
+          main_image_url: mainImageUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', postId)
+        .eq('author_id', user.uid);
+
+      if (error) {
+        throw error;
+      }
+
       alert('게시물이 성공적으로 수정되었습니다!');
       router.push(`/read/${postId}`);
     } catch (e) {
       console.error('게시물 수정 중 오류 발생:', e);
 
       const error = e as { code?: string; message?: string };
-      if (error.code === 'permission-denied') {
-        alert(
-          '권한이 없습니다. Firestore 보안 규칙을 확인해주세요.\n\n' +
-          'Firebase 콘솔 > Firestore Database > 규칙에서 boards 컬렉션에 대한 업데이트 권한이 설정되어 있는지 확인하세요.\n\n' +
-          '예시 규칙:\n' +
-          'match /boards/{document=**} {\n' +
-          '  allow update: if request.auth != null && request.auth.uid == resource.data.authorId;\n' +
-          '}',
-        );
+      if (error.code === '42501') {
+        alert('권한이 없습니다. posts 테이블 RLS/권한 설정을 확인해주세요.');
       } else {
         alert(
           `게시물 수정 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'

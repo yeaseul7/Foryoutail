@@ -1,4 +1,4 @@
-import { Timestamp } from 'firebase/firestore';
+import type { SerializableTimestamp } from './postType';
 
 export interface CommentData {
   id: string;
@@ -6,7 +6,7 @@ export interface CommentData {
   authorName: string;
   authorPhotoURL: string;
   content: string;
-  createdAt: Timestamp | null;
+  createdAt: SerializableTimestamp | null;
   likes?: number;
 }
 
@@ -14,6 +14,6 @@ export interface ReplyData {
   id: string;
   authorId: string;
   content: string;
-  createdAt: Timestamp | null;
+  createdAt: SerializableTimestamp | null;
   likes?: number;
 }

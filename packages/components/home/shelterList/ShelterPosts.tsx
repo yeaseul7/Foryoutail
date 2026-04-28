@@ -9,17 +9,13 @@ import { IoCall, IoLocationSharp } from 'react-icons/io5';
 import { HiOutlineStar, HiStar } from 'react-icons/hi2';
 import Link from 'next/link';
 import ShelterCardSkeleton from '../../skeleton/ShelterCardSkeleton';
-import { useAuth } from '@/lib/firebase/auth';
-import { firestore } from '@/lib/firebase/firebase';
-import {
-    collection,
-    deleteDoc,
-    doc,
-    getDocs,
-    serverTimestamp,
-    setDoc,
-} from 'firebase/firestore';
+import { useAuth } from '@/lib/supabase/auth';
 import { fetchShelterInfoItems } from '@/lib/client/shelter-info';
+import {
+    addShelterFavorite,
+    fetchShelterFavoriteIds,
+    removeShelterFavorite,
+} from '@/lib/client/shelter-favorites';
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
     const R = 6371;
@@ -97,11 +93,9 @@ export default function ShelterPosts() {
         let cancelled = false;
         (async () => {
             try {
-                const snap = await getDocs(collection(firestore, 'users', user.uid, 'Favorites'));
+                const favoriteIds = await fetchShelterFavoriteIds(user.uid);
                 if (cancelled) return;
-                const ids = new Set<string>();
-                snap.forEach((d) => ids.add(d.id));
-                setFavoriteShelterIds(ids);
+                setFavoriteShelterIds(new Set(favoriteIds));
             } catch (e) {
                 console.error('보호소 즐겨찾기 목록 로드 실패:', e);
                 if (!cancelled) setFavoriteShelterIds(new Set());
@@ -120,27 +114,22 @@ export default function ShelterPosts() {
                 alert('즐겨찾기는 로그인 후 이용할 수 있습니다.');
                 return;
             }
-            const shelterId = (shelter.careRegNo ?? '').trim();
+            const shelterId = (shelter.id ?? '').trim();
             if (!shelterId) {
-                alert('보호소 관리번호가 없어 즐겨찾기할 수 없습니다.');
+                alert('보호소 ID가 없어 즐겨찾기할 수 없습니다.');
                 return;
             }
-            const ref = doc(firestore, 'users', user.uid, 'Favorites', shelterId);
             setFavoriteBusyId(shelterId);
             try {
                 if (favoriteShelterIds.has(shelterId)) {
-                    await deleteDoc(ref);
+                    await removeShelterFavorite(shelterId, user.uid);
                     setFavoriteShelterIds((prev) => {
                         const next = new Set(prev);
                         next.delete(shelterId);
                         return next;
                     });
                 } else {
-                    await setDoc(ref, {
-                        shelterId,
-                        careNm: shelter.careNm ?? null,
-                        createdAt: serverTimestamp(),
-                    });
+                    await addShelterFavorite(shelterId, user.uid);
                     setFavoriteShelterIds((prev) => new Set(prev).add(shelterId));
                 }
             } catch (err) {
@@ -538,9 +527,10 @@ export default function ShelterPosts() {
                                                 )
                                                 : null;
                                         const regNo = (shelter.careRegNo ?? '').trim();
-                                        const isFav = regNo !== '' && favoriteShelterIds.has(regNo);
+                                        const shelterUuid = (shelter.id ?? '').trim();
+                                        const isFav = shelterUuid !== '' && favoriteShelterIds.has(shelterUuid);
                                         const favDisabled =
-                                            !user || !regNo || favoriteBusyId === regNo;
+                                            !user || !shelterUuid || favoriteBusyId === shelterUuid;
                                         return (
                                             <li
                                                 key={shelter.careRegNo || index}
@@ -566,7 +556,7 @@ export default function ShelterPosts() {
                                                             title={
                                                                 !user
                                                                     ? '로그인 후 즐겨찾기할 수 있어요'
-                                                                    : !regNo
+                                                                    : !shelterUuid
                                                                         ? '즐겨찾기를 지원하지 않는 항목이에요'
                                                                         : isFav
                                                                             ? '즐겨찾기 해제'
@@ -581,18 +571,18 @@ export default function ShelterPosts() {
                                                             }
                                                             aria-pressed={user ? isFav : undefined}
                                                             onClick={(e) => void toggleShelterFavorite(e, shelter)}
-                                                            className={`rounded-full p-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/70 disabled:opacity-50 ${!user || !regNo
+                                                            className={`rounded-full p-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/70 disabled:opacity-50 ${!user || !shelterUuid
                                                                 ? 'cursor-not-allowed text-gray-300 opacity-60'
                                                                 : isFav
                                                                     ? 'text-amber-500 hover:bg-amber-50'
                                                                     : 'text-gray-400 hover:bg-gray-100 hover:text-amber-500'
                                                                 }`}
                                                         >
-                                                            {isFav && user && regNo ? (
+                                                            {isFav && user && shelterUuid ? (
                                                                 <HiStar className="h-5 w-5" aria-hidden />
                                                             ) : (
                                                                 <HiOutlineStar
-                                                                    className={`h-5 w-5 ${user && regNo ? 'text-gray-400' : ''}`}
+                                                                    className={`h-5 w-5 ${user && shelterUuid ? 'text-gray-400' : ''}`}
                                                                     strokeWidth={2}
                                                                     aria-hidden
                                                                 />

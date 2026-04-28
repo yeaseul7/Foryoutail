@@ -1,64 +1,16 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import {
-  collection,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-  type QueryDocumentSnapshot,
-} from 'firebase/firestore';
-import { firestore } from '@/lib/firebase/firebase';
 import type { ShelterAnimalItem } from '@/packages/type/postType';
 import HorizontalAnimalCardSkeleton from '@/packages/components/skeleton/HorizontalAnimalCardSkeleton';
 import { HorizontalAnimalPhotoCard } from '@/packages/components/shelter/horizontalAnimalCarousel';
-import { isShelterAnimalListable } from '@/lib/client/shelter';
 import { HiHeart } from 'react-icons/hi2';
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
 
-const LIKED_ANIMALS_COLLECTION = 'likedAnimals';
 /** 홈 '최근 인기 많은 아이 모음' 가로 목록 노출 개수 */
 const MOST_LIKED_LIMIT = 5;
 
 type MostLikedRow = { item: ShelterAnimalItem; likedCount: number };
-
-function parseLikedCount(raw: Record<string, unknown>): number {
-  const v = raw.likedCount ?? raw.likeCount;
-  if (typeof v === 'number' && Number.isFinite(v)) return Math.max(0, Math.floor(v));
-  if (typeof v === 'string') {
-    const n = parseInt(v, 10);
-    return Number.isNaN(n) ? 0 : Math.max(0, n);
-  }
-  return 0;
-}
-
-/** Firestore 문서 → 카드용 데이터 (집계 메타는 item에서 제외, 좋아요 수는 별도) */
-function snapshotToMostLikedRow(
-  docSnap: QueryDocumentSnapshot,
-): MostLikedRow | null {
-  const raw = docSnap.data() as Record<string, unknown>;
-  const likedCount = parseLikedCount(raw);
-  const desertionNo =
-    typeof raw.desertionNo === 'string' && raw.desertionNo.trim()
-      ? raw.desertionNo.trim()
-      : docSnap.id.trim();
-  if (!desertionNo) return null;
-
-  const processState =
-    typeof raw.processState === 'string' ? raw.processState : undefined;
-  if (!isShelterAnimalListable(processState)) return null;
-
-  const rest = { ...raw } as Record<string, unknown>;
-  delete rest.likedCount;
-  delete rest.likeCount;
-  delete rest.likedUserID;
-  delete rest.updatedAt;
-  delete rest.image;
-  delete rest.createdAt;
-  const item = { ...(rest as Partial<ShelterAnimalItem>), desertionNo };
-  return { item, likedCount };
-}
 
 const LIST_ROW_GAP =
   'flex gap-6 sm:gap-8 overflow-x-auto pb-2 px-1 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden';
@@ -79,23 +31,22 @@ export default function MostLikedHorizontalAnimalList() {
 
     (async () => {
       try {
-        const q = query(
-          collection(firestore, LIKED_ANIMALS_COLLECTION),
-          orderBy('likedCount', 'desc'),
-          limit(MOST_LIKED_LIMIT * 6),
-        );
-        const snap = await getDocs(q);
-        if (cancelled) return;
-
-        const list: MostLikedRow[] = [];
-        snap.forEach((d) => {
-          const row = snapshotToMostLikedRow(d);
-          if (row) list.push(row);
+        const res = await fetch(`/api/animal-likes/top?limit=${MOST_LIKED_LIMIT}`, {
+          cache: 'no-store',
+          headers: { 'Content-Type': 'application/json' },
         });
-        setRows(list.slice(0, MOST_LIKED_LIMIT));
+
+        if (!res.ok) {
+          const body = (await res.json().catch(() => null)) as { error?: string } | null;
+          throw new Error(body?.error || '좋아요 순위 데이터를 불러오지 못했습니다.');
+        }
+
+        const body = (await res.json()) as { items?: MostLikedRow[] };
+        if (cancelled) return;
+        setRows(body.items ?? []);
       } catch (e) {
         if (cancelled) return;
-        console.error('likedAnimals 조회 실패:', e);
+        console.error('animal_likes 조회 실패:', e);
         setError(
           e instanceof Error
             ? e.message
@@ -181,10 +132,13 @@ export default function MostLikedHorizontalAnimalList() {
         </div>
       </div>
       <div ref={scrollerRef} className={LIST_ROW_GAP} role="list" aria-label="최근 인기 많은 아이 모음 유기동물 목록">
-        {rows.map(({ item, likedCount }) => (
-          <div key={item.desertionNo} className="snap-center">
+        {rows.map(({ item, likedCount }, index) => (
+          <div
+            key={`${item.id ?? item.desertionNo}-${item.noticeNo ?? likedCount ?? index}`}
+            className="snap-center"
+          >
             <HorizontalAnimalPhotoCard
-              key={`${item.desertionNo}-${likedCount}`}
+              key={`${item.id ?? item.desertionNo}-${likedCount}`}
               item={item}
               likeCount={likedCount}
             />

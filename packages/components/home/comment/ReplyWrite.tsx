@@ -1,29 +1,17 @@
 'use client';
 import { useRef, useEffect, useState, useCallback } from 'react';
-import {
-  collection,
-  addDoc,
-  serverTimestamp,
-  doc,
-  updateDoc,
-  increment,
-  getDoc,
-} from 'firebase/firestore';
-import { firestore } from '@/lib/firebase/firebase';
-import { useAuth } from '@/lib/firebase/auth';
+import { useAuth } from '@/lib/supabase/auth';
+import { supabase } from '@/lib/supabase/client';
 import { VscSend } from 'react-icons/vsc';
 import { createHistory } from '@/lib/domain/community/history';
-import type { CommentCollectionName } from './CommentList';
 
 export default function ReplyWrite({
   postId,
   commentId,
-  collectionName = 'boards',
   onReplySubmitted,
 }: {
   postId: string;
   commentId: string;
-  collectionName?: CommentCollectionName;
   onReplySubmitted?: () => void;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -84,54 +72,55 @@ export default function ReplyWrite({
 
     setIsSubmitting(true);
     try {
-      const commentRef = doc(
-        firestore,
-        collectionName,
-        postId,
-        'comments',
-        commentId,
-      );
-      const commentDoc = await getDoc(commentRef);
+      const { data: commentData, error: commentError } = await supabase
+        .from('comments')
+        .select('author_id')
+        .eq('id', commentId)
+        .eq('post_id', postId)
+        .maybeSingle();
 
-      if (!commentDoc.exists()) {
+      if (commentError) {
+        throw commentError;
+      }
+
+      if (!commentData) {
         alert('댓글을 찾을 수 없습니다.');
         return;
       }
 
-      const repliesCollection = collection(
-        firestore,
-        collectionName,
-        postId,
-        'comments',
-        commentId,
-        'replies',
-      );
-      const replyDocRef = await addDoc(repliesCollection, {
-        content: reply.trim(),
-        authorId: user.uid,
-        createdAt: serverTimestamp(),
-        likes: 0,
-      });
+      const { data: replyRow, error: insertError } = await supabase
+        .from('comments')
+        .insert({
+          post_id: postId,
+          author_id: user.uid,
+          content: reply.trim(),
+          parent_id: commentId,
+        })
+        .select('id')
+        .single();
 
-      await updateDoc(commentRef, {
-        repliesCount: increment(1),
-      });
-
-      if (collectionName === 'boards') {
-        const commentData = commentDoc.data();
-        if (commentData?.authorId) {
-          await createHistory(
-            commentData.authorId,
-            user.uid,
-            'reply',
-            'reply',
-            replyDocRef.id,
-            postId,
-            commentId,
-            replyDocRef.id,
-          );
-        }
+      if (insertError) {
+        throw insertError;
       }
+
+      if (commentData.author_id) {
+        await createHistory(
+          commentData.author_id,
+          user.uid,
+          'reply',
+          'reply',
+          replyRow.id,
+          postId,
+          commentId,
+          replyRow.id,
+        );
+      }
+
+      window.dispatchEvent(
+        new CustomEvent('community-comments:changed', {
+          detail: { postId, commentId },
+        }),
+      );
 
       setReply('');
       if (textareaRef.current) {
