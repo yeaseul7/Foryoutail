@@ -4,6 +4,7 @@ import Link from 'next/link';
 const FOOTER_LINKS = {
   서비스: [
     { label: '홈', href: '/' },
+    { label: '서비스 소개', href: '/about' },
     { label: '유기동물 보호소', href: '/animalShelter' },
     { label: '입양 공고', href: '/shelter' },
     { label: '커뮤니티', href: '/community' },
