@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/server/supabase-admin';
 
+export const runtime = 'edge';
+
 export async function DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },

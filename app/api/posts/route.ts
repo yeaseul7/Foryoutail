@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllBoardsData } from '@/lib/domain/community/post';
 
+export const runtime = 'edge';
+
 export async function GET(request: NextRequest) {
   try {
     const limitParam = request.nextUrl.searchParams.get('limit');

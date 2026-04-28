@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/server/supabase-admin';
 
+export const runtime = 'edge';
+
 type NotificationType = 'like' | 'comment' | 'reply';
 
 interface CreateHistoryBody {
