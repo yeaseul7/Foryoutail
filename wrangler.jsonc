@@ -17,6 +17,18 @@
       "service": "foryoutail"
     }
   ],
+  "secrets": {
+    "required": [
+      "NEXT_PUBLIC_BASE_URL",
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "NEXT_PUBLIC_ANIMALS_OPENAPI",
+      "NEXT_PUBLIC_VWORLD_API_KEY",
+      "NEXT_PUBLIC_NAVER_MAP"
+    ]
+  },
   "images": {
     "binding": "IMAGES"
   }

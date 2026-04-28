@@ -32,6 +32,7 @@ npm run deploy
 
 ```bash
 npm ci
+npx wrangler secret bulk .cloudflare-secrets.json
 npm run lint
 npm run deploy
 ```
@@ -55,6 +56,12 @@ GitHub 저장소 `Settings -> Secrets and variables -> Actions`에 아래 시크
 - `NEXT_PUBLIC_ANIMALS_OPENAPI`
 - `NEXT_PUBLIC_VWORLD_API_KEY`
 - `NEXT_PUBLIC_NAVER_MAP`
+
+설명:
+
+- GitHub Actions의 `env`는 빌드 프로세스에서는 읽히지만 Worker 런타임 변수로 자동 저장되지 않습니다.
+- 따라서 워크플로에서 `wrangler secret bulk`로 Cloudflare Worker secrets에 먼저 동기화한 뒤 배포합니다.
+- 배포 명령에는 `--keep-vars`를 붙여 Cloudflare 대시보드에 이미 저장된 변수들이 삭제되지 않게 했습니다.
 
 ## Cloudflare 쪽 설정
 

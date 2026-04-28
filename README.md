@@ -71,6 +71,7 @@ npm run deploy
 
 - `main` 브랜치 push 시 GitHub Actions가 Cloudflare Workers로 자동 배포
 - 워크플로 파일: `.github/workflows/deploy-cloudflare.yml`
+- 배포 전 GitHub Secrets 값을 Cloudflare Worker secrets로 동기화한 뒤 배포
 
 상세 절차:
 
