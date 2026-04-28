@@ -1,6 +1,7 @@
 import type { ShelterInfoItem } from '@/packages/type/shelterTyps';
 
 export interface ShelterInfoQueryParams {
+  id?: string;
   care_reg_no?: string;
   upr_cd?: string;
   org_cd?: string;
@@ -20,6 +21,7 @@ interface ShelterInfoApiResponse {
 
 function toQueryString(params: ShelterInfoQueryParams): string {
   const qp = new URLSearchParams();
+  if (params.id) qp.set('id', params.id);
   if (params.care_reg_no) qp.set('care_reg_no', params.care_reg_no);
   if (params.upr_cd) qp.set('upr_cd', params.upr_cd);
   if (params.org_cd) qp.set('org_cd', params.org_cd);
@@ -59,6 +61,17 @@ export async function fetchShelterInfoByCareRegNo(
 ): Promise<ShelterInfoItem | null> {
   const items = await fetchShelterInfoItems(
     { care_reg_no: careRegNo, pageNo: 1, numOfRows: 1 },
+    options,
+  );
+  return items[0] ?? null;
+}
+
+export async function fetchShelterInfoById(
+  id: string,
+  options?: { baseUrl?: string; cache?: RequestCache },
+): Promise<ShelterInfoItem | null> {
+  const items = await fetchShelterInfoItems(
+    { id, pageNo: 1, numOfRows: 1 },
     options,
   );
   return items[0] ?? null;

@@ -1,12 +1,9 @@
 'use client';
-import { useAuth } from '@/lib/firebase/auth';
-import { firestore } from '@/lib/firebase/firebase';
-import { doc, getDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
-import { updateProfile } from 'firebase/auth';
+import { useAuth } from '@/lib/supabase/auth';
+import { supabase } from '@/lib/supabase/client';
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { uploadCardImages } from '@/lib/client/imageUpload';
 import EditingHeader from './EditingHeader';
 import EditingHeaderText from './EditingHeaderText';
 import EditingBtn from './EditingBtn';
@@ -20,10 +17,12 @@ interface ProfileUser {
   email: string;
 }
 
+const PROFILE_IMAGE_BUCKET = 'board-images';
+
 export default function UserHeader() {
   const params = useParams();
   const userId = params.id as string;
-  const { user } = useAuth();
+  const { user, updateUserProfile } = useAuth();
   const [profileUser, setProfileUser] = useState<ProfileUser | null>(null);
   const [description, setDescription] = useState<string>('');
   const [isEditing, setIsEditing] = useState(false);
@@ -49,28 +48,43 @@ export default function UserHeader() {
 
       setLoading(true);
       try {
-        const userDoc = await getDoc(doc(firestore, 'users', userId));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
+        const response = await fetch(
+          `/api/supabase/users/sync?id=${encodeURIComponent(userId)}`,
+        );
+        if (!response.ok) {
+          throw new Error('사용자 조회에 실패했습니다.');
+        }
+        const result = (await response.json()) as {
+          user?: {
+            id: string;
+            email: string | null;
+            nickname: string | null;
+            profile_img: string | null;
+          } | null;
+        };
+        if (result.user) {
           setProfileUser({
             uid: userId,
-            displayName: userData?.nickname || userData?.displayName || '',
-            photoURL: userData?.photoURL || null,
-            email: userData?.email || '',
+            displayName: result.user.nickname || '',
+            photoURL: result.user.profile_img || null,
+            email: result.user.email || '',
           });
-          setDescription(userData?.description || '');
-          setEditedName(userData?.nickname || userData?.displayName || '');
-          setEditedDescription(userData?.description || '');
-          setEditedPhotoURL(userData?.photoURL || null);
+          setDescription('');
+          setEditedName(result.user.nickname || '');
+          setEditedDescription('');
+          setEditedPhotoURL(result.user.profile_img || null);
         }
 
-        // 게시글 개수 조회
-        const boardsQuery = query(
-          collection(firestore, 'boards'),
-          where('authorId', '==', userId)
-        );
-        const boardsSnapshot = await getDocs(boardsQuery);
-        setPostsCount(boardsSnapshot.size);
+        const { count, error } = await supabase
+          .from('posts')
+          .select('id', { count: 'exact', head: true })
+          .eq('author_id', userId);
+
+        if (error) {
+          throw error;
+        }
+
+        setPostsCount(count ?? 0);
 
         // 팔로워/팔로잉은 아직 구현되지 않았으므로 0으로 설정
         setFollowersCount(0);
@@ -87,12 +101,34 @@ export default function UserHeader() {
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !user?.uid) return;
 
     setIsUploading(true);
     try {
-      const urls = await uploadCardImages([file]);
-      setEditedPhotoURL(urls[0]);
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const path = `${user.uid}/profile.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(PROFILE_IMAGE_BUCKET)
+        .upload(path, file, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: file.type || undefined,
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage
+        .from(PROFILE_IMAGE_BUCKET)
+        .getPublicUrl(path);
+
+      if (!data.publicUrl) {
+        throw new Error('프로필 이미지 URL 생성에 실패했습니다.');
+      }
+
+      setEditedPhotoURL(data.publicUrl);
     } catch (error) {
       console.error('이미지 업로드 실패:', error);
       alert('이미지 업로드 중 오류가 발생했습니다.');
@@ -114,14 +150,7 @@ export default function UserHeader() {
 
     setIsSaving(true);
     try {
-      await updateDoc(doc(firestore, 'users', userId), {
-        nickname: editedName.trim(),
-        description: editedDescription.trim() || '',
-        photoURL: editedPhotoURL,
-        updatedAt: serverTimestamp(),
-      });
-
-      await updateProfile(user, {
+      await updateUserProfile({
         displayName: editedName.trim(),
         photoURL: editedPhotoURL || null,
       });

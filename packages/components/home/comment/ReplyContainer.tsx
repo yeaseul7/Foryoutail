@@ -1,9 +1,7 @@
 import { ReplyData } from '@/packages/type/commentType';
-import type { CommentCollectionName } from './CommentList';
 import { useMemo, useState } from 'react';
-import { doc, deleteDoc, updateDoc, increment } from 'firebase/firestore';
-import { firestore } from '@/lib/firebase/firebase';
-import { useAuth } from '@/lib/firebase/auth';
+import { supabase } from '@/lib/supabase/client';
+import { useAuth } from '@/lib/supabase/auth';
 import { formatDate } from '@/packages/utils/dateFormatting';
 import UserProfile from '../../common/UserProfile';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -13,12 +11,10 @@ export default function ReplyContainer({
   replyData,
   postId,
   commentId,
-  collectionName = 'boards',
 }: {
   replyData: ReplyData;
   postId: string;
   commentId: string;
-  collectionName?: CommentCollectionName;
 }) {
   const { user } = useAuth();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -47,36 +43,30 @@ export default function ReplyContainer({
 
     setIsDeleting(true);
     try {
-      const replyRef = doc(
-        firestore,
-        collectionName,
-        postId,
-        'comments',
-        commentId,
-        'replies',
+      await deleteHistoryByReplyId(
         replyData.id,
+        postId,
+        commentId,
+        replyData.authorId,
       );
-      if (collectionName === 'boards') {
-        await deleteHistoryByReplyId(
-          replyData.id,
-          postId,
-          commentId,
-          replyData.authorId,
-        );
+
+      const { error } = await supabase
+        .from('comments')
+        .delete()
+        .eq('id', replyData.id)
+        .eq('post_id', postId)
+        .eq('parent_id', commentId)
+        .eq('author_id', user.uid);
+
+      if (error) {
+        throw error;
       }
 
-      await deleteDoc(replyRef);
-
-      const commentRef = doc(
-        firestore,
-        collectionName,
-        postId,
-        'comments',
-        commentId,
+      window.dispatchEvent(
+        new CustomEvent('community-comments:changed', {
+          detail: { postId, commentId },
+        }),
       );
-      await updateDoc(commentRef, {
-        repliesCount: increment(-1),
-      });
     } catch (error) {
       console.error('대댓글 삭제 중 오류 발생:', error);
       alert('대댓글 삭제 중 오류가 발생했습니다.');

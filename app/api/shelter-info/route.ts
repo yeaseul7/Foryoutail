@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  getFirestoreDocument,
-  runFirestoreCollectionQuery,
-} from '@/lib/server/firestore-rest';
+import { createSupabaseAdminClient } from '@/lib/server/supabase-admin';
 import type { ShelterInfoItem } from '@/packages/type/shelterTyps';
 import { sidoLocation } from '@/static/data/sidoLocation';
 
 export const runtime = 'edge';
 
 interface ShelterInfoParams {
+  id?: string;
   care_reg_no?: string;
   upr_cd?: string;
   org_cd?: string;
@@ -16,114 +14,167 @@ interface ShelterInfoParams {
   numOfRows?: number;
 }
 
-function normalizeShelterItem(
-  id: string,
-  raw: Record<string, unknown>,
-): ShelterInfoItem {
-  const pickString = (v: unknown) => (typeof v === 'string' ? v : undefined);
-  const pickNumber = (v: unknown) =>
-    typeof v === 'number' && Number.isFinite(v) ? v : undefined;
+interface ShelterRow {
+  id: string;
+  care_reg_no: string;
+  care_nm: string;
+  care_addr: string | null;
+  jibun_addr: string | null;
+  lat: number | null;
+  lng: number | null;
+  care_tel: string | null;
+  close_day: string | null;
+  week_opr_stime: string | null;
+  week_opr_etime: string | null;
+  weekend_opr_stime: string | null;
+  weekend_opr_etime: string | null;
+  breed_cnt: number | null;
+  vet_person_cnt: number | null;
+  specs_person_cnt: number | null;
+  medical_cnt: number | null;
+  author_id: string | null;
+  content: string | null;
+  save_trgt_animal: string | null;
+  division_nm: string | null;
+  org_nm: string | null;
+  shelter_migrated_data: Record<string, unknown> | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+function pickNestedString(
+  raw: Record<string, unknown> | null | undefined,
+  ...keys: string[]
+): string | undefined {
+  if (!raw) return undefined;
+  for (const key of keys) {
+    const value = raw[key];
+    if (typeof value === 'string' && value.trim() !== '') return value;
+  }
+  return undefined;
+}
+
+function pickNestedNumber(
+  raw: Record<string, unknown> | null | undefined,
+  ...keys: string[]
+): number | undefined {
+  if (!raw) return undefined;
+  for (const key of keys) {
+    const value = raw[key];
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+  }
+  return undefined;
+}
+
+function normalizeShelterItem(row: ShelterRow): ShelterInfoItem {
+  const migrated = row.shelter_migrated_data;
   return {
-    careRegNo:
-      pickString(raw.careRegNo) ??
-      pickString(raw.care_reg_no) ??
-      id,
-    careNm: pickString(raw.careNm) ?? pickString(raw.care_nm),
-    orgNm: pickString(raw.orgNm) ?? pickString(raw.org_nm),
-    orgCd: pickString(raw.orgCd) ?? pickString(raw.org_cd),
-    uprCd: pickString(raw.uprCd) ?? pickString(raw.upr_cd),
-    divisionNm: pickString(raw.divisionNm) ?? pickString(raw.division_nm),
+    id: row.id,
+    careRegNo: row.care_reg_no?.trim() || undefined,
+    careNm: row.care_nm?.trim() || undefined,
+    orgNm: row.org_nm?.trim() || pickNestedString(migrated, 'orgNm', 'org_nm'),
+    orgCd: pickNestedString(migrated, 'orgCd', 'org_cd'),
+    uprCd: pickNestedString(migrated, 'uprCd', 'upr_cd'),
+    divisionNm:
+      row.division_nm?.trim() || pickNestedString(migrated, 'divisionNm', 'division_nm'),
     saveTrgtAnimal:
-      pickString(raw.saveTrgtAnimal) ?? pickString(raw.save_trgt_animal),
-    careAddr: pickString(raw.careAddr) ?? pickString(raw.care_addr),
-    jibunAddr: pickString(raw.jibunAddr) ?? pickString(raw.jibun_addr),
-    lat: pickNumber(raw.lat),
-    lng: pickNumber(raw.lng),
-    careTel: pickString(raw.careTel) ?? pickString(raw.care_tel),
-    dsignationDate:
-      pickString(raw.dsignationDate) ?? pickString(raw.dsignation_date),
+      row.save_trgt_animal?.trim() ||
+      pickNestedString(migrated, 'saveTrgtAnimal', 'save_trgt_animal'),
+    careAddr: row.care_addr?.trim() || pickNestedString(migrated, 'careAddr', 'care_addr'),
+    jibunAddr:
+      row.jibun_addr?.trim() || pickNestedString(migrated, 'jibunAddr', 'jibun_addr'),
+    lat: row.lat ?? pickNestedNumber(migrated, 'lat'),
+    lng: row.lng ?? pickNestedNumber(migrated, 'lng'),
+    careTel: row.care_tel?.trim() || pickNestedString(migrated, 'careTel', 'care_tel'),
+    dsignationDate: pickNestedString(migrated, 'dsignationDate', 'dsignation_date'),
     weekOprStime:
-      pickString(raw.weekOprStime) ?? pickString(raw.week_opr_stime),
+      row.week_opr_stime?.trim() ||
+      pickNestedString(migrated, 'weekOprStime', 'week_opr_stime'),
     weekOprEtime:
-      pickString(raw.weekOprEtime) ?? pickString(raw.week_opr_etime),
-    weekCellStime:
-      pickString(raw.weekCellStime) ?? pickString(raw.week_cell_stime),
-    weekCellEtime:
-      pickString(raw.weekCellEtime) ?? pickString(raw.week_cell_etime),
+      row.week_opr_etime?.trim() ||
+      pickNestedString(migrated, 'weekOprEtime', 'week_opr_etime'),
+    weekCellStime: pickNestedString(migrated, 'weekCellStime', 'week_cell_stime'),
+    weekCellEtime: pickNestedString(migrated, 'weekCellEtime', 'week_cell_etime'),
     weekendOprStime:
-      pickString(raw.weekendOprStime) ?? pickString(raw.weekend_opr_stime),
+      row.weekend_opr_stime?.trim() ||
+      pickNestedString(migrated, 'weekendOprStime', 'weekend_opr_stime'),
     weekendOprEtime:
-      pickString(raw.weekendOprEtime) ?? pickString(raw.weekend_opr_etime),
-    weekendCellStime:
-      pickString(raw.weekendCellStime) ?? pickString(raw.weekend_cell_stime),
-    weekendCellEtime:
-      pickString(raw.weekendCellEtime) ?? pickString(raw.weekend_cell_etime),
-    closeDay: pickString(raw.closeDay) ?? pickString(raw.close_day),
-    vetPersonCnt: pickNumber(raw.vetPersonCnt),
-    specsPersonCnt: pickNumber(raw.specsPersonCnt),
-    medicalCnt: pickNumber(raw.medicalCnt),
-    breedCnt: pickNumber(raw.breedCnt),
-    quarabtineCnt: pickNumber(raw.quarabtineCnt),
-    feedCnt: pickNumber(raw.feedCnt),
-    dataStdDt: pickString(raw.dataStdDt) ?? pickString(raw.data_std_dt),
+      row.weekend_opr_etime?.trim() ||
+      pickNestedString(migrated, 'weekendOprEtime', 'weekend_opr_etime'),
+    weekendCellStime: pickNestedString(migrated, 'weekendCellStime', 'weekend_cell_stime'),
+    weekendCellEtime: pickNestedString(migrated, 'weekendCellEtime', 'weekend_cell_etime'),
+    closeDay: row.close_day?.trim() || pickNestedString(migrated, 'closeDay', 'close_day'),
+    vetPersonCnt: row.vet_person_cnt ?? pickNestedNumber(migrated, 'vetPersonCnt'),
+    specsPersonCnt: row.specs_person_cnt ?? pickNestedNumber(migrated, 'specsPersonCnt'),
+    medicalCnt: row.medical_cnt ?? pickNestedNumber(migrated, 'medicalCnt'),
+    breedCnt: row.breed_cnt ?? pickNestedNumber(migrated, 'breedCnt'),
+    quarabtineCnt: pickNestedNumber(migrated, 'quarabtineCnt'),
+    feedCnt: pickNestedNumber(migrated, 'feedCnt'),
+    dataStdDt: pickNestedString(migrated, 'dataStdDt', 'data_std_dt'),
+    authorId: row.author_id?.trim() || pickNestedString(migrated, 'authorId', 'author_id'),
+    content: row.content?.trim() || pickNestedString(migrated, 'content'),
+    createdAt: row.created_at ?? pickNestedString(migrated, 'createdAt', 'created_at'),
+    updatedAt: row.updated_at ?? pickNestedString(migrated, 'updatedAt', 'updated_at'),
   };
 }
 
-async function queryShelterDocs(params: ShelterInfoParams): Promise<ShelterInfoItem[]> {
-  if (params.care_reg_no) {
-    const careRegNo = params.care_reg_no.trim();
-    if (careRegNo) {
-      const byDocId = await getFirestoreDocument('shelter-info', careRegNo);
-      if (byDocId) return [normalizeShelterItem(byDocId.id, byDocId.data)];
-    }
-  }
+function matchesSido(item: ShelterInfoItem, sidoName: string): boolean {
+  const orgNm = (item.orgNm ?? '').trim();
+  const careAddr = (item.careAddr ?? '').trim();
+  const jibunAddr = (item.jibunAddr ?? '').trim();
+  return [orgNm, careAddr, jibunAddr].some((value) => value.startsWith(sidoName));
+}
 
+async function queryShelterDocs(params: ShelterInfoParams): Promise<ShelterInfoItem[]> {
   const pageNo = params.pageNo ?? 1;
   const numOfRows = params.numOfRows ?? 10;
   const fetchLimit = Math.max(pageNo * numOfRows, numOfRows);
-  const filters: Parameters<typeof runFirestoreCollectionQuery>[0]['filters'] = [];
 
-  if (params.care_reg_no) {
-    filters.push({ field: 'careRegNo', op: 'EQUAL', value: params.care_reg_no.trim() });
+  const supabaseAdmin = createSupabaseAdminClient();
+  let query = supabaseAdmin
+    .from('shelters')
+    .select(
+      'id, care_reg_no, care_nm, care_addr, jibun_addr, lat, lng, care_tel, close_day, week_opr_stime, week_opr_etime, weekend_opr_stime, weekend_opr_etime, breed_cnt, vet_person_cnt, specs_person_cnt, medical_cnt, author_id, content, save_trgt_animal, division_nm, org_nm, shelter_migrated_data, created_at, updated_at',
+    )
+    .order('care_nm', { ascending: true })
+    .limit(Math.min(fetchLimit * 3, 3000));
+
+  if (params.care_reg_no?.trim()) {
+    query = query.eq('care_reg_no', params.care_reg_no.trim());
   }
-  if (params.upr_cd) filters.push({ field: 'uprCd', op: 'EQUAL', value: params.upr_cd });
-  if (params.org_cd) filters.push({ field: 'orgCd', op: 'EQUAL', value: params.org_cd });
+  if (params.id?.trim()) {
+    query = query.eq('id', params.id.trim());
+  }
 
-  const rows = await runFirestoreCollectionQuery({
-    collectionId: 'shelter-info',
-    filters,
-    limit: fetchLimit,
-  });
-  let items = rows.map((row) => normalizeShelterItem(row.id, row.data));
+  const { data, error } = await query;
+  if (error) {
+    throw new Error(error.message);
+  }
 
-  if (params.care_reg_no) {
+  let items = (data ?? []).map((row) => normalizeShelterItem(row as ShelterRow));
+
+  if (params.id?.trim()) {
+    const shelterId = params.id.trim();
+    items = items.filter((item) => item.id === shelterId);
+  }
+  if (params.care_reg_no?.trim()) {
     const careRegNo = params.care_reg_no.trim();
     items = items.filter((item) => item.careRegNo === careRegNo);
   }
+
   if (params.upr_cd) {
-    items = items.filter((item) => item.uprCd === params.upr_cd);
+    const sidoName =
+      sidoLocation.items.find((s) => s.SIDO_CD === params.upr_cd)?.SIDO_NAME ?? null;
+    items = items.filter((item) => {
+      if (item.uprCd) return item.uprCd === params.upr_cd;
+      return sidoName ? matchesSido(item, sidoName) : true;
+    });
   }
+
   if (params.org_cd) {
     items = items.filter((item) => item.orgCd === params.org_cd);
   }
 
-  // Firestore 문서에 uprCd/orgCd가 아직 없고 orgNm만 있는 경우를 위한 최종 폴백
-  if (items.length === 0 && params.upr_cd) {
-    const sidoName =
-      sidoLocation.items.find((s) => s.SIDO_CD === params.upr_cd)?.SIDO_NAME ??
-      null;
-    if (sidoName) {
-      const fallbackRows = await runFirestoreCollectionQuery({
-        collectionId: 'shelter-info',
-        filters: [
-          { field: 'orgNm', op: 'GREATER_THAN_OR_EQUAL', value: sidoName },
-          { field: 'orgNm', op: 'LESS_THAN_OR_EQUAL', value: `${sidoName}\uf8ff` },
-        ],
-        limit: fetchLimit,
-      });
-      items = fallbackRows.map((row) => normalizeShelterItem(row.id, row.data));
-    }
-  }
   return items.slice(0, fetchLimit);
 }
 
@@ -131,6 +182,7 @@ export async function GET(request: NextRequest) {
   try {
     const sp = request.nextUrl.searchParams;
     const params: ShelterInfoParams = {
+      id: sp.get('id') ?? undefined,
       care_reg_no: sp.get('care_reg_no') ?? undefined,
       upr_cd: sp.get('upr_cd') ?? undefined,
       org_cd: sp.get('org_cd') ?? undefined,
@@ -163,12 +215,11 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Shelter info API (Firestore) error:', error);
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
+    console.error('Shelter info API (Supabase) error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       {
-        error: 'Failed to fetch shelter info from firestore',
+        error: 'Failed to fetch shelter info from supabase',
         details: errorMessage,
       },
       { status: 500 },

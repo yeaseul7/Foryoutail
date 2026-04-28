@@ -1,8 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { collection, getDocs } from 'firebase/firestore';
-import { firestore } from '@/lib/firebase/firebase';
+import { supabase } from '@/lib/supabase/client';
 import { useState, useEffect, useMemo } from 'react';
 import { HiHeart } from 'react-icons/hi2';
 import { HiChatBubbleLeft } from 'react-icons/hi2';
@@ -97,24 +96,16 @@ export default function PostCard({ post, highPriority = false, highQuality = fal
     const fetchCommentCount = async () => {
       if (!post.id) return;
       try {
-        const commentsCollection = collection(
-          firestore,
-          'boards',
-          post.id,
-          'comments',
-        );
-        const commentsSnapshot = await getDocs(commentsCollection);
-        const commentCount = commentsSnapshot.size;
+        const { count, error } = await supabase
+          .from('comments')
+          .select('id', { count: 'exact', head: true })
+          .eq('post_id', post.id);
 
-        // 각 댓글의 repliesCount 합산
-        let totalRepliesCount = 0;
-        commentsSnapshot.forEach((commentDoc) => {
-          const commentData = commentDoc.data();
-          totalRepliesCount += commentData.repliesCount || 0;
-        });
+        if (error) {
+          throw error;
+        }
 
-        const totalCommentCount = commentCount + totalRepliesCount;
-        setCommentCount(totalCommentCount);
+        setCommentCount(count ?? 0);
       } catch (error) {
         console.error('댓글 개수 가져오기 실패:', error);
       }

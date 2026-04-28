@@ -1,5 +1,4 @@
 'use client';
-import { getAllBoardsData } from '@/lib/domain/community/post';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PostCard from '../base/PostCard';
@@ -53,8 +52,12 @@ export default function CommunityPosts({ pageSize = 12, fromMain = false }: Comm
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const data = await getAllBoardsData();
-        setAllPosts(data);
+        const response = await fetch(`/api/posts?limit=${Math.max(pageSize * 5, 60)}`);
+        if (!response.ok) {
+          throw new Error('게시물 목록 조회 실패');
+        }
+        const body = (await response.json()) as { posts?: PostData[] };
+        setAllPosts(body.posts ?? []);
       } catch (e) {
         console.error('게시물 조회 중 오류 발생:', e);
       } finally {
@@ -62,7 +65,7 @@ export default function CommunityPosts({ pageSize = 12, fromMain = false }: Comm
       }
     };
     fetchPosts();
-  }, []);
+  }, [pageSize]);
 
   useEffect(() => {
     setDisplayedPosts(filteredPosts.slice(0, pageSize));

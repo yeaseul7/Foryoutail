@@ -1,12 +1,10 @@
 'use client';
-import { useAuth } from '@/lib/firebase/auth';
-import { firestore } from '@/lib/firebase/firebase';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { useAuth } from '@/lib/supabase/auth';
+import { supabase } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
 import PostCard from '../../base/PostCard';
 import PostCardSkeleton from '../../skeleton/PostCardSkeleton';
 import { PostData } from '@/packages/type/postType';
-import { enrichPostsWithAuthorInfo } from '@/lib/domain/community/post';
 
 export default function PostScrollList({ userId }: { userId?: string }) {
   const { user } = useAuth();
@@ -26,26 +24,63 @@ export default function PostScrollList({ userId }: { userId?: string }) {
       }
 
       try {
-        const boardsCol = collection(firestore, 'boards');
-        const q = query(boardsCol, where('authorId', '==', targetUserId));
-        const boardsSnapshot = await getDocs(q);
+        const [postsResult, userResponse] = await Promise.all([
+          supabase
+            .from('posts')
+            .select('id, author_id, title, content, likes_count, created_at, updated_at, main_image_url, category, tags, view_count')
+            .eq('author_id', targetUserId)
+            .order('created_at', { ascending: false }),
+          fetch(`/api/supabase/users/sync?id=${encodeURIComponent(targetUserId)}`),
+        ]);
 
-        const postsList = boardsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as PostData[];
+        if (postsResult.error) {
+          throw postsResult.error;
+        }
 
-        // 클라이언트에서 최신순으로 정렬
-        postsList.sort((a, b) => {
-          const aTime = a.createdAt?.toMillis() || 0;
-          const bTime = b.createdAt?.toMillis() || 0;
-          return bTime - aTime; // 내림차순 (최신순)
+        const userBody = userResponse.ok
+          ? ((await userResponse.json()) as {
+              user?: { nickname?: string | null; profile_img?: string | null } | null;
+            })
+          : { user: null };
+
+        const postsList = (postsResult.data ?? []).map((row) => {
+          const createdAt = row.created_at
+            ? {
+                seconds: Math.floor(new Date(row.created_at).getTime() / 1000),
+                nanoseconds: 0,
+              }
+            : null;
+          const updatedAt = row.updated_at
+            ? {
+                seconds: Math.floor(new Date(row.updated_at).getTime() / 1000),
+                nanoseconds: 0,
+              }
+            : null;
+
+          return {
+            id: row.id,
+            title: row.title ?? '',
+            content: row.content ?? '',
+            tags: Array.isArray(row.tags) ? row.tags : [],
+            authorId: row.author_id ?? '',
+            authorName: userBody.user?.nickname || '',
+            authorPhotoURL: userBody.user?.profile_img || null,
+            createdAt,
+            updatedAt,
+            thumbnail: row.main_image_url ?? null,
+            likes: row.likes_count ?? 0,
+            category:
+              row.category === 'daily' ||
+              row.category === 'question' ||
+              row.category === 'adoption' ||
+              row.category === 'pet-life'
+                ? row.category
+                : undefined,
+            viewCount: row.view_count ?? 0,
+          } as PostData;
         });
-
-        // 작성자 정보 추가
-        const postsWithAuthorInfo = await enrichPostsWithAuthorInfo(postsList);
-        setAllPosts(postsWithAuthorInfo);
-        setDisplayedPosts(postsWithAuthorInfo.slice(0, 6)); // 처음 6개만 표시
+        setAllPosts(postsList);
+        setDisplayedPosts(postsList.slice(0, 6));
       } catch (error) {
         console.error('게시물 조회 중 오류 발생:', error);
       } finally {

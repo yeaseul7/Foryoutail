@@ -1,13 +1,6 @@
-import type { Timestamp } from 'firebase/firestore';
-
-/**
- * Firestore `shelterAnimals` 컬렉션 문서 ID 규칙: `{desertionNo}-{careRegNo}`
- * (예: `411300202600109-311300201300001`)
- *
- * 본문 필드는 공공데이터포털 유기동물 API(v2)와 동일한 키를 기준으로 하며,
- * 지역 필터 등을 위해 `uprCd` / `orgCd`를 동기화 시 넣어두는 것을 권장합니다.
- */
+/** 앱 전역에서 사용하는 camelCase 유기동물 공고 타입 */
 export interface ShelterAnimalItem {
+  id?: string;
   desertionNo?: string; // 유기번호
   careRegNo?: string; // 보호소번호
   noticeNo?: string; // 공고번호
@@ -80,12 +73,71 @@ export interface ShelterAnimalItem {
 }
 
 /**
- * Firestore에서 읽은 원시 문서 (`updatedAt` 등 서버 전용 필드 포함).
- * 클라이언트 컴포넌트 props로 넘기기 전에 타임스탬프 필드는 제거하는 것이 안전합니다.
+ * Supabase `public.animals` 테이블 row 타입.
+ * snake_case 컬럼과 nullable 제약을 그대로 반영합니다.
  */
-export interface ShelterAnimalFirestoreDoc extends ShelterAnimalItem {
-  updatedAt?: Timestamp;
-  createdAt?: Timestamp;
+export interface ShelterAnimalRow {
+  id: string;
+  desertion_no: string;
+  care_reg_no: string | null;
+  age: string | null;
+  weight: string | null;
+  color_cd: string | null;
+  sex_cd: string | null;
+  neuter_yn: string | null;
+  up_kind_nm: string | null;
+  kind_nm: string | null;
+  kind_full_nm: string | null;
+  notice_no: string | null;
+  notice_sdt: string | null;
+  notice_edt: string | null;
+  process_state: string | null;
+  happen_dt: string | null;
+  happen_place: string | null;
+  special_mark: string | null;
+  popfiles: string[] | null;
+  embedding: unknown;
+  created_at: string | null;
+  updated_at: string | null;
+  rfid_cd: string | null;
+  upd_tm: string | null;
+  end_reason: string | null;
+  care_nm: string | null;
+  care_tel: string | null;
+  care_addr: string | null;
+  org_nm: string | null;
+  care_owner_nm: string | null;
+  up_kind_cd: string | null;
+  sfe_soci: string | null;
+  sfe_health: string | null;
+  etc_bigo: string | null;
+  vaccination_chk: string | null;
+  health_chk: string | null;
+  adptn_title: string | null;
+  adptn_s_date: string | null;
+  adptn_e_date: string | null;
+  adptn_condition_limit_txt: string | null;
+  adptn_txt: string | null;
+  adptn_img: string | null;
+  sprt_title: string | null;
+  sprt_s_date: string | null;
+  sprt_e_date: string | null;
+  sprt_condition_limit_txt: string | null;
+  sprt_txt: string | null;
+  sprt_img: string | null;
+  srvc_title: string | null;
+  srvc_s_date: string | null;
+  srvc_e_date: string | null;
+  srvc_condition_limit_txt: string | null;
+  srvc_txt: string | null;
+  srvc_img: string | null;
+  evnt_title: string | null;
+  evnt_s_date: string | null;
+  evnt_e_date: string | null;
+  evnt_condition_limit_txt: string | null;
+  evnt_txt: string | null;
+  evnt_img: string | null;
+  kind_cd: string | null;
 }
 
 /** 공공데이터 API `items.item` — 단일 객체 또는 배열 */

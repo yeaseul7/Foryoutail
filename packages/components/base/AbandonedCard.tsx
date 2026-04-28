@@ -183,7 +183,6 @@ export default function AbandonedCard({
 
   return (
     <article
-      key={shelterAnimal.desertionNo}
       onClick={() => router.push(`/shelter/${shelterAnimal.desertionNo}`)}
       className="flex h-full w-full max-w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-gray-100 border-b-0 bg-white shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98]"
     >

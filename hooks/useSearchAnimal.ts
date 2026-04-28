@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { doc, getDocFromServer, setDoc } from 'firebase/firestore';
 import type { SimilarMatch } from '@/lib/search-animal/types';
-import { useAuth } from '@/lib/firebase/auth';
-import { firestore } from '@/lib/firebase/firebase';
+import { useAuth } from '@/lib/supabase/auth';
+import { supabase } from '@/lib/supabase/client';
 import type { AiSearchFiltersValues } from '@/packages/components/search-animals/AiSearchFilters';
 import { sidoLocation } from '@/static/data/sidoLocation';
 
@@ -21,6 +20,11 @@ const FILTERED_TOP_K = 50;
 interface SearchCache {
   searchMatches: SimilarMatch[];
   filters: AiSearchFiltersValues;
+}
+
+interface AiSearchUsageRow {
+  last_ai: string | null;
+  today_ai: number | null;
 }
 
 function readSearchCache(): SearchCache | null {
@@ -80,11 +84,19 @@ function applyAiSearchFilters(
 
 /** lastAi 이후 24시간 지났거나 lastAi가 없으면 기본 사용 가능 횟수, 아니면 서버의 todayAi 반환 */
 async function getDailyAiRemaining(uid: string): Promise<number> {
-  const userRef = doc(firestore, 'users', uid);
-  const snap = await getDocFromServer(userRef);
-  const data = snap.data();
-  const lastAi = typeof data?.lastAi === 'string' ? data.lastAi : '';
-  const todayAi = typeof data?.todayAi === 'number' ? data.todayAi : DAILY_LIMIT;
+  const { data, error } = await supabase
+    .from('ai_search_usage')
+    .select('last_ai, today_ai')
+    .eq('user_id', uid)
+    .maybeSingle<AiSearchUsageRow>();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const lastAi = typeof data?.last_ai === 'string' ? data.last_ai : '';
+  const todayAi =
+    typeof data?.today_ai === 'number' ? data.today_ai : DAILY_LIMIT;
   if (!lastAi) return DAILY_LIMIT;
   const lastTime = new Date(lastAi).getTime();
   if (Number.isNaN(lastTime) || Date.now() - lastTime >= TWENTY_FOUR_HOURS_MS) {
@@ -97,12 +109,19 @@ async function getDailyAiRemaining(uid: string): Promise<number> {
 async function decrementDailyAiRemaining(uid: string): Promise<number> {
   const remaining = await getDailyAiRemaining(uid);
   const newRemaining = Math.max(0, remaining - 1);
-  const userRef = doc(firestore, 'users', uid);
-  await setDoc(
-    userRef,
-    { lastAi: new Date().toISOString(), todayAi: newRemaining },
-    { merge: true }
+  const { error } = await supabase.from('ai_search_usage').upsert(
+    {
+      user_id: uid,
+      last_ai: new Date().toISOString(),
+      today_ai: newRemaining,
+    },
+    { onConflict: 'user_id' },
   );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
   return newRemaining;
 }
 

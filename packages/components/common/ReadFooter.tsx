@@ -13,12 +13,8 @@ export type ReadFooterProps = ReadFooterPostProps;
 export default function ReadFooter(props: ReadFooterProps) {
   return (
     <div className="flex flex-col w-full">
-      <CommentList
-        postId={props.postId}
-        postAuthorId={props.post.authorId}
-        collectionName="boards"
-      />
-      <WriteComment postId={props.postId} collectionName="boards" />
+      <CommentList postId={props.postId} postAuthorId={props.post.authorId} />
+      <WriteComment postId={props.postId} />
     </div>
   );
 }

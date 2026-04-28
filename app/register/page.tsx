@@ -3,16 +3,13 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/firebase/auth';
-import { firestore } from '@/lib/firebase/firebase';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { updateProfile } from 'firebase/auth';
+import { useAuth } from '@/lib/supabase/auth';
 import { HiLockClosed } from 'react-icons/hi';
 import ShelterRegis from '@/packages/components/register/ShelterRegis';
 import type { ShelterOption } from '@/packages/type/shelterTyps';
 
 export default function RegisterPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, updateUserProfile } = useAuth();
   const router = useRouter();
   const [profileName, setProfileName] = useState('');
   const [intro, setIntro] = useState('');
@@ -21,6 +18,67 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [shelterInfo, setShelterInfo] = useState<ShelterOption | null>(null);
+  void intro;
+  void isShelterStaff;
+  void shelterInfo;
+
+  const syncSupabaseProfile = async ({
+    id,
+    email,
+    nickname,
+    profileImg,
+    fulladmin,
+  }: {
+    id: string;
+    email: string | null;
+    nickname: string;
+    profileImg: string | null;
+    fulladmin: boolean;
+  }) => {
+    const response = await fetch('/api/supabase/users/sync', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        id,
+        email,
+        nickname,
+        profile_img: profileImg,
+        fulladmin,
+      }),
+    });
+
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as
+        | { error?: string }
+        | null;
+      throw new Error(body?.error || 'Supabase 사용자 정보 저장에 실패했습니다.');
+    }
+  };
+
+  const hasCompletedSupabaseProfile = async (id: string): Promise<boolean> => {
+    const response = await fetch(
+      `/api/supabase/users/sync?id=${encodeURIComponent(id)}`,
+      {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+        },
+      },
+    );
+
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as
+        | { error?: string }
+        | null;
+      throw new Error(body?.error || 'Supabase 사용자 조회에 실패했습니다.');
+    }
+
+    const body = (await response.json()) as { hasCompletedProfile?: boolean };
+    return body.hasCompletedProfile === true;
+  };
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/');
@@ -32,18 +90,12 @@ export default function RegisterPage() {
       const checkIfAlreadyRegistered = async () => {
         if (!user) return;
         try {
-          const userDoc = await getDoc(doc(firestore, 'users', user.uid));
-          if (userDoc.exists()) {
+          const hasCompletedProfile = await hasCompletedSupabaseProfile(user.uid);
+          if (hasCompletedProfile) {
             router.push('/');
           }
         } catch (error) {
           console.error('사용자 정보 확인 중 오류:', error);
-          const firebaseError = error as { code?: string; message?: string };
-          if (firebaseError.code === 'permission-denied') {
-            console.warn(
-              'Firestore users 컬렉션에 대한 읽기 권한이 없습니다. Firestore 보안 규칙을 확인해주세요.',
-            );
-          }
         }
       };
 
@@ -78,61 +130,26 @@ export default function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      // Firestore는 undefined 값을 허용하지 않으므로, shelterInfo에서 undefined 필드 제거
-      const safeShelterInfo =
-        isShelterStaff && shelterInfo
-          ? {
-            careNm: shelterInfo.careNm,
-            careRegNo: shelterInfo.careRegNo,
-            ...(shelterInfo.careAddr != null && { careAddr: shelterInfo.careAddr }),
-            ...(shelterInfo.jibunAddr != null && { jibunAddr: shelterInfo.jibunAddr }),
-            ...(shelterInfo.uprCd != null && { uprCd: shelterInfo.uprCd }),
-            ...(shelterInfo.orgCd != null && { orgCd: shelterInfo.orgCd }),
-          }
-          : null;
-
-      console.log(safeShelterInfo);
-      await setDoc(doc(firestore, 'users', user.uid), {
-        uid: user.uid,
-        email: user.email,
-        nickname: profileName.trim(),
-        description: intro.trim() || '',
-        photoURL: user.photoURL || null,
-        isShelterStaff,
-        shelterInfo: safeShelterInfo,
-        approve: agreed,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+      await updateUserProfile({
+        displayName: profileName.trim(),
       });
 
-      // Firebase Auth의 displayName 업데이트
-      await updateProfile(user, {
-        displayName: profileName.trim(),
+      await syncSupabaseProfile({
+        id: user.uid,
+        email: user.email,
+        nickname: profileName.trim(),
+        profileImg: user.photoURL || null,
+        fulladmin: isShelterStaff,
       });
 
       router.push('/');
     } catch (error) {
       console.error('회원가입 중 오류 발생:', error);
-      const firebaseError = error as { code?: string; message?: string };
-
-      if (firebaseError.code === 'permission-denied') {
-        setError(
-          '권한이 없습니다. Firestore 보안 규칙을 확인해주세요.\n\n' +
-          'Firebase 콘솔 > Firestore Database > 규칙에서 users 컬렉션에 대한 쓰기 권한이 설정되어 있는지 확인하세요.\n\n' +
-          '예시 규칙:\n' +
-          'match /users/{userId} {\n' +
-          '  allow read: if request.auth != null;\n' +
-          '  allow create: if request.auth != null && request.auth.uid == userId;\n' +
-          '  allow update: if request.auth != null && request.auth.uid == userId;\n' +
-          '}',
-        );
-      } else {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : '회원가입 중 오류가 발생했습니다.';
-        setError(errorMessage);
-      }
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : '회원가입 중 오류가 발생했습니다.';
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -165,16 +182,19 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block mb-2 text-sm font-medium text-text1">
-              프로필 이름
+              프로필 이름 <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={profileName}
               onChange={(e) => setProfileName(e.target.value)}
-              placeholder="프로필 이름을 입력하세요."
+              placeholder="프로필 이름을 반드시 입력해주세요."
               className="w-full px-0 py-2 text-base text-text1 bg-transparent border-0 border-b border-border3 outline-none focus:border-primary1"
               required
             />
+            <p className="mt-2 text-xs text-text3">
+              프로필 이름은 필수 입력 항목이며 댓글과 게시글에 표시됩니다.
+            </p>
           </div>
 
           <div>
@@ -261,7 +281,7 @@ export default function RegisterPage() {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !profileName.trim()}
               className="flex-1 px-6 py-3 text-base font-medium text-white rounded-lg bg-primary1 hover:bg-primary2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isSubmitting ? '가입 중...' : '가입'}

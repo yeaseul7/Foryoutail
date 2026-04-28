@@ -3,9 +3,8 @@
 import { PostData } from '@/packages/type/postType';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { doc, deleteDoc, getDoc } from 'firebase/firestore';
-import { firestore } from '@/lib/firebase/firebase';
-import { useAuth } from '@/lib/firebase/auth';
+import { useAuth } from '@/lib/supabase/auth';
+import { getSupabaseAccessToken } from '@/lib/supabase/client';
 import UserProfile from '../../common/UserProfile';
 import { formatDateSimple } from '@/packages/utils/dateFormatting';
 import BlockingProgressOverlay from '@/packages/components/base/BlockingProgressOverlay';
@@ -31,7 +30,6 @@ export default function ReadHeader({
 
   const postId = params.id as string;
 
-  // 작성자 정보를 Firestore의 users 컬렉션에서 가져오기
   useEffect(() => {
     const fetchAuthorInfo = async () => {
       if (!post?.authorId) {
@@ -41,20 +39,19 @@ export default function ReadHeader({
       }
 
       try {
-        const userDoc = await getDoc(doc(firestore, 'users', post.authorId));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setAuthorNickname(
-            userData?.nickname ||
-            userData?.displayName ||
-            post?.authorName ||
-            '탈퇴한 사용자',
-          );
-          setAuthorPhotoURL(userData?.photoURL || null);
-        } else {
-          setAuthorNickname(post?.authorName || '탈퇴한 사용자');
-          setAuthorPhotoURL(post?.authorPhotoURL || null);
+        const response = await fetch(
+          `/api/supabase/users/sync?id=${encodeURIComponent(post.authorId)}`,
+        );
+        if (!response.ok) {
+          throw new Error('작성자 조회 실패');
         }
+        const body = (await response.json()) as {
+          user?: { nickname?: string | null; profile_img?: string | null } | null;
+        };
+        setAuthorNickname(
+          body.user?.nickname || post?.authorName || '탈퇴한 사용자',
+        );
+        setAuthorPhotoURL(body.user?.profile_img || post?.authorPhotoURL || null);
       } catch (error) {
         console.error('작성자 정보 가져오기 실패:', error);
         setAuthorNickname(post?.authorName || '탈퇴한 사용자');
@@ -92,7 +89,21 @@ export default function ReadHeader({
 
     setDeleteOverlay({ kind: 'loading' });
     try {
-      await deleteDoc(doc(firestore, 'boards', postId));
+      const accessToken = await getSupabaseAccessToken();
+      const response = await fetch(`/api/posts/${encodeURIComponent(postId)}`, {
+        method: 'DELETE',
+        headers: {
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+      });
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(body?.error || '게시물 삭제에 실패했습니다.');
+      }
+
       setDeleteOverlay({
         kind: 'success',
         message: '성공했습니다!',
@@ -104,17 +115,10 @@ export default function ReadHeader({
       setDeleteOverlay({ kind: 'idle' });
 
       const error = e as { code?: string; message?: string };
-      if (error.code === 'permission-denied') {
-        alert(
-          '권한이 없습니다. Firestore 보안 규칙을 확인해주세요.\n\n' +
-          'Firebase 콘솔 > Firestore Database > 규칙에서 boards 컬렉션에 대한 삭제 권한이 설정되어 있는지 확인하세요.',
-        );
-      } else {
-        alert(
-          `게시물 삭제 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'
-          }`,
-        );
-      }
+      alert(
+        `게시물 삭제 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'
+        }`,
+      );
     }
   }, [postId, user, post]);
 

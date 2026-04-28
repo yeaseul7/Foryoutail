@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next';
-import { listFirestoreCollection } from '@/lib/server/firestore-rest';
+import { createSupabaseAdminClient } from '@/lib/server/supabase-admin';
 
 const baseUrl =
   process.env.NEXT_PUBLIC_BASE_URL ||
@@ -94,16 +94,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let dynamicPages: MetadataRoute.Sitemap = [];
 
   try {
-    const [posts, users] = await Promise.all([
-      listFirestoreCollection('boards', 1000, { cache: 'force-cache' }),
-      listFirestoreCollection('users', 1000, { cache: 'force-cache' }),
-    ]);
+    const supabaseAdmin = createSupabaseAdminClient();
+    const [{ data: posts, error: postsError }, { data: users, error: usersError }] =
+      await Promise.all([
+        supabaseAdmin
+          .from('posts')
+          .select('id, created_at, updated_at')
+          .order('created_at', { ascending: false })
+          .limit(1000),
+        supabaseAdmin
+          .from('users')
+          .select('id, created_at')
+          .limit(1000),
+      ]);
 
-    const postPages: MetadataRoute.Sitemap = posts.map((post) => {
-      const lastModified = post.data.updatedAt
-        ? getDateFromTimestamp(post.data.updatedAt)
-        : post.data.createdAt
-          ? getDateFromTimestamp(post.data.createdAt)
+    if (postsError) {
+      throw new Error(postsError.message);
+    }
+
+    if (usersError) {
+      throw new Error(usersError.message);
+    }
+
+    const postPages: MetadataRoute.Sitemap = (posts ?? []).map((post) => {
+      const lastModified = post.updated_at
+        ? getDateFromTimestamp(post.updated_at)
+        : post.created_at
+          ? getDateFromTimestamp(post.created_at)
           : new Date();
 
       return {
@@ -114,23 +131,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       };
     });
 
-    const userPages: MetadataRoute.Sitemap = users.map(
-      (userDoc) => {
-        const userData = userDoc.data;
-        const lastModified = userData.updatedAt
-          ? getDateFromTimestamp(userData.updatedAt)
-          : userData.createdAt
-            ? getDateFromTimestamp(userData.createdAt)
-            : new Date();
+    const userPages: MetadataRoute.Sitemap = (users ?? []).map((user) => {
+      const lastModified = user.created_at
+        ? getDateFromTimestamp(user.created_at)
+        : new Date();
 
-        return {
-          url: `${baseUrl}/posts/${userDoc.id}`,
-          lastModified,
-          changeFrequency: 'weekly',
-          priority: 0.6,
-        };
-      },
-    );
+      return {
+        url: `${baseUrl}/posts/${user.id}`,
+        lastModified,
+        changeFrequency: 'weekly',
+        priority: 0.6,
+      };
+    });
 
     dynamicPages = [...postPages, ...userPages];
   } catch (error) {

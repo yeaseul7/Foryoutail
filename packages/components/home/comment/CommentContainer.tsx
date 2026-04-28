@@ -1,5 +1,4 @@
 import { CommentData } from '@/packages/type/commentType';
-import type { CommentCollectionName } from './CommentList';
 import CommentHeader from './CommentHeader';
 import CommentFooter from './CommentFooter';
 
@@ -7,13 +6,11 @@ export default function CommentContainer({
   commentData,
   postId,
   postAuthorId,
-  collectionName = 'boards',
   isLoadingAuthorInfo,
 }: {
   commentData: CommentData;
   postId: string;
   postAuthorId?: string;
-  collectionName?: CommentCollectionName;
   isLoadingAuthorInfo?: boolean;
 }) {
   const { content } = commentData;
@@ -29,14 +26,13 @@ export default function CommentContainer({
           <CommentHeader
             commentData={commentData}
             postId={postId}
-            collectionName={collectionName}
             isLoadingAuthorInfo={isLoadingAuthorInfo}
           />
         </div>
         <p className="text-sm text-gray-700 whitespace-pre-wrap mb-2">{content}</p>
       </div>
       <div>
-        <CommentFooter commentData={commentData} postId={postId} collectionName={collectionName} />
+        <CommentFooter commentData={commentData} postId={postId} />
       </div>
     </div>
   );

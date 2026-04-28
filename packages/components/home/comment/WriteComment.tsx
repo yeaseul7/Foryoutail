@@ -1,24 +1,14 @@
 'use client';
 import { useRef, useEffect, useState } from 'react';
-import {
-  collection,
-  addDoc,
-  serverTimestamp,
-  doc,
-  getDoc,
-} from 'firebase/firestore';
-import { firestore } from '@/lib/firebase/firebase';
-import { useAuth } from '@/lib/firebase/auth';
+import { useAuth } from '@/lib/supabase/auth';
+import { supabase } from '@/lib/supabase/client';
 import { VscSend } from 'react-icons/vsc';
 import { createHistory } from '@/lib/domain/community/history';
-import type { CommentCollectionName } from './CommentList';
 
 export default function WriteComment({
   postId,
-  collectionName = 'boards',
 }: {
   postId: string;
-  collectionName?: CommentCollectionName;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [comment, setComment] = useState('');
@@ -45,41 +35,53 @@ export default function WriteComment({
 
     setIsSubmitting(true);
     try {
-      const docRef = doc(firestore, collectionName, postId);
-      const docSnap = await getDoc(docRef);
+      const { data: postData, error: postError } = await supabase
+        .from('posts')
+        .select('author_id')
+        .eq('id', postId)
+        .maybeSingle();
 
-      if (!docSnap.exists()) {
-        alert(collectionName === 'boards' ? '게시물을 찾을 수 없습니다.' : '공지를 찾을 수 없습니다.');
+      if (postError) {
+        throw postError;
+      }
+
+      if (!postData) {
+        alert('게시물을 찾을 수 없습니다.');
         return;
       }
 
-      const commentsCollection = collection(
-        firestore,
-        collectionName,
-        postId,
-        'comments',
-      );
-      const commentDocRef = await addDoc(commentsCollection, {
-        content: comment.trim(),
-        authorId: user.uid,
-        createdAt: serverTimestamp(),
-        likes: 0,
-      });
+      const { data: commentRow, error: insertError } = await supabase
+        .from('comments')
+        .insert({
+          post_id: postId,
+          author_id: user.uid,
+          content: comment.trim(),
+          parent_id: null,
+        })
+        .select('id')
+        .single();
 
-      if (collectionName === 'boards') {
-        const postData = docSnap.data();
-        if (postData?.authorId) {
-          await createHistory(
-            postData.authorId,
-            user.uid,
-            'comment',
-            'comment',
-            commentDocRef.id,
-            postId,
-            commentDocRef.id,
-          );
-        }
+      if (insertError) {
+        throw insertError;
       }
+
+      if (postData.author_id) {
+        await createHistory(
+          postData.author_id,
+          user.uid,
+          'comment',
+          'comment',
+          commentRow.id,
+          postId,
+          commentRow.id,
+        );
+      }
+
+      window.dispatchEvent(
+        new CustomEvent('community-comments:changed', {
+          detail: { postId },
+        }),
+      );
 
       setComment('');
       if (textareaRef.current) {

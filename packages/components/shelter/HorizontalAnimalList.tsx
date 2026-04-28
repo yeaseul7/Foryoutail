@@ -130,8 +130,8 @@ export default function HorizontalAnimalList() {
         role="list"
         aria-label="최근 입양 공고 목록"
       >
-        {items.map((item) => (
-          <div key={item.desertionNo} className="snap-center">
+        {items.map((item, index) => (
+          <div key={`${item.desertionNo}-${item.noticeNo ?? index}`} className="snap-center">
             <HorizontalAnimalCard item={item} />
           </div>
         ))}

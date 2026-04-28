@@ -223,7 +223,7 @@ export function HorizontalAnimalCard({ item }: { item: ShelterAnimalItem }) {
     : normalizeAnimalImageUrl(imageUrl || '/static/images/defaultDog.png');
   const isNew = isNewNotice(item);
   const region = getShortRegion(item);
-  const breedLabel = item.kindNm?.trim() || getKindLabel(item);
+  const breedLabel = item.specialMark || item.kindNm?.trim() || getKindLabel(item);
   const shelterLabel = item.careNm?.trim() || '';
   const sexLabel = getSexLabel(item);
   const age = item.age?.trim() || '-';

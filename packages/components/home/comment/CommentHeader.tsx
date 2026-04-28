@@ -1,21 +1,17 @@
-import { useAuth } from '@/lib/firebase/auth';
+import { useAuth } from '@/lib/supabase/auth';
 import { CommentData } from '@/packages/type/commentType';
-import type { CommentCollectionName } from './CommentList';
 import { useMemo, useState } from 'react';
-import { doc, deleteDoc } from 'firebase/firestore';
-import { firestore } from '@/lib/firebase/firebase';
+import { supabase } from '@/lib/supabase/client';
 import { formatDate } from '@/packages/utils/dateFormatting';
 import { deleteHistoryByCommentId } from '@/lib/domain/community/history';
 
 export default function CommentHeader({
   commentData,
   postId,
-  collectionName = 'boards',
   isLoadingAuthorInfo,
 }: {
   commentData: CommentData;
   postId: string;
-  collectionName?: CommentCollectionName;
   isLoadingAuthorInfo?: boolean;
 }) {
   const { authorName, createdAt } = commentData;
@@ -41,23 +37,28 @@ export default function CommentHeader({
 
     setIsDeleting(true);
     try {
-      const commentRef = doc(
-        firestore,
-        collectionName,
-        postId,
-        'comments',
+      await deleteHistoryByCommentId(
         commentData.id,
+        postId,
+        commentData.authorId,
       );
 
-      if (collectionName === 'boards') {
-        await deleteHistoryByCommentId(
-          commentData.id,
-          postId,
-          commentData.authorId,
-        );
+      const { error } = await supabase
+        .from('comments')
+        .delete()
+        .eq('id', commentData.id)
+        .eq('post_id', postId)
+        .eq('author_id', user.uid);
+
+      if (error) {
+        throw error;
       }
 
-      await deleteDoc(commentRef);
+      window.dispatchEvent(
+        new CustomEvent('community-comments:changed', {
+          detail: { postId, commentId: commentData.id },
+        }),
+      );
     } catch (error) {
       console.error('댓글 삭제 중 오류 발생:', error);
       alert('댓글 삭제 중 오류가 발생했습니다.');

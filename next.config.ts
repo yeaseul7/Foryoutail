@@ -78,13 +78,16 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'k.kakaocdn.net',
       },
+      {
+        protocol: 'https',
+        hostname: 'uqaaeqpdcezjpqtbybnm.supabase.co',
+      },
     ],
     minimumCacheTTL: 60 * 60 * 24,
   },
   experimental: {
     optimizePackageImports: [
       'react-icons',
-      'firebase',
     ],
   },
 };

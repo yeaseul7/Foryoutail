@@ -1,6 +1,5 @@
 'use client';
-import { firestore } from '@/lib/firebase/firebase';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { supabase } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
 import CommentContainer from './CommentContainer';
 import { CommentData } from '@/packages/type/commentType';
@@ -9,16 +8,12 @@ import UserProfile from '../../common/UserProfile';
 import { useUserProfiles } from '@/hooks/useUserProfile';
 import { HiChatBubbleLeft } from 'react-icons/hi2';
 
-export type CommentCollectionName = 'boards' | 'notice';
-
 export default function CommentList({
   postId,
   postAuthorId,
-  collectionName = 'boards',
 }: {
   postId: string;
   postAuthorId?: string;
-  collectionName?: CommentCollectionName;
 }) {
   const router = useRouter();
   const [comments, setComments] = useState<CommentData[]>([]);
@@ -35,32 +30,58 @@ export default function CommentList({
       return;
     }
 
-    const commentCollection = collection(
-      firestore,
-      collectionName,
-      postId,
-      'comments',
-    );
-    const q = query(commentCollection, orderBy('createdAt', 'desc'));
+    const fetchComments = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('comments')
+          .select('id, author_id, content, created_at')
+          .eq('post_id', postId)
+          .is('parent_id', null)
+          .order('created_at', { ascending: false });
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const commentsList = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as unknown as CommentData[];
+        if (error) {
+          throw error;
+        }
+
+        const commentsList = (data ?? []).map((row) => ({
+          id: row.id,
+          authorId: row.author_id ?? '',
+          authorName: '',
+          authorPhotoURL: '',
+          content: row.content,
+          createdAt: row.created_at
+            ? {
+                seconds: Math.floor(new Date(row.created_at).getTime() / 1000),
+                nanoseconds: 0,
+              }
+            : null,
+          likes: 0,
+        })) as CommentData[];
+
         setComments(commentsList);
-        setLoading(false);
-      },
-      (error) => {
+      } catch (error) {
         console.error('댓글 조회 중 오류 발생:', error);
+      } finally {
         setLoading(false);
-      },
-    );
+      }
+    };
 
-    return () => unsubscribe();
-  }, [postId, collectionName]);
+    void fetchComments();
+
+    const handleChanged = (event: Event) => {
+      const changedPostId = (event as CustomEvent<{ postId?: string }>).detail
+        ?.postId;
+      if (changedPostId === postId) {
+        setLoading(true);
+        void fetchComments();
+      }
+    };
+
+    window.addEventListener('community-comments:changed', handleChanged);
+    return () => {
+      window.removeEventListener('community-comments:changed', handleChanged);
+    };
+  }, [postId]);
 
   if (loading) {
     return (
@@ -145,7 +166,6 @@ export default function CommentList({
                 }
                 postId={postId}
                 postAuthorId={postAuthorId}
-                collectionName={collectionName}
                 isLoadingAuthorInfo={
                   comment.authorId
                     ? !authorInfoMap.has(comment.authorId)

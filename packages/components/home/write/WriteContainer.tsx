@@ -1,11 +1,10 @@
 'use client';
-import { firestore } from '@/lib/firebase/firebase';
-import { useAuth } from '@/lib/firebase/auth';
+import { useAuth } from '@/lib/supabase/auth';
+import { supabase } from '@/lib/supabase/client';
 import TagInput from '@/packages/components/home/write/TagInput';
 import WriteBody from '@/packages/components/home/write/WriteBody';
 import WriteFooter from '@/packages/components/home/write/WriteFooter';
 import WriteHeader from '@/packages/components/home/write/WriteHeader';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import {
   getBoardWriteGuidelineDismissedServerSnapshot,
   getBoardWriteGuidelineDismissedSnapshot,
@@ -73,9 +72,11 @@ export default function WriteContainer({ className, initialCategory }: WriteCont
     setPostingOverlay({ kind: 'loading' });
     try {
       let content = postData?.content ?? '';
+      let mainImageUrl = postData?.thumbnail ?? null;
       if (coverDraftFiles.length > 0) {
         const urls = await uploadCardImages(coverDraftFiles, 'boards');
         content = prependImageUrlsToHtmlContent(urls, content);
+        mainImageUrl = urls[0] ?? mainImageUrl;
       }
 
       const titleFromForm = (postData?.title ?? '').trim();
@@ -95,22 +96,27 @@ export default function WriteContainer({ className, initialCategory }: WriteCont
       };
 
       const postDataToSave = {
-        ...base,
         title,
         content,
+        tags: base.tags ?? [],
         category: writeCategory,
-        authorId: user.uid,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        author_id: user.uid,
+        main_image_url: mainImageUrl,
       };
 
-      const docRef = await addDoc(
-        collection(firestore, 'boards'),
-        postDataToSave,
-      );
+      const { data, error } = await supabase
+        .from('posts')
+        .insert(postDataToSave)
+        .select('id')
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
       setPostingOverlay({
         kind: 'success',
-        readId: docRef.id,
+        readId: data.id,
         message: '성공했습니다!',
       });
     } catch (e) {
@@ -122,10 +128,8 @@ export default function WriteContainer({ className, initialCategory }: WriteCont
 
       setPostingOverlay({ kind: 'idle' });
 
-      if (error.code === 'permission-denied') {
-        alert(
-          '권한이 없습니다. Firestore 보안 규칙을 확인해주세요.\n\nFirebase 콘솔 > Firestore Database > 규칙에서 boards 컬렉션에 대한 쓰기 권한이 설정되어 있는지 확인하세요.',
-        );
+      if (error.code === '42501') {
+        alert('권한이 없습니다. posts 테이블 RLS/권한 설정을 확인해주세요.');
       } else {
         alert(
           `게시물 생성 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'
