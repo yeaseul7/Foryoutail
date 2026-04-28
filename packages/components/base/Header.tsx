@@ -93,8 +93,7 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
               alt="Logo"
               width={120}
               height={120}
-              className="hidden md:block"
-              style={{ width: 'auto', height: 'auto' }}
+              className="hidden h-auto w-[120px] md:block"
               loading="eager"
             />
           </Link>
