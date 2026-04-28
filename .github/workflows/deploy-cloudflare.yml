@@ -43,6 +43,39 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Sync Cloudflare runtime secrets
+        run: |
+          node <<'EOF'
+          const fs = require('fs');
+          const keys = [
+            'NEXT_PUBLIC_BASE_URL',
+            'NEXT_PUBLIC_SUPABASE_URL',
+            'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
+            'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+            'SUPABASE_SERVICE_ROLE_KEY',
+            'NEXT_PUBLIC_ANIMALS_OPENAPI',
+            'NEXT_PUBLIC_VWORLD_API_KEY',
+            'NEXT_PUBLIC_NAVER_MAP',
+          ];
+
+          const missing = keys.filter((key) => !process.env[key]);
+          if (missing.length > 0) {
+            console.error(`Missing required deploy secrets: ${missing.join(', ')}`);
+            process.exit(1);
+          }
+
+          const payload = Object.fromEntries(
+            keys.map((key) => [key, process.env[key]])
+          );
+
+          fs.writeFileSync(
+            '.cloudflare-secrets.json',
+            JSON.stringify(payload, null, 2),
+          );
+          EOF
+          npx wrangler secret bulk .cloudflare-secrets.json
+          rm .cloudflare-secrets.json
+
       - name: Lint
         run: npm run lint
 
