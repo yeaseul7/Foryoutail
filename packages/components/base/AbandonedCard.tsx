@@ -1,6 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { ShelterAnimalItem } from '@/packages/type/postType';
 import getOptimizedCloudinaryUrl from '@/packages/utils/optimization';
 import {
@@ -64,12 +64,6 @@ export default function AbandonedCard({
     }
     return normalizeAnimalImageUrl(currentImageUrl);
   }, [currentImageUrl]);
-
-  const handleImageError = useCallback(() => {
-    if (currentImageIndex < availableImages.length - 1) {
-      setCurrentImageIndex((prev) => prev + 1);
-    }
-  }, [currentImageIndex, availableImages.length]);
 
   const defaultImage = useMemo(() => {
     if (shelterAnimal.upKindNm === '417000') {

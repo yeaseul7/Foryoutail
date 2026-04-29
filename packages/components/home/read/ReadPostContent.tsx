@@ -148,7 +148,7 @@ export default function ReadPostContent({
   }
 
   const content = post?.content ?? '';
-  const optimizedContent = optimizeImageUrlsInHtml(content, 800);
+  const optimizedContent = optimizeImageUrlsInHtml(content, 680);
 
   return (
     <div className="w-full px-0 lg:px-8">
@@ -168,7 +168,7 @@ export default function ReadPostContent({
             <article className="px-4 py-0 w-full sm:px-6 sm:py-2 lg:px-8 lg:py-3">
               <ReadHeader post={post} isEditing={false} />
 
-              <div className="prose prose-sm sm:prose-base lg:prose-lg mx-auto max-w-[800px] [&_img]:mx-auto [&_img]:block [&_img]:max-w-[800px] [&_img]:max-h-[680px] [&_img]:w-auto [&_img]:h-auto">
+              <div className="prose prose-sm sm:prose-base lg:prose-lg mx-auto max-w-[760px] [&_img]:mx-auto [&_img]:my-8 sm:[&_img]:my-10 [&_img]:block [&_img]:max-w-full [&_img]:w-auto [&_img]:h-auto [&_img]:rounded-2xl [&_img]:shadow-sm sm:[&_img]:max-w-[620px] lg:[&_img]:max-w-[680px] [&_img]:max-h-[520px] sm:[&_img]:max-h-[560px] lg:[&_img]:max-h-[620px]">
                 {hasHtmlTag(optimizedContent) ? (
                   <div
                     className="post-content"

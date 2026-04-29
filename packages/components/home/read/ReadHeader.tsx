@@ -204,7 +204,7 @@ export default function ReadHeader({
           {post?.tags.map((tag) => (
             <span
               key={tag}
-              className="shrink-0 cursor-pointer whitespace-nowrap rounded-full bg-element2 px-2 py-1 text-sm text-primary1"
+              className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-primary1/15 bg-[linear-gradient(180deg,rgba(107,133,227,0.14)_0%,rgba(107,133,227,0.08)_100%)] px-3 py-1.5 text-[13px] font-semibold tracking-[-0.01em] text-primary1 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]"
             >
               {tag.startsWith('#') ? tag : `#${tag}`}
             </span>

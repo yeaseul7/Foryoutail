@@ -149,7 +149,7 @@ export default function PostCard({ post, highPriority = false, highQuality = fal
           {previewTags.map((tag) => (
             <span
               key={tag}
-              className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600"
+              className="inline-flex items-center rounded-full border border-[#d8e2ff] bg-[linear-gradient(180deg,#f7faff_0%,#eef3ff_100%)] px-2.5 py-1 text-[11px] font-semibold tracking-[-0.01em] text-[#5873de] shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]"
             >
               #{tag}
             </span>

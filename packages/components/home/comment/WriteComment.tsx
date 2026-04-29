@@ -18,8 +18,8 @@ export default function WriteComment({
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      const lineHeight = 24;
-      const fixedHeight = lineHeight * 3;
+      const lineHeight = 22;
+      const fixedHeight = lineHeight * 2;
 
       textarea.style.height = `${fixedHeight}px`;
       textarea.style.overflowY = 'auto';
@@ -106,8 +106,8 @@ export default function WriteComment({
   const maxLength = 500;
 
   return (
-    <div className="flex flex-col p-4 px-4 sm:px-10 w-full">
-      <div className="flex flex-col gap-3 p-4 w-full bg-white rounded-xl border border-gray-200 shadow-sm transition-all focus-within:border-primary1 focus-within:shadow-md">
+    <div className="flex flex-col px-4 py-3 pb-10 sm:px-10 w-full">
+      <div className="flex flex-col gap-2.5 px-4 py-3 w-full bg-white rounded-xl border border-gray-200 shadow-sm transition-all focus-within:border-primary1 focus-within:shadow-md">
         <textarea
           ref={textareaRef}
           placeholder="댓글을 입력하세요 (Cmd/Ctrl + Enter로 전송)"
@@ -118,18 +118,18 @@ export default function WriteComment({
             }
           }}
           onKeyDown={handleKeyDown}
-          className="overflow-y-auto w-full text-sm leading-6 bg-transparent outline-none resize-none placeholder:text-gray-400"
-          rows={3}
+          className="overflow-y-auto w-full text-sm leading-[22px] bg-transparent outline-none resize-none placeholder:text-gray-400"
+          rows={2}
           disabled={isSubmitting}
           maxLength={maxLength}
         />
         <div className="flex justify-between items-center pt-2 border-t border-gray-100">
           <span
             className={`text-xs font-medium ${commentLength >= maxLength
-                ? 'text-red-500'
-                : commentLength >= maxLength * 0.9
-                  ? 'text-orange-500'
-                  : 'text-gray-400'
+              ? 'text-red-500'
+              : commentLength >= maxLength * 0.9
+                ? 'text-orange-500'
+                : 'text-gray-400'
               }`}
           >
             {commentLength}/{maxLength}

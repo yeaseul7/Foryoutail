@@ -93,8 +93,11 @@ export default function CommentList({
 
   if (comments.length === 0) {
     return (
-      <div className="flex justify-center items-center py-8 text-gray-500">
-        아직 댓글이 없습니다.
+      <div className="flex flex-col gap-4 p-4 px-4 w-full sm:px-6 md:px-10">
+        <div className="flex gap-2 items-center text-primary1">
+          <HiChatBubbleLeft className="w-5 h-5" />
+          <div className="text-sm text-gray-500">댓글 0</div>
+        </div>
       </div>
     );
   }

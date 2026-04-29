@@ -2,7 +2,7 @@
 
 import getOptimizedCloudinaryUrl from '@/packages/utils/optimization';
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { PiDogFill } from 'react-icons/pi';
 
 export default function UserProfile({
@@ -26,11 +26,8 @@ export default function UserProfile({
     () => getOptimizedCloudinaryUrl(profileUrl, 100, 100),
     [profileUrl],
   );
-  const [hasImageError, setHasImageError] = useState(false);
-
-  useEffect(() => {
-    setHasImageError(false);
-  }, [optimizedProfileUrl]);
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
+  const hasImageError = failedImageUrl === optimizedProfileUrl;
 
   return (
     <div className="flex gap-2 items-center">
@@ -43,7 +40,7 @@ export default function UserProfile({
             className="object-cover rounded-full"
             sizes={`${imgSize}px`}
             unoptimized
-            onError={() => setHasImageError(true)}
+            onError={() => setFailedImageUrl(optimizedProfileUrl)}
           />
         </div>
       ) : (

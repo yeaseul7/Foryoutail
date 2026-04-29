@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
-import { HiHeart, HiOutlineHeart } from 'react-icons/hi2';
+import { HiOutlineHeart } from 'react-icons/hi2';
 import { BsShare } from 'react-icons/bs';
 
 export default function Liked() {
@@ -82,46 +82,24 @@ export default function Liked() {
   }
 
   return (
-    <>
-      {/* 모바일 버전 - 게시물 내부에 표시 */}
-      <div className="flex gap-3 justify-center items-center py-4 md:hidden">
-        <button
-          disabled
-          className="flex gap-2 items-center px-4 py-2 text-gray-700 bg-white rounded-full border border-gray-200 opacity-70 cursor-default"
-          aria-label="좋아요 수"
-        >
-          <HiOutlineHeart className="w-5 h-5" />
-          <span className="text-sm font-semibold">{likes}</span>
-        </button>
-        <button
-          onClick={handleShare}
-          className="flex gap-2 items-center px-4 py-2 text-gray-700 bg-white rounded-full border border-gray-200 cursor-pointer hover:bg-gray-50"
-          aria-label="공유"
-        >
-          <BsShare className="w-5 h-5" />
-          <span className="text-sm font-semibold">공유</span>
-        </button>
-      </div>
-      {/* 데스크톱 버전 - fixed 위치 */}
-      <div className="hidden fixed top-2/5 -translate-y-1/2 right-4 xl:right-[calc((100vw-1152px)/2-4rem)] z-50 md:block">
-        <div className="flex flex-col gap-3 justify-center items-center p-2 shadow-lg transition-all duration-200 rounded-4xl bg-gray-1">
-          <button
-            disabled
-            className="rounded-full border border-gray-200 bg-white p-3 text-gray-700 opacity-70 cursor-default"
+      <div className="mt-6 flex items-center justify-center border-t border-slate-200 pt-5">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-700 shadow-sm"
             aria-label="좋아요 수"
           >
-            <HiHeart className="w-5 h-5" />
-          </button>
-          <span className="text-xs font-semibold">{likes}</span>
+            <HiOutlineHeart className="h-5 w-5" />
+            <span className="text-sm font-semibold">{likes}</span>
+          </div>
           <button
             onClick={handleShare}
-            className={`p-3 rounded-full ${'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'} ${'cursor-pointer'}`}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
             aria-label="공유"
           >
-            <BsShare className="w-5 h-5" />
+            <BsShare className="h-5 w-5" />
+            <span className="text-sm font-semibold">공유</span>
           </button>
         </div>
       </div>
-    </>
   );
 }
