@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import type { QuickFilterKey } from '@/lib/client/shelter';
 import { HOME_HERO_QUICK_FILTERS, QUICK_FILTER_ICONS } from '@/lib/shelter/quickFilterLabels';
 import { MdPhotoCamera } from 'react-icons/md';
-import heroBackground from '@/static/images/background_default.png';
 
 const HERO_TITLE = '입양 가능한 아이를 찾아보세요';
 const HERO_SUBTITLE = '지역, 성격, 보호소 정보를 바탕으로 나와 잘 맞는 아이를 찾아보세요.';
@@ -56,7 +55,7 @@ export default function HomeAdoptionHero() {
       {/* 배경만 잘라서 scale 이미지가 삐져나가지 않게 — 본문은 hover 시 세로로 잘리지 않음 */}
       <div className="absolute inset-0 overflow-hidden">
         <Image
-          src={heroBackground}
+          src="/static/images/background_default.png"
           alt=""
           fill
           priority

@@ -3,7 +3,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { MdAutoAwesome, MdSearch } from 'react-icons/md';
-import aiBackground from '@/static/images/aibackground.png';
 
 export default function SearchAi() {
     return (
@@ -11,7 +10,7 @@ export default function SearchAi() {
             <div className="mx-auto w-full max-w-7xl">
                 <div className="relative min-h-[12.5rem] overflow-hidden rounded-2xl border border-slate-200/50 shadow-lg sm:min-h-[14rem] sm:rounded-3xl">
                     <Image
-                        src={aiBackground}
+                        src="/static/images/aibackground.png"
                         alt=""
                         fill
                         className="object-cover object-[75%_center] sm:object-right"

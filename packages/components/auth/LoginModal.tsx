@@ -3,9 +3,6 @@ import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/supabase/auth';
 import { useClickOutsideModal } from '@/packages/utils/clickEvent';
-import googleLoginButton from '@/static/images/login/web_light_rd_na@3x.png';
-import githubLoginButton from '@/static/images/login/GitHub_Invertocat_Black.png';
-import kakaoLoginButton from '@/static/images/login/free-icon-kakao-talk-3991999.png';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -194,8 +191,10 @@ export default function LoginModal({ onClose }: LoginModalProps) {
             aria-label="Google로 로그인"
           >
             <Image
-              src={googleLoginButton}
+              src="/static/images/login/web_light_rd_na@3x.png"
               alt="Google 로그인"
+              width={56}
+              height={56}
               className="h-14 w-14 object-contain"
             />
           </button>
@@ -207,8 +206,10 @@ export default function LoginModal({ onClose }: LoginModalProps) {
             aria-label="Github로 로그인"
           >
             <Image
-              src={githubLoginButton}
+              src="/static/images/login/GitHub_Invertocat_Black.png"
               alt="GitHub 로그인"
+              width={56}
+              height={56}
               className="h-14 w-14 object-contain"
             />
           </button>
@@ -220,8 +221,10 @@ export default function LoginModal({ onClose }: LoginModalProps) {
             aria-label="카카오로 로그인"
           >
             <Image
-              src={kakaoLoginButton}
+              src="/static/images/login/free-icon-kakao-talk-3991999.png"
               alt="카카오 로그인"
+              width={56}
+              height={56}
               className="h-14 w-auto object-contain"
             />
           </button>
