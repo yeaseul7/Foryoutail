@@ -286,7 +286,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
           .map((x) => x.desertionNo?.trim())
           .filter((x): x is string => Boolean(x)),
       );
-      const snap: AnimalFilterState = { ...filtersRef.current, quickFilter: null };
+      const snap: AnimalFilterState = { ...filtersRef.current };
       const yearFull = new Date().getFullYear();
       const { picked, nextPage, exhausted } = await gatherListQuickMatches(
         snap,
@@ -330,7 +330,6 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
 
     const snap: AnimalFilterState = {
       ...newFilters,
-      quickFilter: listQuickFilterRef.current ? null : newFilters.quickFilter,
     };
     setFilters(snap);
 
@@ -441,7 +440,6 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
     setListQuickFilter(next);
     const base: AnimalFilterState = {
       ...filtersRef.current,
-      quickFilter: null,
     };
     setFilters(base);
 
@@ -573,13 +571,6 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
     return () => observer.disconnect();
   }, [hasMore, shelterAnimalData.length, loading, handleLoadMorePage]);
 
-  const postCount =
-    loading && shelterAnimalData.length === 0
-      ? null
-      : shelterAnimalData.length > 0
-        ? shelterAnimalData.length.toLocaleString()
-        : '0';
-
   const filterSummaryRows = useMemo(() => buildFilterSummaryRows(filters), [filters]);
 
   return (
@@ -619,12 +610,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
           <div className="flex w-full flex-col gap-2 px-0 pb-2 pt-5 sm:pb-4 sm:pt-7">
             <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0 flex-1">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900">
-                  입양 공고
-                  {postCount !== null && (
-                    <span className="text-primary1 ml-1.5">{postCount}</span>
-                  )}
-                </h2>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900">입양 공고</h2>
                 <div className="mt-1.5 space-y-2">
                   <p className="text-sm leading-snug text-gray-600">
                     {filterSummaryRows.length > 0

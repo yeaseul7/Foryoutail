@@ -15,6 +15,47 @@ function sortShelterItemsByRecencyDesc(a: ShelterAnimalItem, b: ShelterAnimalIte
   return toNum(b) - toNum(a);
 }
 
+function compactTodayYmd(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}${month}${day}`;
+}
+
+function compactNoticeEndYmd(item: ShelterAnimalItem): string {
+  return String(item.noticeEdt || '').replace(/\D/g, '').slice(0, 8);
+}
+
+function sortShelterItemsByNoticeDeadline(a: ShelterAnimalItem, b: ShelterAnimalItem): number {
+  const today = compactTodayYmd();
+  const aDate = compactNoticeEndYmd(a);
+  const bDate = compactNoticeEndYmd(b);
+
+  const aUpcoming = aDate.length === 8 && aDate >= today;
+  const bUpcoming = bDate.length === 8 && bDate >= today;
+
+  if (aUpcoming !== bUpcoming) {
+    return aUpcoming ? -1 : 1;
+  }
+
+  if (aUpcoming && bUpcoming && aDate !== bDate) {
+    return aDate.localeCompare(bDate);
+  }
+
+  const aPast = aDate.length === 8 && aDate < today;
+  const bPast = bDate.length === 8 && bDate < today;
+
+  if (aPast && bPast && aDate !== bDate) {
+    return bDate.localeCompare(aDate);
+  }
+
+  if (aDate.length === 8 && bDate.length !== 8) return -1;
+  if (aDate.length !== 8 && bDate.length === 8) return 1;
+
+  return sortShelterItemsByRecencyDesc(a, b);
+}
+
 function mergeShelterItemsByDesertionNo(
   first: ShelterAnimalItem[],
   second: ShelterAnimalItem[],
@@ -174,7 +215,13 @@ export function applyShelterClientFilters(
       );
     });
   }
-  return applyQuickFilterBySpecialMark(resultItems, filters.quickFilter);
+
+  const filteredItems = applyQuickFilterBySpecialMark(resultItems, filters.quickFilter);
+  if (!filters.quickFilter) {
+    return filteredItems;
+  }
+
+  return [...filteredItems].sort(sortShelterItemsByNoticeDeadline);
 }
 
 /** 구조 필터만 반영한 원시 목록 (항상 `SHELTER_API_PAGE_SIZE`건 단위 요청) */
