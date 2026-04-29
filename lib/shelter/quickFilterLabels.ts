@@ -5,7 +5,7 @@ import { MdChildCare, MdGroups, MdLocationOn, MdSentimentSatisfied } from 'react
 export const QUICK_FILTER_LABEL: Record<QuickFilterKey, string> = {
   likesHuman: '사람 좋아해요',
   gentle: '순한 아이',
-  nearby: '근처 보호소 공고',
+  nearby: '가까운 보호소',
   young: '어린 동물',
 };
 

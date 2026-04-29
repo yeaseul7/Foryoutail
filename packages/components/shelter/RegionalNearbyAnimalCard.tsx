@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import type { ShelterAnimalItem } from '@/packages/type/postType';
 import getOptimizedCloudinaryUrl from '@/packages/utils/optimization';
@@ -12,6 +11,7 @@ import {
   getFirstImageUrl,
   getKindLabel,
 } from '@/packages/components/shelter/horizontalAnimalCarousel';
+import CardImage from '@/packages/components/common/CardImage';
 
 function getPrimaryTitle(item: ShelterAnimalItem): string {
   const mark = item.specialMark?.trim();
@@ -55,10 +55,9 @@ export default function RegionalNearbyAnimalCard({ item }: { item: ShelterAnimal
       className="flex flex-col items-center gap-3 sm:gap-3.5 shrink-0 w-[178px] sm:w-[208px] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary1 focus-visible:ring-offset-2 rounded-xl group"
     >
       <div className="relative w-[168px] h-[168px] sm:w-[196px] sm:h-[196px] rounded-full overflow-hidden bg-gray-100 shadow-[0_5px_24px_rgba(0,0,0,0.15)] ring-1 ring-black/[0.06] transition-transform duration-200 group-hover:scale-[1.04]">
-        <Image
+        <CardImage
           src={displayUrl}
           alt={item.desertionNo || '유기동물'}
-          fill
           className="object-cover"
           sizes="(max-width: 640px) 168px, 196px"
           unoptimized={shouldBypassNextImageOptimization(displayUrl)}

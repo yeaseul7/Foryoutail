@@ -220,8 +220,8 @@ export function filterShelterAnimalsFromParams(
       if ((item.neuterYn || '').trim() !== params.neuter_yn.trim()) return false;
     }
     if (params.orgNm?.trim()) {
-      const orgNm = (item.orgNm || '').trim();
-      if (!orgNm.includes(params.orgNm.trim())) return false;
+      const careAddr = (item.careAddr || '').trim();
+      if (!careAddr.includes(params.orgNm.trim())) return false;
     }
     if (!matchesDateRange(item, params.bgnde, params.endde)) return false;
     if (!matchesUpdDateRange(item, params.bgupd, params.enupd)) return false;
@@ -295,7 +295,7 @@ export async function queryShelterAnimals(
     query = query.eq('neuter_yn', params.neuter_yn.trim());
   }
   if (params.orgNm?.trim()) {
-    query = query.ilike('org_nm', `%${params.orgNm.trim()}%`);
+    query = query.ilike('care_addr', `%${params.orgNm.trim()}%`);
   }
 
   const states = stateQueryValues(params.state);

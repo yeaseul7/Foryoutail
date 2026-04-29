@@ -1,12 +1,12 @@
 'use client';
 
 import { ShelterAnimalItem } from '@/packages/type/postType';
-import Image from 'next/image';
 import { HiHeart, HiOutlineHeart } from 'react-icons/hi2';
 import { useRouter } from 'next/navigation';
 import { IoIosCalendar } from 'react-icons/io';
 import { useShelterLike } from '@/hooks/useShelterLike';
 import { normalizeAnimalImageUrl } from '@/packages/utils/imageSource';
+import CardImage from '@/packages/components/common/CardImage';
 
 export default function WatingAnimalCard({ animal }: { animal: ShelterAnimalItem }) {
   const router = useRouter();
@@ -75,11 +75,11 @@ export default function WatingAnimalCard({ animal }: { animal: ShelterAnimalItem
       className="bg-white rounded-3xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
     >
       <div className="relative w-full h-48">
-        <Image
+        <CardImage
           src={imageUrl}
           alt={animalName}
-          fill
           className="object-cover"
+          sizes="(max-width: 768px) 100vw, 320px"
           unoptimized
         />
         {statusBadge && (

@@ -1,6 +1,5 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
 import { useState, useEffect, useMemo } from 'react';
 import { HiHeart } from 'react-icons/hi2';
@@ -9,6 +8,7 @@ import { PostData } from '@/packages/type/postType';
 import { stripTagHashes } from '@/lib/community/boardSuggestedTags';
 import getOptimizedCloudinaryUrl from '@/packages/utils/optimization';
 import UserProfile from '../common/UserProfile';
+import CardImage from '@/packages/components/common/CardImage';
 
 interface PostCardProps {
   post: PostData;
@@ -121,11 +121,9 @@ export default function PostCard({ post, highPriority = false, highQuality = fal
       className="flex overflow-hidden flex-col bg-white rounded-2xl shadow-sm transition-all duration-200 cursor-pointer hover:shadow-lg hover:translate-y-1 active:translate-y-0 active:shadow-sm"
     >
       <div className="relative aspect-square w-full overflow-hidden bg-gray-200">
-        <Image
+        <CardImage
           src={thumbnailImage || defaultImage}
           alt={post.title || '게시물 이미지'}
-          width={400}
-          height={400}
           className="h-full w-full object-cover"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           priority={highPriority}

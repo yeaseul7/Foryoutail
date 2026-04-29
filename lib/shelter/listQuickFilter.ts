@@ -73,7 +73,7 @@ export async function gatherListQuickMatches(
   yearFull: number,
   recentWindowDays: number,
 ): Promise<{ picked: ShelterAnimalItem[]; nextPage: number; exhausted: boolean }> {
-  const filters: AnimalFilterState = { ...baseFilters, quickFilter: null };
+  const filters: AnimalFilterState = { ...baseFilters };
   const { items, hasMore } = await fetchShelterAnimalData(startPage, filters);
   const picked: ShelterAnimalItem[] = [];
   for (const it of items) {
