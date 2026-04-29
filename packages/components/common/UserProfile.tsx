@@ -1,5 +1,8 @@
+'use client';
+
 import getOptimizedCloudinaryUrl from '@/packages/utils/optimization';
 import Image from 'next/image';
+import { useEffect, useMemo, useState } from 'react';
 import { PiDogFill } from 'react-icons/pi';
 
 export default function UserProfile({
@@ -19,16 +22,28 @@ export default function UserProfile({
   iconSize: string;
   nameClassName?: string;
 }) {
+  const optimizedProfileUrl = useMemo(
+    () => getOptimizedCloudinaryUrl(profileUrl, 100, 100),
+    [profileUrl],
+  );
+  const [hasImageError, setHasImageError] = useState(false);
+
+  useEffect(() => {
+    setHasImageError(false);
+  }, [optimizedProfileUrl]);
+
   return (
     <div className="flex gap-2 items-center">
-      {profileUrl ? (
+      {profileUrl && !hasImageError ? (
         <div className={`relative shrink-0 aspect-square ${sizeClass}`}>
           <Image
-            src={getOptimizedCloudinaryUrl(profileUrl, 100, 100)}
+            src={optimizedProfileUrl}
             alt={profileName || '작성자 프로필 이미지'}
             fill
             className="object-cover rounded-full"
             sizes={`${imgSize}px`}
+            unoptimized
+            onError={() => setHasImageError(true)}
           />
         </div>
       ) : (

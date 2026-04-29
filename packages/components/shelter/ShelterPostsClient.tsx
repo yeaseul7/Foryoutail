@@ -44,9 +44,9 @@ const LIST_QUICK_BUTTONS: {
   emoji: string;
   label: string;
 }[] = [
-    { id: 'birthYear', emoji: '👶', label: '올해 출생' },
-    { id: 'noticeEnding', emoji: '⏰', label: '공고 종료 임박' },
     { id: 'recentReg', emoji: '🆕', label: '최근 등록' },
+    { id: 'noticeEnding', emoji: '⏰', label: '공고 종료 임박' },
+    { id: 'birthYear', emoji: '👶', label: '어린 동물' },
     { id: 'neutered', emoji: '🏥', label: '중성화 완료' },
   ];
 
@@ -576,7 +576,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
   return (
     <div className="mx-auto w-full min-w-0 max-w-7xl pb-4 sm:pb-5">
       <div className="flex flex-col pt-5 sm:pt-6">
-        <div className="flex min-w-0 w-full flex-1 flex-col items-stretch gap-3">
+        <div className="flex min-w-0 w-full flex-1 flex-col items-stretch gap-2 sm:gap-2.5">
           <div
             className="flex flex-wrap items-center gap-2"
             role="group"
@@ -590,9 +590,9 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
                   type="button"
                   aria-pressed={active}
                   onClick={() => handleUpKindBadgePress(value)}
-                  className={`inline-flex items-center rounded-full border px-3.5 py-2 text-sm font-semibold transition-all sm:px-4 sm:py-2 sm:text-[15px] ${active
-                    ? 'border-primary1 bg-primary1/10 text-primary1 ring-1 ring-primary1/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]'
-                    : 'border-gray-200 bg-white text-gray-800 shadow-sm hover:border-primary1/35 hover:bg-primary1/[0.06]'
+                  className={`inline-flex items-center rounded-full px-3 py-2 text-sm font-medium transition-colors sm:px-3.5 sm:py-2 sm:text-[15px] ${active
+                    ? 'bg-primary1 text-white shadow-sm'
+                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200/90'
                     }`}
                 >
                   {label}
@@ -607,7 +607,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
           <SearchAi />
 
           {/* 입양 공고: 제목·설명·적용 필터 칩 아래에 빠른 선택 뱃지 */}
-          <div className="flex w-full flex-col gap-2 px-0 pb-2 pt-5 sm:pb-4 sm:pt-7">
+          <div className="flex w-full flex-col gap-2 px-0 pb-2 pt-3 sm:pb-4 sm:pt-5">
             <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0 flex-1">
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900">입양 공고</h2>
@@ -615,7 +615,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
                   <p className="text-sm leading-snug text-gray-600">
                     {filterSummaryRows.length > 0
                       ? '적용한 조건에 맞는 보호소 입양 공고만 골라 보여드려요.'
-                      : '전국 보호소 입양 공고를 기본 조건으로 보여드리고 있어요.'}
+                      : '보호소에 등록된 아이들을 조건에 맞게 찾아볼 수 있어요.'}
                   </p>
                   {filterSummaryRows.length > 0 && (
                     <div
@@ -662,7 +662,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
                   )}
                 </div>
                 <div
-                  className="mt-2.5 flex flex-wrap items-center gap-2 sm:mt-3"
+                  className="mt-2.5 flex flex-wrap items-center gap-1.5 sm:mt-3 sm:gap-2"
                   role="group"
                   aria-label="빠른 선택 필터"
                 >
@@ -674,13 +674,15 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
                         type="button"
                         aria-pressed={active}
                         onClick={() => handleListQuickChange(active ? null : id)}
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-semibold transition-all sm:px-4 sm:py-2 sm:text-[15px] ${active
-                          ? 'border-primary1 bg-primary1/10 text-primary1 ring-1 ring-primary1/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]'
-                          : 'border-gray-200 bg-white text-gray-800 shadow-sm hover:border-primary1/35 hover:bg-primary1/[0.06]'
+                        className={`inline-flex select-none items-center gap-1 rounded-full px-3 py-2 text-[13px] font-medium leading-none tracking-tight transition-colors active:opacity-90 sm:gap-1.5 sm:px-3.5 sm:py-2 sm:text-sm ${active
+                          ? 'bg-primary1 text-white shadow-sm'
+                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200/90'
                           }`}
                       >
-                        <span aria-hidden>{emoji}</span>
-                        {label}
+                        <span aria-hidden className="text-[15px] sm:text-base">
+                          {emoji}
+                        </span>
+                        <span>{label}</span>
                       </button>
                     );
                   })}

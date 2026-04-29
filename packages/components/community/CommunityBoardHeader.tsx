@@ -12,7 +12,7 @@ const TABS: { id: CommunityBoardTabId; label: string }[] = [
   { id: 'adoption', label: '입양후기' },
 ];
 
-const SUBTITLE = '반려생활에 필요한 이야기와 경험을 모아보는 커뮤니티입니다.';
+const SUBTITLE = '일상, 질문, 입양 후기를 함께 나누며 더 따뜻한 반려생활을 만들어가요.';
 
 interface CommunityBoardHeaderProps {
   activeTab: CommunityBoardTabId;

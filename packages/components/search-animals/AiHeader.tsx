@@ -44,16 +44,16 @@ export default function AiHeader({
     const handleFiltersChange = isControlled ? onFiltersChange : setInternalFilters;
 
     return (
-        <div className="w-full px-4 py-6 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+        <div className="w-full max-w-5xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
             {/* 헤더: AI 친구 찾기 + 사용 횟수(눈에 띄게) + 설명 */}
             <header className="text-center mb-8">
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
                     사진 한 장이면 충분해요
                 </h1>
                 <p className="text-xs sm:text-sm text-gray-500 leading-relaxed max-w-xl mx-auto">
-                    AI가 보호소 공고 사진을 기반으로 분석하여 가장 닮은 공고를 찾아드립니다.
+                    보호소 공고 사진을 기반으로 비슷한 아이를 찾아드려요.
                     <br className="hidden sm:block" />
-                    <span className="text-primary1 font-medium">2026년 2월 5일</span> 이후 업데이트된 공고 데이터를 기반으로 분석합니다.
+                    최근 업데이트된 공고 데이터를 기준으로 분석합니다.
                 </p>
             </header>
 
@@ -64,7 +64,7 @@ export default function AiHeader({
                         <AiSearchFilterSelects value={currentFilters} onChange={handleFiltersChange} />
                     </div>
 
-                    <div className="grid min-h-[220px] grid-cols-1 gap-3 md:min-h-[260px] md:grid-cols-6 md:gap-4">
+                    <div className="grid min-h-[260px] grid-cols-1 gap-4 md:min-h-[340px] md:grid-cols-2 md:gap-5">
                         <div
                             role="button"
                             tabIndex={0}
@@ -75,7 +75,7 @@ export default function AiHeader({
                                     fileInputRef.current?.click();
                                 }
                             }}
-                            className="cursor-pointer md:col-span-3"
+                            className="cursor-pointer"
                         >
                             <input
                                 ref={fileInputRef}
@@ -85,7 +85,7 @@ export default function AiHeader({
                                 className="sr-only"
                                 aria-label="강아지/고양이 사진 업로드"
                             />
-                            <div className="relative flex h-full min-h-[220px] w-full flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50/50 transition-colors hover:border-primary1 hover:bg-primary1/5 md:min-h-[260px]">
+                            <div className="relative flex h-full min-h-[260px] w-full flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50/50 transition-colors hover:border-primary1 hover:bg-primary1/5 md:min-h-[340px]">
                                 {previewUrl ? (
                                     <div className="absolute inset-0 rounded-2xl overflow-hidden">
                                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -111,7 +111,7 @@ export default function AiHeader({
                                 )}
                             </div>
                         </div>
-                        <div className="relative min-h-[220px] overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 md:col-span-3 md:min-h-[260px]">
+                        <div className="relative min-h-[260px] overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 md:min-h-[340px]">
                             <Image
                                 src="/static/images/example1.jpeg"
                                 alt="좋은 예시"

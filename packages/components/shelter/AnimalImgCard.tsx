@@ -1,9 +1,9 @@
 import { ShelterAnimalItem } from '@/packages/type/postType';
-import Image from 'next/image';
 import {
   normalizeAnimalImageUrl,
   shouldBypassNextImageOptimization,
 } from '@/packages/utils/imageSource';
+import CardImage from '@/packages/components/common/CardImage';
 
 interface AnimalImgCardProps {
   mainImage: string;
@@ -24,10 +24,9 @@ export default function AnimalImgCard({
   return (
     <div className="flex flex-col gap-4">
       <div className="relative w-full aspect-square bg-gray-100 rounded-2xl overflow-hidden">
-        <Image
+        <CardImage
           src={normalizedMainImage}
           alt={animalData?.desertionNo || '동물 이미지'}
-          fill
           className="object-cover"
           sizes="(max-width: 1024px) 100vw, 50vw"
           unoptimized={shouldBypassNextImageOptimization(normalizedMainImage)}
@@ -49,10 +48,9 @@ export default function AnimalImgCard({
                   : 'border-gray-200 hover:border-gray-300'
                   }`}
               >
-                <Image
+                <CardImage
                   src={normalizedImg}
                   alt={`이미지 ${index + 1}`}
-                  fill
                   className="object-cover"
                   sizes="(max-width: 1024px) 25vw, 12.5vw"
                   unoptimized={shouldBypassNextImageOptimization(normalizedImg)}

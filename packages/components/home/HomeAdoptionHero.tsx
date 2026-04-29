@@ -108,7 +108,7 @@ export default function HomeAdoptionHero() {
                 key={quick.key}
                 type="button"
                 onClick={() => applyQuickFilter(quick.key)}
-                className="inline-flex min-h-[36px] min-w-0 max-w-[calc(50%-0.25rem)] shrink-0 items-center justify-center gap-0.5 rounded border border-gray-200/90 bg-white/95 px-1.5 py-1 text-center text-[11px] font-medium leading-tight text-gray-800 shadow-sm backdrop-blur-[2px] transition-colors active:bg-gray-50 sm:max-w-none sm:min-h-[44px] sm:gap-2 sm:rounded-lg sm:px-3.5 sm:py-2 sm:text-[15px] sm:font-semibold sm:leading-normal sm:hover:border-gray-300 sm:hover:bg-white lg:min-h-0 lg:text-base"
+                className="inline-flex min-h-[36px] min-w-0 max-w-[calc(50%-0.125rem)] shrink-0 items-center justify-center gap-0.5 rounded border border-gray-200/90 bg-white/95 px-1.5 py-1 text-center text-[11px] font-medium leading-tight text-gray-800 shadow-sm backdrop-blur-[2px] transition-colors active:bg-gray-50 sm:max-w-none sm:min-h-[44px] sm:gap-2 sm:rounded-lg sm:px-3.5 sm:py-2 sm:text-[15px] sm:font-semibold sm:leading-normal sm:hover:border-gray-300 sm:hover:bg-white lg:min-h-0 lg:text-base"
               >
                 <Icon
                   className={`h-3.5 w-3.5 shrink-0 sm:h-5 sm:w-5 ${accent}`}

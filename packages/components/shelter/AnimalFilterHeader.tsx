@@ -293,7 +293,7 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
                 >
                   <span className={filterPillLeadClass}>
                     <MdLocationOn className={filterPillIconClass} aria-hidden />
-                    <span className="truncate">지역 · {getRegionFilterLabel()}</span>
+                    <span className="truncate">구조 지역 · {getRegionFilterLabel()}</span>
                   </span>
                   <MdArrowDropDown
                     className={`${filterChevronClass} ${openDropdown === 'upr_cd' ? 'rotate-180' : ''}`}

@@ -1,12 +1,12 @@
 'use client';
 
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import { HiHeart, HiOutlineHeart } from 'react-icons/hi2';
 import type { ShelterAnimalItem } from '@/packages/type/postType';
 import getOptimizedCloudinaryUrl from '@/packages/utils/optimization';
 import { useShelterLike } from '@/hooks/useShelterLike';
+import CardImage from '@/packages/components/common/CardImage';
 import { MdShare } from 'react-icons/md';
 import {
   normalizeAnimalImageUrl,
@@ -158,10 +158,9 @@ export function HorizontalAnimalPhotoCard({
       className="flex-shrink-0 w-[220px] sm:w-[250px] mt-4 rounded-2xl overflow-hidden bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.13)] transition-shadow duration-200 cursor-pointer focus:outline-none group"
     >
       <div className="relative w-full aspect-[4/5] bg-gray-100">
-        <Image
+        <CardImage
           src={displayUrl}
           alt=""
-          fill
           className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           sizes="250px"
           unoptimized={shouldBypassNextImageOptimization(displayUrl)}
@@ -242,10 +241,9 @@ export function HorizontalAnimalCard({ item }: { item: ShelterAnimalItem }) {
       className="flex-shrink-0 w-[220px] sm:w-[250px] mt-4 rounded-2xl overflow-hidden bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)] cursor-pointer focus:outline-none group"
     >
       <div className="relative w-full aspect-[4/5] bg-gray-100">
-        <Image
+        <CardImage
           src={displayUrl}
           alt={item.desertionNo || '유기동물'}
-          fill
           className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           sizes="250px"
           unoptimized={shouldBypassNextImageOptimization(displayUrl)}

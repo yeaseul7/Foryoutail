@@ -1,6 +1,5 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { useState, useMemo, useCallback } from 'react';
 import { ShelterAnimalItem } from '@/packages/type/postType';
 import getOptimizedCloudinaryUrl from '@/packages/utils/optimization';
@@ -18,6 +17,7 @@ import {
 } from 'react-icons/hi2';
 import { FaMars, FaPaw, FaVenus } from 'react-icons/fa';
 import { useShelterLike } from '@/hooks/useShelterLike';
+import CardImage from '@/packages/components/common/CardImage';
 
 export default function AbandonedCard({
   shelterAnimal,
@@ -187,15 +187,13 @@ export default function AbandonedCard({
       className="flex h-full w-full max-w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-gray-100 border-b-0 bg-white shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98]"
     >
       <div className="relative aspect-[4/5] w-full overflow-hidden rounded-t-2xl bg-gray-100">
-        <Image
+        <CardImage
           src={displayImage}
           alt={shelterAnimal?.desertionNo || '유기동물 이미지'}
-          fill
           className="object-cover"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 20vw"
           unoptimized={shouldUseUnoptimizedImage}
           loading="lazy"
-          onError={handleImageError}
         />
         {isProcessEnded && (
           <>
