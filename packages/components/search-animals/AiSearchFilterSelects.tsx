@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { getShortSidoName } from '@/packages/utils/locationUtils';
 import { sidoLocation } from '@/static/data/sidoLocation';
 import type { AiSearchFiltersValues } from './AiSearchFilters';
-import { MdSearch } from 'react-icons/md';
 
 interface SidoItem {
   SIDO_CD: string;

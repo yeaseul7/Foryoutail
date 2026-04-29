@@ -2,7 +2,7 @@
 
 import getOptimizedCloudinaryUrl from '@/packages/utils/optimization';
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { PiDogFill } from 'react-icons/pi';
 interface ReasHeaderImgProps {
   currentPhotoURL: string;
@@ -16,11 +16,8 @@ export default function ReasHeaderImg({
     () => getOptimizedCloudinaryUrl(currentPhotoURL, 150, 150),
     [currentPhotoURL],
   );
-  const [hasImageError, setHasImageError] = useState(false);
-
-  useEffect(() => {
-    setHasImageError(false);
-  }, [optimizedPhotoUrl]);
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
+  const hasImageError = failedImageUrl === optimizedPhotoUrl;
 
   return (
     <>
@@ -33,7 +30,7 @@ export default function ReasHeaderImg({
             fill
             className="rounded-full object-cover transition-all duration-125 ease-in border-2 border-white"
             unoptimized
-            onError={() => setHasImageError(true)}
+            onError={() => setFailedImageUrl(optimizedPhotoUrl)}
           />
         </div>
       ) : (

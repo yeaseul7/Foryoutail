@@ -1,60 +1,66 @@
 export default function WriteContainerSkeleton() {
   return (
-    <div className="grid w-full h-full min-h-0 grid-cols-1 lg:grid-cols-[7fr_3fr] gap-4">
-      <div className="flex flex-col w-full h-full min-h-0">
-        <div className="flex flex-col flex-1 min-h-0 p-4 sm:p-6 lg:p-8 bg-white rounded-2xl animate-pulse"
+    <div className="grid w-full h-full min-h-0 grid-cols-1 gap-4 lg:grid-cols-[7fr_3fr]">
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <div
+          className="flex min-h-0 flex-1 flex-col rounded-2xl bg-white p-4 animate-pulse sm:p-6 lg:p-8"
           style={{ boxShadow: '0 0 6px 0 rgba(0, 0, 0, 0.05)' }}
         >
-          {/* 헤더 영역 */}
-          <div className="shrink-0 mb-4">
-            <div className="h-10 bg-gray-200 rounded w-full mb-4" />
-            <div className="flex gap-2">
-              <div className="h-8 bg-gray-200 rounded-full w-20" />
-              <div className="h-8 bg-gray-200 rounded-full w-20" />
+          <div className="mb-4 shrink-0">
+            <div className="mb-3 h-8 w-36 rounded-xl bg-gray-200" />
+            <div className="flex flex-wrap gap-2">
+              <div className="h-9 w-24 rounded-full bg-[#eef3ff]" />
+              <div className="h-9 w-24 rounded-full bg-[#eef3ff]" />
+              <div className="h-9 w-28 rounded-full bg-[#eef3ff]" />
             </div>
           </div>
 
-          {/* 에디터 툴바 영역 */}
-          <div className="shrink-0 mb-4">
-            <div className="flex gap-2 flex-wrap">
+          <div className="mb-4 shrink-0">
+            <div className="flex flex-wrap gap-2 rounded-2xl border border-gray-100 bg-[#fbfcff] p-3">
               {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="h-8 bg-gray-200 rounded w-8" />
+                <div key={i} className="h-8 w-8 rounded-lg bg-gray-200" />
               ))}
             </div>
           </div>
 
-          {/* 에디터 영역 */}
-          <div className="flex-1 min-h-0 bg-gray-50 rounded p-4">
+          <div className="min-h-0 flex-1 rounded-2xl border border-gray-100 bg-[#fcfcfd] p-4">
             <div className="space-y-3">
-              <div className="h-4 bg-gray-200 rounded w-full" />
-              <div className="h-4 bg-gray-200 rounded w-full" />
-              <div className="h-4 bg-gray-200 rounded w-3/4" />
-              <div className="h-32 bg-gray-200 rounded w-full" />
-              <div className="h-4 bg-gray-200 rounded w-full" />
-              <div className="h-4 bg-gray-200 rounded w-5/6" />
+              <div className="h-5 w-2/5 rounded-lg bg-gray-200" />
+              <div className="h-4 w-full rounded bg-gray-200" />
+              <div className="h-4 w-11/12 rounded bg-gray-200" />
+              <div className="h-4 w-4/5 rounded bg-gray-200" />
+              <div className="h-44 w-full rounded-2xl bg-gray-200" />
+              <div className="h-4 w-full rounded bg-gray-200" />
+              <div className="h-4 w-5/6 rounded bg-gray-200" />
             </div>
           </div>
 
-          {/* 태그 영역 */}
-          <div className="shrink-0 mt-4">
-            <div className="h-10 bg-gray-200 rounded w-full" />
+          <div className="mt-4 shrink-0">
+            <div className="mb-2 h-4 w-20 rounded bg-gray-200" />
+            <div className="flex flex-wrap gap-2">
+              <div className="h-8 w-20 rounded-full border border-[#d8e2ff] bg-[linear-gradient(180deg,#f7faff_0%,#eef3ff_100%)]" />
+              <div className="h-8 w-24 rounded-full border border-[#d8e2ff] bg-[linear-gradient(180deg,#f7faff_0%,#eef3ff_100%)]" />
+              <div className="h-8 w-16 rounded-full border border-[#d8e2ff] bg-[linear-gradient(180deg,#f7faff_0%,#eef3ff_100%)]" />
+            </div>
           </div>
-        </div>
 
-        {/* 푸터 영역 */}
-        <div className="flex justify-end items-center w-full shrink-0 mt-4">
-          <div className="h-10 bg-gray-200 rounded w-24" />
+          <div className="mt-4 shrink-0 border-t border-gray-100 pt-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="h-4 w-40 rounded bg-gray-200" />
+              <div className="h-11 w-28 rounded-xl bg-[#dbe4ff]" />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* 사이드바 영역 */}
       <div className="min-h-0 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-2xl p-6 animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-32 mb-4" />
+        <div className="animate-pulse rounded-2xl bg-white p-6">
+          <div className="mb-4 h-6 w-32 rounded bg-gray-200" />
           <div className="space-y-3">
-            <div className="h-4 bg-gray-200 rounded w-full" />
-            <div className="h-4 bg-gray-200 rounded w-5/6" />
-            <div className="h-4 bg-gray-200 rounded w-4/5" />
+            <div className="h-4 w-full rounded bg-gray-200" />
+            <div className="h-4 w-5/6 rounded bg-gray-200" />
+            <div className="h-4 w-4/5 rounded bg-gray-200" />
+            <div className="h-24 rounded-2xl bg-[#f6f8fc]" />
           </div>
         </div>
       </div>
