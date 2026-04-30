@@ -87,7 +87,7 @@ export default function ShelterInfoComponent({ shelter, animals }: ShelterInfoCo
                                             href={directionHref}
                                             target="_blank"
                                             rel="noreferrer"
-                                            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 transition-colors hover:border-primary1/30 hover:bg-primary1/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary1/30"
+                                            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-primary1/15 bg-primary1/8 px-4 py-2.5 text-sm font-semibold text-primary1 shadow-[0_8px_20px_rgba(99,125,227,0.14)] transition-colors hover:bg-primary1/12 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary1/30"
                                         >
                                             <IoNavigate className="h-4 w-4" aria-hidden />
                                             <span>길찾기</span>
@@ -112,7 +112,10 @@ export default function ShelterInfoComponent({ shelter, animals }: ShelterInfoCo
                             {animals.length > 0 && (
                                 <WaitingAnimalsByShelter animals={animals} shelterName={shelter.careNm || ''} setShowAllList={setShowAllList} />
                             )}
-                            <ShelterIntro shelterId={shelter.careRegNo || ''} />
+                            <ShelterIntro
+                                shelterId={shelter.id || ''}
+                                fallbackContent={shelter.content || ''}
+                            />
                         </div>
 
                         <div className="flex-1 lg:flex-[2] flex flex-col gap-4">

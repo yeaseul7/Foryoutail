@@ -176,13 +176,15 @@ export default function OperationInfo({ shelter }: OperationInfoProps) {
             {basicInfo.length > 0 && (
                 <div>
                     {/* <div className="text-sm text-gray-600">기본 정보</div> */}
-                    <div className="overflow-hidden rounded-2xl border border-gray-100">
+                    <div className="flex flex-col gap-3">
                         {basicInfo.map((item) => (
                             <div
                                 key={item.label}
-                                className="grid grid-cols-[104px_1fr] gap-4 border-b border-gray-100 bg-white px-4 py-3 last:border-b-0"
+                                className="grid grid-cols-[104px_1fr] gap-4"
                             >
-                                <span className={metaLabelClass}>{item.label}</span>
+                                <span className={item.label === '휴무일' ? 'text-sm text-red-500' : metaLabelClass}>
+                                    {item.label}
+                                </span>
                                 <div className="flex items-center justify-between gap-3">
                                     <span className="text-sm font-semibold text-gray-900 break-keep">{item.value}</span>
                                     {item.label === '연락처' && shelter.careTel && (
