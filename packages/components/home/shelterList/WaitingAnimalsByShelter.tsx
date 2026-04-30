@@ -22,11 +22,8 @@ export default function WaitingAnimalsByShelter({ animals, shelterName, setShowA
                 <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                         <FaPaw className="w-4 h-4 sm:w-5 sm:h-5 text-primary1" />
-                        <h2 className="text-base sm:text-lg font-bold text-gray-900">입양 대기 중인 친구들</h2>
+                        <h2 className="text-base sm:text-lg font-bold text-gray-900">이곳에서 기다리는 아이들</h2>
                     </div>
-                    <p className="text-xs sm:text-sm text-gray-600">
-                        현재 {shelterName}에서 가족을 기다리는 아이들입니다.
-                    </p>
                 </div>
                 {animals.length > 4 && (
                     <button
