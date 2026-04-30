@@ -79,7 +79,8 @@ export default function ShelterIntro({ shelterId }: ShelterIntroProps) {
         <div className="flex flex-col items-center justify-center gap-4 py-8">
           <HiDocumentText className="w-10 h-10 text-gray-300" />
           <div className="flex flex-col items-center gap-2">
-            <p className="text-base font-bold text-gray-900">등록된 소개 정보가 없습니다</p>
+            <p className="text-base font-bold text-gray-900">보호소 소개 정보는 아직 제공되지 않았어요.<br />
+              방문 전 운영 시간과 연락처를 확인해 주세요.</p>
           </div>
         </div>
       </div>
