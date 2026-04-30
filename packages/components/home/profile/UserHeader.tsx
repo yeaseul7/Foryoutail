@@ -33,8 +33,8 @@ export default function UserHeader() {
   const [isUploading, setIsUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [postsCount, setPostsCount] = useState(0);
-  const [followersCount, setFollowersCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
+  const [likedAnimalsCount, setLikedAnimalsCount] = useState(0);
+  const [favoriteSheltersCount, setFavoriteSheltersCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isOwnProfile = user?.uid === userId;
@@ -86,9 +86,33 @@ export default function UserHeader() {
 
         setPostsCount(count ?? 0);
 
-        // 팔로워/팔로잉은 아직 구현되지 않았으므로 0으로 설정
-        setFollowersCount(0);
-        setFollowingCount(0);
+        if (user?.uid === userId) {
+          const [{ count: likedCount, error: likedError }, { count: favoriteCount, error: favoriteError }] =
+            await Promise.all([
+              supabase
+                .from('animal_likes')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', userId),
+              supabase
+                .from('shelter_favorites')
+                .select('shelter_id', { count: 'exact', head: true })
+                .eq('user_id', userId),
+            ]);
+
+          if (likedError) {
+            throw likedError;
+          }
+
+          if (favoriteError) {
+            throw favoriteError;
+          }
+
+          setLikedAnimalsCount(likedCount ?? 0);
+          setFavoriteSheltersCount(favoriteCount ?? 0);
+        } else {
+          setLikedAnimalsCount(0);
+          setFavoriteSheltersCount(0);
+        }
       } catch (error) {
         console.error('사용자 프로필 가져오기 실패:', error);
       } finally {
@@ -269,16 +293,20 @@ export default function UserHeader() {
                   <span className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{formatNumber(postsCount)}</span>
                   <span className="text-[10px] sm:text-xs text-gray-500 uppercase">Posts</span>
                 </div>
-                <div className="h-6 sm:h-8 w-px bg-gray-300" />
-                <div className="flex flex-col items-start">
-                  <span className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{formatNumber(followersCount)}</span>
-                  <span className="text-[10px] sm:text-xs text-gray-500 uppercase">Followers</span>
-                </div>
-                <div className="h-6 sm:h-8 w-px bg-gray-300" />
-                <div className="flex flex-col items-start">
-                  <span className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{formatNumber(followingCount)}</span>
-                  <span className="text-[10px] sm:text-xs text-gray-500 uppercase">Following</span>
-                </div>
+                {isOwnProfile && (
+                  <>
+                    <div className="h-6 sm:h-8 w-px bg-gray-300" />
+                    <div className="flex flex-col items-start">
+                      <span className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{formatNumber(likedAnimalsCount)}</span>
+                      <span className="text-[10px] sm:text-xs text-gray-500">좋아요한 동물</span>
+                    </div>
+                    <div className="h-6 sm:h-8 w-px bg-gray-300" />
+                    <div className="flex flex-col items-start">
+                      <span className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{formatNumber(favoriteSheltersCount)}</span>
+                      <span className="text-[10px] sm:text-xs text-gray-500">즐겨찾기 보호소</span>
+                    </div>
+                  </>
+                )}
               </div>
             </>
           )}
