@@ -8,6 +8,11 @@ const LocationDataProvider = dynamic(
   { ssr: false }
 );
 
+const SitePopupModal = dynamic(
+  () => import('@/packages/components/base/SitePopupModal'),
+  { ssr: false }
+);
+
 export default function Providers({
   children,
 }: Readonly<{
@@ -16,6 +21,7 @@ export default function Providers({
   return (
     <AuthProvider>
       <LocationDataProvider />
+      <SitePopupModal />
       {children}
     </AuthProvider>
   );
