@@ -44,14 +44,14 @@ export default function SitePopupModal() {
   }
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center px-4 py-6 sm:px-6">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center px-3 py-4 sm:px-5 sm:py-5">
       <div className="absolute inset-0 bg-[rgba(15,23,42,0.52)] backdrop-blur-[2px]" aria-hidden />
       <div
         ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="site-popup-title"
-        className="relative z-[10001] w-full max-w-[30rem] overflow-hidden rounded-[1.6rem] border border-[#e8dcc7] bg-white shadow-[0_20px_60px_rgba(15,23,42,0.28)]"
+        className="relative z-[10001] w-full max-w-[36rem] overflow-hidden rounded-[1.6rem] border border-[#e8dcc7] bg-white shadow-[0_20px_60px_rgba(15,23,42,0.28)]"
       >
         <button
           type="button"
