@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { loadNaverMapsScript } from '@/packages/utils/naverMapLoader';
 
 interface ShelterMapComponentProps {
     lat: number;
@@ -137,34 +138,27 @@ export default function ShelterMapComponent({
             }
         };
 
-        if (checkNaverMap()) {
-            initializeMap();
-            return;
-        }
+        let cancelled = false;
 
-        let attemptCount = 0;
-        const maxAttempts = 100;
-
-        const interval = setInterval(() => {
-            attemptCount++;
-            if (checkNaverMap()) {
-                clearInterval(interval);
+        loadNaverMapsScript()
+            .then(() => {
+                if (cancelled) return;
                 const success = initializeMap();
-                if (!success && attemptCount >= maxAttempts) {
+                if (!success) {
                     setError('지도를 초기화할 수 없습니다. 잠시 후 다시 시도해주세요.');
                 }
-            } else if (attemptCount >= maxAttempts) {
-                clearInterval(interval);
-                if (!isLoaded && !error) {
-                    setError('네이버 지도 API를 로드할 수 없습니다. 네트워크 연결을 확인하세요.');
-                }
-            }
-        }, 100);
+            })
+            .catch((err) => {
+                if (cancelled) return;
+                console.error('네이버 지도 API 로드 실패:', err);
+                setError(err instanceof Error ? err.message : '네이버 지도 API를 로드할 수 없습니다. 네트워크 연결을 확인하세요.');
+                setIsLoaded(false);
+            });
 
         return () => {
-            clearInterval(interval);
+            cancelled = true;
         };
-    }, [lat, lng, zoom, map, isLoaded, error, title, address]);
+    }, [lat, lng, zoom, map, title, address]);
 
     // 위도/경도가 변경되면 지도 중심 이동
     useEffect(() => {

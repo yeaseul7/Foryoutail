@@ -26,12 +26,20 @@ function toQueryString(params: ShelterDataQueryParams): string {
   return qp.toString();
 }
 
+function buildApiUrl(params: ShelterDataQueryParams, baseUrl?: string): string {
+  const query = toQueryString(params);
+  const path = `/api/shelter-data${query ? `?${query}` : ''}`;
+  if (!baseUrl) return path;
+  return `${baseUrl.replace(/\/$/, '')}${path}`;
+}
+
 export async function fetchShelterAnimals(
   params: ShelterDataQueryParams,
+  options?: { baseUrl?: string; cache?: RequestCache },
 ): Promise<ShelterAnimalItem[]> {
-  const query = toQueryString(params);
-  const res = await fetch(`/api/shelter-data${query ? `?${query}` : ''}`, {
-    cache: 'no-store',
+  const url = buildApiUrl(params, options?.baseUrl);
+  const res = await fetch(url, {
+    cache: options?.cache ?? 'no-store',
     headers: { 'Content-Type': 'application/json' },
   });
 
@@ -47,11 +55,12 @@ export async function fetchShelterAnimals(
 
 export async function fetchShelterAnimalByDesertionNo(
   desertionNo: string,
+  options?: { baseUrl?: string; cache?: RequestCache },
 ): Promise<ShelterAnimalItem | null> {
   const items = await fetchShelterAnimals({
     desertion_no: desertionNo,
     pageNo: 1,
     numOfRows: 1,
-  });
+  }, options);
   return items[0] ?? null;
 }

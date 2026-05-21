@@ -1,17 +1,17 @@
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
 @import "tailwindcss";
 
 :root {
   --background: #ffffff;
   /* --foreground: #171717; */
-  --font-pretendard: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-pretendard: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", system-ui, sans-serif;
+  --font-system-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 }
 
 @theme inline {
   --color-background: var(--background);
   /* --color-foreground: var(--foreground); */
   --font-sans: var(--font-pretendard);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: var(--font-system-mono);
 
   /* Theme colors from tailwind.config.js */
   --color-page1: #F8F9FA;
@@ -35,8 +35,8 @@
   --color-border2: #ADB5BD;
   --color-border3: #DEE2E6;
   --color-border4: #F1F3F5;
-  --color-primary1: #6b85e3;
-  --color-primary2: #576dbd;
+  --color-primary1: #4f63d7;
+  --color-primary2: #4455bf;
   --color-lightBlue: #f9fcfe;
   --color-destructive1: #FF6B6B;
   --color-destructive2: #FF8787;
@@ -63,8 +63,8 @@
   --color-teal-2: #96F2D7;
   --color-teal-3: #63E6BE;
   --color-teal-4: #38D9A9;
-  --color-teal-5: #576dbd;
-  --color-teal-6: #6b85e3;
+  --color-teal-5: #4455bf;
+  --color-teal-6: #4f63d7;
   --color-teal-7: #0CA678;
   --color-teal-8: #099268;
   --color-teal-9: #087F5B;

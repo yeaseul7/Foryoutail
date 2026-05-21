@@ -27,10 +27,10 @@ export default function NavLink({
   const match = isActive ? isActive(defaultMatch, { pathname }) : defaultMatch;
 
   // 기본 스타일: active일 때만 border-bottom과 어두운 텍스트, inactive일 때 회색 텍스트
-  const baseStyles = 'transition-all duration-300 ease-in-out pb-2 px-2';
+  const baseStyles = 'transition-colors duration-200 ease-in-out pb-2 px-2';
   const activeStyles = match
     ? 'border-b-2 border-stone-900 text-stone-900 font-bold'
-    : 'text-gray-400';
+    : 'text-gray-600';
   const activeClass = match ? activeClassName : '';
   const combinedClassName =
     `${baseStyles} ${activeStyles} ${className} ${activeClass}`.trim();

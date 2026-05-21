@@ -3,6 +3,7 @@
 import { ShelterInfoItem } from '@/packages/type/shelterTyps';
 import { useEffect, useRef, useState } from 'react';
 import { getShortSidoName } from '@/packages/utils/locationUtils';
+import { loadNaverMapsScript } from '@/packages/utils/naverMapLoader';
 
 interface MapComponentProps {
     center?: { lat: number; lng: number };
@@ -88,8 +89,19 @@ export default function MapComponent({
     const [isLoaded, setIsLoaded] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const markersRef = useRef<NaverMarker[]>([]);
-    const [sidoList, setSidoList] = useState<SidoItem[]>([]);
-    const [selectedSido, setSelectedSido] = useState<string | null>(initialSidoCd || null);
+    const [sidoList] = useState<SidoItem[]>(() => {
+        if (typeof window === 'undefined') return [];
+        const storedSidoData = localStorage.getItem('sido_data');
+        if (!storedSidoData) return [];
+        try {
+            return JSON.parse(storedSidoData) as SidoItem[];
+        } catch (err) {
+            console.error('시도 데이터 파싱 오류:', err);
+            return [];
+        }
+    });
+    const [internalSelectedSido, setInternalSelectedSido] = useState<string | null>(initialSidoCd || null);
+    const selectedSido = selectedSidoCd !== undefined ? selectedSidoCd : internalSelectedSido;
 
 
 
@@ -144,34 +156,27 @@ export default function MapComponent({
             }
         };
 
-        if (checkNaverMap()) {
-            initializeMap();
-            return;
-        }
+        let cancelled = false;
 
-        let attemptCount = 0;
-        const maxAttempts = 100;
-
-        const interval = setInterval(() => {
-            attemptCount++;
-            if (checkNaverMap()) {
-                clearInterval(interval);
+        loadNaverMapsScript()
+            .then(() => {
+                if (cancelled) return;
                 const success = initializeMap();
-                if (!success && attemptCount >= maxAttempts) {
+                if (!success) {
                     setError('지도를 초기화할 수 없습니다. 잠시 후 다시 시도해주세요.');
                 }
-            } else if (attemptCount >= maxAttempts) {
-                clearInterval(interval);
-                if (!isLoaded && !error) {
-                    setError('네이버 지도 API를 로드할 수 없습니다. 네트워크 연결을 확인하세요.');
-                }
-            }
-        }, 100);
+            })
+            .catch((err) => {
+                if (cancelled) return;
+                console.error('네이버 지도 API 로드 실패:', err);
+                setError(err instanceof Error ? err.message : '네이버 지도 API를 로드할 수 없습니다. 네트워크 연결을 확인하세요.');
+                setIsLoaded(false);
+            });
 
         return () => {
-            clearInterval(interval);
+            cancelled = true;
         };
-    }, [center?.lat, center?.lng, zoom, map, isLoaded, error]);
+    }, [center?.lat, center?.lng, zoom, map]);
 
     useEffect(() => {
         if (map && window.naver && window.naver.maps) {
@@ -180,36 +185,9 @@ export default function MapComponent({
         }
     }, [center?.lat, center?.lng, zoom, map]);
 
-    // 시도 목록 가져오기
-    useEffect(() => {
-        const storedSidoData = localStorage.getItem('sido_data');
-        if (storedSidoData) {
-            try {
-                const sidoData: SidoItem[] = JSON.parse(storedSidoData);
-                setSidoList(sidoData);
-            } catch (err) {
-                console.error('시도 데이터 파싱 오류:', err);
-            }
-        }
-    }, []);
-
-    // initialSidoCd가 변경되면 selectedSido 업데이트
-    useEffect(() => {
-        if (initialSidoCd) {
-            setSelectedSido(initialSidoCd);
-        }
-    }, [initialSidoCd]);
-
-    // selectedSidoCd prop이 변경되면 내부 상태 동기화
-    useEffect(() => {
-        if (selectedSidoCd !== undefined) {
-            setSelectedSido(selectedSidoCd);
-        }
-    }, [selectedSidoCd]);
-
     // 시도 선택 핸들러
     const handleSidoSelect = (sidoCd: string) => {
-        setSelectedSido(sidoCd);
+        setInternalSelectedSido(sidoCd);
         if (onSidoSelect) {
             onSidoSelect(sidoCd);
         }

@@ -43,7 +43,7 @@ export default function RegionalNearbyAnimalCard({ item }: { item: ShelterAnimal
 
   return (
     <article
-      role="button"
+      role="link"
       tabIndex={0}
       onClick={() => router.push(`/shelter/${item.desertionNo}`)}
       onKeyDown={(e) => {
@@ -69,7 +69,7 @@ export default function RegionalNearbyAnimalCard({ item }: { item: ShelterAnimal
         <p className="text-[16px] sm:text-lg font-bold text-gray-900 text-center leading-snug line-clamp-2 break-keep">
           {headlineLine}
         </p>
-        <p className="text-[13px] sm:text-sm text-gray-500 text-center leading-snug line-clamp-2 break-all">
+        <p className="text-[13px] sm:text-sm text-gray-700 text-center leading-snug line-clamp-2 break-all">
           {detailLine}
         </p>
       </div>

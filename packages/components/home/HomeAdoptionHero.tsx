@@ -72,7 +72,7 @@ export default function HomeAdoptionHero() {
       {/* 배경만 잘라서 scale 이미지가 삐져나가지 않게 — 본문은 hover 시 세로로 잘리지 않음 */}
       <div className="absolute inset-0 overflow-hidden">
         <Image
-          src="/static/images/background_default.png"
+          src="/static/images/background_default_1600.jpg"
           alt=""
           fill
           priority
@@ -125,7 +125,7 @@ export default function HomeAdoptionHero() {
           <button
             type="button"
             onClick={() => router.push('/search-animal')}
-            className="inline-flex min-h-[42px] w-full max-w-md min-w-0 items-center justify-center gap-1.5 rounded-full bg-[#637dec] px-4 py-2.5 text-[13px] font-bold leading-snug text-white shadow-[0_8px_20px_rgba(99,125,236,0.22)] transition-all active:translate-y-0 active:shadow-[0_6px_14px_rgba(99,125,236,0.2)] sm:min-h-[52px] sm:w-auto sm:min-w-[280px] sm:gap-2 sm:px-[34px] sm:py-[14px] sm:text-base sm:shadow-[0_10px_24px_rgba(99,125,236,0.25)] sm:hover:-translate-y-0.5 sm:hover:bg-[#5a73e0] sm:hover:shadow-[0_12px_28px_rgba(99,125,236,0.32)] md:min-w-[300px] md:text-[17px]"
+            className="inline-flex min-h-[42px] w-full max-w-md min-w-0 items-center justify-center gap-1.5 rounded-full bg-primary1 px-4 py-2.5 text-[13px] font-bold leading-snug text-white shadow-[0_8px_20px_rgba(79,99,215,0.22)] transition-colors active:shadow-[0_6px_14px_rgba(79,99,215,0.2)] sm:min-h-[52px] sm:w-auto sm:min-w-[280px] sm:gap-2 sm:px-[34px] sm:py-[14px] sm:text-base sm:shadow-[0_10px_24px_rgba(79,99,215,0.25)] sm:hover:bg-primary2 sm:hover:shadow-[0_12px_28px_rgba(79,99,215,0.32)] md:min-w-[300px] md:text-[17px]"
           >
             <HiOutlineCamera className="h-4 w-4 shrink-0 opacity-95 sm:h-[22px] sm:w-[22px]" strokeWidth={1.75} aria-hidden />
             {PHOTO_CTA_LABEL}

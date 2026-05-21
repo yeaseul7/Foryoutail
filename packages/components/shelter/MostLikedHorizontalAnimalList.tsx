@@ -136,6 +136,7 @@ export default function MostLikedHorizontalAnimalList() {
           <div
             key={`${item.id ?? item.desertionNo}-${item.noticeNo ?? likedCount ?? index}`}
             className="snap-center"
+            role="listitem"
           >
             <HorizontalAnimalPhotoCard
               key={`${item.id ?? item.desertionNo}-${likedCount}`}

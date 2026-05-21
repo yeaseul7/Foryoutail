@@ -16,7 +16,7 @@ interface CardImageProps {
   fallbackSrc?: string;
 }
 
-const DEFAULT_FALLBACK_SRC = '/static/images/notfound_img.png';
+const DEFAULT_FALLBACK_SRC = '/static/images/notfound_img_700.jpg';
 
 export default function CardImage({
   src,
