@@ -145,7 +145,7 @@ export function HorizontalAnimalPhotoCard({
 
   return (
     <article
-      role="button"
+      role="link"
       tabIndex={0}
       aria-label={a11yLabel}
       onClick={() => router.push(`/shelter/${item.desertionNo}`)}
@@ -172,7 +172,7 @@ export function HorizontalAnimalPhotoCard({
               type="button"
               aria-label={shareCopied ? '링크를 복사했습니다' : '공유 링크 복사'}
               onClick={handleShareClick}
-              className={`w-7 h-7 flex items-center justify-center rounded-full backdrop-blur-sm transition-colors shadow-sm ${shareCopied ? 'bg-primary1/90 text-white' : 'bg-white/75 text-gray-600 hover:bg-white'
+            className={`w-7 h-7 min-h-7 min-w-7 flex items-center justify-center rounded-full backdrop-blur-sm transition-colors shadow-sm ${shareCopied ? 'bg-primary1/90 text-white' : 'bg-white/75 text-gray-700 hover:bg-white'
                 }`}
             >
               <MdShare className="w-4 h-4" aria-hidden />
@@ -194,7 +194,7 @@ export function HorizontalAnimalPhotoCard({
                 setLikeCountBoost((b) => b + d);
               }
             }}
-            className={`absolute bottom-2.5 right-2.5 z-10 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold leading-none shadow-sm backdrop-blur-[2px] tabular-nums transition-colors border-0 ${isLiked
+            className={`absolute bottom-2.5 right-2.5 z-10 inline-flex min-h-6 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold leading-none shadow-sm backdrop-blur-[2px] tabular-nums transition-colors border-0 ${isLiked
               ? 'bg-black/65 text-white ring-1 ring-red-400/50'
               : 'bg-black/55 text-white hover:bg-black/70'
               } ${isUpdating ? 'opacity-60 cursor-wait' : 'cursor-pointer'}`}
@@ -229,7 +229,7 @@ export function HorizontalAnimalCard({ item }: { item: ShelterAnimalItem }) {
 
   return (
     <article
-      role="button"
+      role="link"
       tabIndex={0}
       onClick={() => router.push(`/shelter/${item.desertionNo}`)}
       onKeyDown={(e) => {
@@ -262,7 +262,7 @@ export function HorizontalAnimalCard({ item }: { item: ShelterAnimalItem }) {
             aria-label="관심 동물 추가"
             onClick={(e) => handleLike(e)}
             disabled={isUpdating}
-            className={`w-7 h-7 flex items-center justify-center rounded-full backdrop-blur-sm transition-colors shadow-sm ${isLiked ? 'bg-red-100 hover:bg-red-200' : 'bg-white/75 hover:bg-white'
+            className={`w-7 h-7 min-h-7 min-w-7 flex items-center justify-center rounded-full backdrop-blur-sm transition-colors shadow-sm ${isLiked ? 'bg-red-100 hover:bg-red-200' : 'bg-white/75 hover:bg-white'
               } ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {isLiked ? (
@@ -270,7 +270,7 @@ export function HorizontalAnimalCard({ item }: { item: ShelterAnimalItem }) {
                 <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             ) : (
-              <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+              <svg className="w-3.5 h-3.5 text-gray-600" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             )}
@@ -280,7 +280,7 @@ export function HorizontalAnimalCard({ item }: { item: ShelterAnimalItem }) {
               type="button"
               aria-label={shareCopied ? '링크를 복사했습니다' : '공유 링크 복사'}
               onClick={handleShareClick}
-              className={`w-7 h-7 flex items-center justify-center rounded-full backdrop-blur-sm transition-colors shadow-sm ${shareCopied ? 'bg-primary1/90 text-white' : 'bg-white/75 text-gray-600 hover:bg-white'
+              className={`w-7 h-7 min-h-7 min-w-7 flex items-center justify-center rounded-full backdrop-blur-sm transition-colors shadow-sm ${shareCopied ? 'bg-primary1/90 text-white' : 'bg-white/75 text-gray-700 hover:bg-white'
                 }`}
             >
               <MdShare className="w-4 h-4" aria-hidden />
@@ -295,22 +295,22 @@ export function HorizontalAnimalCard({ item }: { item: ShelterAnimalItem }) {
             <p className="text-[15px] font-bold text-gray-900 leading-snug truncate">
               {breedLabel}
             </p>
-            <p className="text-[12px] text-gray-400 whitespace-nowrap shrink-0 pt-px">
+            <p className="text-[12px] text-gray-600 whitespace-nowrap shrink-0 pt-px">
               {region}
             </p>
           </div>
           {shelterLabel ? (
-            <p className="text-[12px] text-gray-500 truncate mt-1" title={shelterLabel}>
+            <p className="text-[12px] text-gray-700 truncate mt-1" title={shelterLabel}>
               {shelterLabel}
             </p>
           ) : null}
         </div>
 
         <div className="flex flex-wrap gap-1">
-          <span className="text-[12px] font-semibold text-gray-500 bg-gray-100 rounded-full px-2.5 py-0.5">
+          <span className="text-[12px] font-semibold text-gray-700 bg-gray-100 rounded-full px-2.5 py-0.5">
             {sexLabel}
           </span>
-          <span className="text-[12px] font-semibold text-gray-500 bg-gray-100 rounded-full px-2.5 py-0.5 truncate max-w-[80px]">
+          <span className="text-[12px] font-semibold text-gray-700 bg-gray-100 rounded-full px-2.5 py-0.5 truncate max-w-[80px]">
             {age}
           </span>
         </div>

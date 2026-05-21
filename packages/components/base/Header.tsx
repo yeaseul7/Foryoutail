@@ -81,7 +81,7 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
             className="flex items-center transition-opacity hover:opacity-80"
           >
             <Image
-              src="/static/images/foryoutail.png"
+              src="/static/images/foryoutail-60.png"
               alt="Logo"
               width={30}
               height={30}
@@ -89,10 +89,10 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
               loading="eager"
             />
             <Image
-              src="/static/images/foryoutail-textonly.png"
+              src="/static/images/foryoutail-textonly-240.png"
               alt="Logo"
               width={120}
-              height={120}
+              height={24}
               className="hidden h-auto w-[120px] md:block"
               loading="eager"
             />
@@ -183,7 +183,7 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
           <div className="flex gap-1 items-center sm:gap-2">
             <div ref={notificationRef} className="relative">
               <button
-                className="relative p-2 rounded-full transition-all duration-200 hover:bg-gray-100 active:scale-95"
+                className="relative flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200 hover:bg-gray-100 active:scale-95"
                 onClick={handleNotificationClick}
                 aria-label="알림"
               >
@@ -192,7 +192,7 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
                   alt="Notification"
                   width={24}
                   height={24}
-                  className="transition-opacity hover:opacity-70"
+                  className="h-6 w-6 transition-opacity hover:opacity-70"
                 />
                 {unreadHistoryCount > 0 && (
                   <span className="flex absolute top-0 right-0 justify-center items-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full shadow-sm">
@@ -207,7 +207,7 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
               )}
             </div>
             <button
-              className="p-2 rounded-full transition-all duration-200 hover:bg-gray-100 active:scale-95"
+              className="flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200 hover:bg-gray-100 active:scale-95"
               onClick={handleSearchClick}
               aria-label="검색"
             >
@@ -216,7 +216,7 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
                 alt="Search"
                 width={24}
                 height={24}
-                className="transition-opacity hover:opacity-70"
+                className="h-6 w-6 transition-opacity hover:opacity-70"
               />
             </button>
             {!loading && (

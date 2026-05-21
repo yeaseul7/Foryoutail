@@ -1,37 +1,15 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
 import localFont from 'next/font/local';
 import Script from 'next/script';
 import './globals.css';
 import '@/styles/keyframe.css';
 import Providers from './providers';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
-
 const cafe24SsurroundAir = localFont({
-  src: [
-    {
-      path: '../public/static/font/Cafe24SsurroundAir-v1.1/webfont/Cafe24SsurroundAir-v1.1.woff2',
-      weight: '400',
-      style: 'normal',
-    },
-    {
-      path: '../public/static/font/Cafe24SsurroundAir-v1.1/webfont/Cafe24SsurroundAir-v1.1.woff',
-      weight: '400',
-      style: 'normal',
-    },
-  ],
+  src: '../public/static/font/Cafe24SsurroundAir-v1.1/webfont/Cafe24SsurroundAir-v1.1.woff2',
   variable: '--font-cafe24',
   display: 'swap',
-  preload: true,
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -114,27 +92,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ko">
       <head>
         <meta name="google-adsense-account" content="ca-pub-6471129158350904" />
         <meta
           name="naver-site-verification"
           content="c61009c06bdc1e6acd5ec9f6813edbf6b52524c8"
         />
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6471129158350904"
-          crossOrigin="anonymous"
-        />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${cafe24SsurroundAir.variable} antialiased w-full min-h-screen font-sans bg-white`}
+        className={`${cafe24SsurroundAir.variable} antialiased w-full min-h-screen font-sans bg-white`}
       >
         <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-9P3M59NTFM"
-          strategy="afterInteractive"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6471129158350904"
+          strategy="lazyOnload"
+          crossOrigin="anonymous"
         />
-        <Script id="google-analytics" strategy="afterInteractive">
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-9P3M59NTFM"
+          strategy="lazyOnload"
+        />
+        <Script id="google-analytics" strategy="lazyOnload">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
@@ -142,12 +120,6 @@ export default function RootLayout({
             gtag('config', 'G-9P3M59NTFM');
           `}
         </Script>
-        {process.env.NEXT_PUBLIC_NAVER_MAP && (
-          <Script
-            src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${process.env.NEXT_PUBLIC_NAVER_MAP}`}
-            strategy="afterInteractive"
-          />
-        )}
         <Providers>
           {children}
         </Providers>

@@ -28,28 +28,28 @@ export default function PageFooter() {
           <div className="flex max-w-sm flex-col items-center gap-3 text-center sm:items-start sm:text-left">
             <Link href="/" className="flex items-center gap-2 rounded focus:outline-none focus:ring-2 focus:ring-primary1/30">
               <Image
-                src="/static/images/foryoutail-textonly.png"
+                src="/static/images/foryoutail-textonly-240.png"
                 alt="포유테일 로고"
                 width={120}
-                height={120}
+                height={24}
                 className="shrink-0"
               />
             </Link>
-            <p className="text-xs leading-6 text-gray-500">
+            <p className="text-xs leading-6 text-gray-600">
               유기동물 공고, 보호소 정보, 커뮤니티 경험을 하나의 흐름으로 연결하는 입양 탐색 서비스.
             </p>
             <a
               href="https://www.instagram.com/kkosunnae_official/"
               rel="noopener noreferrer"
               className="flex items-center gap-2 rounded text-gray-600 transition-colors hover:text-primary1 focus:outline-none focus:ring-2 focus:ring-primary1/30"
-              aria-label="포유테일 인스타그램"
+              aria-label="Instagram 포유테일 인스타그램"
             >
               <span className="text-xs">Instagram</span>
             </a>
             <a
               href="mailto:kkosunnaekr1@gmail.com"
               className="flex items-center gap-2 rounded text-gray-600 transition-colors hover:text-primary1 focus:outline-none focus:ring-2 focus:ring-primary1/30"
-              aria-label="포유테일 이메일"
+              aria-label="kkosunnaekr1@gmail.com 포유테일 이메일"
             >
               <span className="text-xs">kkosunnaekr1@gmail.com</span>
             </a>
@@ -75,7 +75,7 @@ export default function PageFooter() {
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col items-center gap-1 border-t border-gray-100 pt-6 text-center text-xs text-gray-500">
+        <div className="mt-8 flex flex-col items-center gap-1 border-t border-gray-100 pt-6 text-center text-xs text-gray-600">
           <div>created by lee yeaseul</div>
           <div>© copyright 2025. All rights reserved.</div>
         </div>
