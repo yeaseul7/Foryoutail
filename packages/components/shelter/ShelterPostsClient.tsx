@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ShelterAnimalItem } from '@/packages/type/postType';
 import { getShortSidoName } from '@/packages/utils/locationUtils';
 import AbandonedCard from '../base/AbandonedCard';
@@ -78,6 +78,35 @@ function parseQuickFilterFromSearchParams(
   if (raw === 'gentle' || raw === 'gentleDog' || raw === 'gentleCat') return 'gentle';
   if (raw === 'nearby' || raw === 'young') return raw;
   return null;
+}
+
+function parseListQuickFilter(raw: string | null): ListQuickFilterId | null {
+  if (raw === 'recentReg' || raw === 'noticeEnding' || raw === 'birthYear' || raw === 'neutered') {
+    return raw;
+  }
+  return null;
+}
+
+function createFilterSearchParams(
+  filters: AnimalFilterState,
+  listQuickFilter: ListQuickFilterId | null = null,
+): URLSearchParams {
+  const params = new URLSearchParams();
+  const q = filters.searchQuery.trim();
+
+  if (q) params.set('q', q);
+  if (filters.sexCd) params.set('sex', filters.sexCd);
+  if (filters.upKindCd) params.set('upkind', filters.upKindCd);
+  if (filters.neuterYn) params.set('neuter', filters.neuterYn);
+  if (filters.state) params.set('state', filters.state);
+  if (filters.quickFilter) params.set('quickFilter', filters.quickFilter);
+  if (filters.bgnde) params.set('bgnde', filters.bgnde);
+  if (filters.endde) params.set('endde', filters.endde);
+  if (filters.upr_cd) params.set('upr_cd', filters.upr_cd);
+  if (filters.orgNm?.trim()) params.set('orgNm', filters.orgNm.trim());
+  if (listQuickFilter) params.set('listQuick', listQuickFilter);
+
+  return params;
 }
 
 const UP_KIND_LABEL: Record<string, string> = {
@@ -179,6 +208,8 @@ function buildFilterSummaryRows(filters: AnimalFilterState): FilterSummaryRow[] 
 }
 
 export default function ShelterPostsClient({ initialData }: ShelterPostsClientProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const appliedUrlQueryRef = useRef(false);
   const [shelterAnimalData, setShelterAnimalData] = useState<ShelterAnimalItem[]>(
@@ -311,7 +342,10 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
     }
   }, []);
 
-  const handleFilterChange = useCallback((newFilters: AnimalFilterState) => {
+  const handleFilterChange = useCallback((
+    newFilters: AnimalFilterState,
+    syncUrl = true,
+  ) => {
     const prevFilters = filtersRef.current;
     const isSearchQueryChanged =
       prevFilters.searchQuery !== newFilters.searchQuery;
@@ -341,6 +375,14 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
 
     const applyFilters = async () => {
       if (isFilterRequestInProgress.current) return;
+
+      if (syncUrl) {
+        const nextQuery = createFilterSearchParams(snap, listQuickFilterRef.current).toString();
+        const currentQuery = searchParams.toString();
+        if (nextQuery !== currentQuery) {
+          router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
+        }
+      }
 
       isFilterRequestInProgress.current = true;
       setPageNo(1);
@@ -386,7 +428,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
     } else {
       applyFilters();
     }
-  }, []);
+  }, [pathname, router, searchParams]);
 
   const handleRemoveFilterSummary = useCallback(
     (removeKey: FilterSummaryRemoveKey) => {
@@ -436,13 +478,24 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
     [handleFilterChange],
   );
 
-  const handleListQuickChange = useCallback((next: ListQuickFilterId | null) => {
+  const handleListQuickChange = useCallback((
+    next: ListQuickFilterId | null,
+    syncUrl = true,
+  ) => {
     listQuickFilterRef.current = next;
     setListQuickFilter(next);
     const base: AnimalFilterState = {
       ...filtersRef.current,
     };
     setFilters(base);
+
+    if (syncUrl) {
+      const nextQuery = createFilterSearchParams(base, next).toString();
+      const currentQuery = searchParams.toString();
+      if (nextQuery !== currentQuery) {
+        router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
+      }
+    }
 
     if (next === null) {
       listQuickNextApiPageRef.current = 1;
@@ -500,10 +553,9 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
         isFilterRequestInProgress.current = false;
       }
     })();
-  }, []);
+  }, [pathname, router, searchParams]);
 
   useEffect(() => {
-    if (appliedUrlQueryRef.current) return;
     const q = searchParams.get('q')?.trim();
     const sex = searchParams.get('sex');
     const upkind = searchParams.get('upkind');
@@ -511,15 +563,17 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
     const state = searchParams.get('state');
     const quickFilterRaw = searchParams.get('quickFilter');
     const parsedQuick = parseQuickFilterFromSearchParams(quickFilterRaw);
+    const listQuickRaw = searchParams.get('listQuick');
+    const parsedListQuick = parseListQuickFilter(listQuickRaw);
     const uprCd = searchParams.get('upr_cd');
     const orgNm = searchParams.get('orgNm')?.trim() || searchParams.get('org_nm')?.trim();
-    const hasFilterParams = Boolean(
-      q || sex || upkind || neuter || state || quickFilterRaw || uprCd || orgNm,
+    const bgnde = searchParams.get('bgnde');
+    const endde = searchParams.get('endde');
+    const hasUrlFilterParams = Boolean(
+      q || sex || upkind || neuter || state || quickFilterRaw || listQuickRaw || uprCd || orgNm || bgnde || endde,
     );
-    if (!hasFilterParams) return;
-    appliedUrlQueryRef.current = true;
-    handleFilterChange({
-      ...filtersRef.current,
+    if (hasUrlFilterParams) appliedUrlQueryRef.current = true;
+    const nextFilters: AnimalFilterState = {
       searchQuery: q ?? '',
       sexCd: sex === 'M' || sex === 'F' || sex === 'Q' ? sex : null,
       upKindCd:
@@ -532,10 +586,35 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
         neuter === 'Y' || neuter === 'N' || neuter === 'U' ? neuter : null,
       state: state === 'notice' || state === 'protect' ? state : null,
       quickFilter: parsedQuick,
+      bgnde: bgnde && /^\d{8}$/.test(bgnde) ? bgnde : null,
+      endde: endde && /^\d{8}$/.test(endde) ? endde : null,
       upr_cd: uprCd && /^\d{7}$/.test(uprCd) ? uprCd : null,
       orgNm: orgNm || null,
-    });
-  }, [searchParams, handleFilterChange]);
+    };
+    const currentFilters = filtersRef.current;
+    const regularFilterChanged =
+      currentFilters.searchQuery !== nextFilters.searchQuery ||
+      currentFilters.sexCd !== nextFilters.sexCd ||
+      currentFilters.state !== nextFilters.state ||
+      currentFilters.upKindCd !== nextFilters.upKindCd ||
+      currentFilters.neuterYn !== nextFilters.neuterYn ||
+      currentFilters.quickFilter !== nextFilters.quickFilter ||
+      currentFilters.bgnde !== nextFilters.bgnde ||
+      currentFilters.endde !== nextFilters.endde ||
+      currentFilters.upr_cd !== nextFilters.upr_cd ||
+      currentFilters.orgNm !== nextFilters.orgNm;
+    const listQuickChanged = listQuickFilterRef.current !== parsedListQuick;
+
+    if (listQuickChanged) {
+      listQuickFilterRef.current = parsedListQuick;
+      setListQuickFilter(parsedListQuick);
+    }
+    if (regularFilterChanged) {
+      handleFilterChange(nextFilters, false);
+    } else if (listQuickChanged) {
+      handleListQuickChange(parsedListQuick, false);
+    }
+  }, [searchParams, handleFilterChange, handleListQuickChange]);
 
   useEffect(() => {
     if (loadedInitialRef.current || appliedUrlQueryRef.current) return;
