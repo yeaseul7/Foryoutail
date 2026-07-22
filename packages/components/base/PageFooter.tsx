@@ -7,7 +7,6 @@ const FOOTER_LINKS = {
     { label: 'AI 찾기', href: '/' },
   ],
   서비스: [
-    { label: '서비스 소개', href: '/about' },
     { label: '회원가입', href: '/register' },
   ],
   정책: [
