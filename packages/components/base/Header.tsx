@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import RoundButton from '../common/RoundButton';
 import { useCallback, useState, useRef } from 'react';
 import { useClickOutside } from '@/packages/utils/clickEvent';
@@ -46,22 +45,9 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
             href="/"
             className="flex items-center transition-opacity hover:opacity-80"
           >
-            <Image
-              src="/static/images/foryoutail-60.png"
-              alt="Logo"
-              width={30}
-              height={30}
-              className="block md:hidden"
-              loading="eager"
-            />
-            <Image
-              src="/static/images/foryoutail-textonly-240.png"
-              alt="Logo"
-              width={120}
-              height={24}
-              className="hidden h-auto w-[120px] md:block"
-              loading="eager"
-            />
+            <span className="text-xl font-extrabold tracking-[-0.04em] text-[#176de5]">
+              꼬순내
+            </span>
           </Link>
 
           {/* 데스크탑 메뉴 */}

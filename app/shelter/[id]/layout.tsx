@@ -14,15 +14,15 @@ interface ShelterDetailLayoutProps {
 function getFallbackMetadata(url: string): Metadata {
   return buildMetadata({
     title: '유기동물 공고 상세',
-    description: '유기동물 공고 상세 정보와 보호소 정보를 포유테일에서 확인해보세요.',
+    description: '유기동물 공고 상세 정보와 보호소 정보를 꼬순내에서 확인해보세요.',
     url,
-    imageAlt: '포유테일 유기동물 공고 상세',
+    imageAlt: '꼬순내 유기동물 공고 상세',
     type: 'article',
   });
 }
 
 function buildAnimalDescription(kind: string, orgNm: string, processState: string): string {
-  return `${orgNm}에서 ${processState} 상태인 ${kind} 공고를 포유테일에서 확인하고, 보호소 정보와 입양 관련 내용을 함께 살펴보세요.`;
+  return `${orgNm}에서 ${processState} 상태인 ${kind} 공고를 꼬순내에서 확인하고, 보호소 정보와 입양 관련 내용을 함께 살펴보세요.`;
 }
 
 export async function generateMetadata({

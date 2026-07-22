@@ -8,7 +8,7 @@ import { generateDefaultMetadata } from '@/packages/utils/metadata';
 
 export const metadata: Metadata = generateDefaultMetadata(
   '전국 유기동물 입양 공고',
-  '전국 유기견·유기묘 입양 공고를 지역과 상태별로 확인하고, 가족을 기다리는 아이들을 포유테일에서 찾아보세요.',
+  '전국 유기견·유기묘 입양 공고를 지역과 상태별로 확인하고, 가족을 기다리는 아이들을 꼬순내에서 찾아보세요.',
   'https://www.kkosunnae.com/shelter',
   {
     includeCanonical: true,

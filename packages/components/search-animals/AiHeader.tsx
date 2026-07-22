@@ -29,7 +29,7 @@ export default function AiHeader({
   searchLoading,
   modelReady = false,
   dailyAiUsed = null,
-  dailyLimit = 3,
+  dailyLimit = 10,
   filters = defaultFilters,
   onFiltersChange,
   onFileChange,

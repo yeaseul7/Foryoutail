@@ -6,7 +6,7 @@ import { generateDefaultMetadata } from '@/packages/utils/metadata';
 
 export const metadata: Metadata = generateDefaultMetadata(
   '서비스 소개',
-  '포유테일이 유기동물 공고와 AI 검색을 통해 입양 탐색을 돕는 방식을 소개합니다.',
+  '꼬순내가 유기동물 공고와 AI 검색을 통해 입양 탐색을 돕는 방식을 소개합니다.',
   'https://www.kkosunnae.com/about',
   {
     includeCanonical: true,
@@ -39,7 +39,7 @@ export default function AboutPage() {
           <div className="overflow-hidden rounded-[2.5rem] bg-[radial-gradient(circle_at_top,#fff1bf_0%,#fff7df_28%,#ffffff_62%)]">
             <section className="px-6 pb-14 pt-16 text-center sm:px-10 sm:pb-20 sm:pt-24 lg:px-16 lg:pt-28">
               <p className="text-sm font-semibold tracking-[0.24em] text-amber-700 uppercase">
-                About Foryoutail
+                About Kkosunnae
               </p>
               <h1 className="mx-auto mt-5 max-w-5xl text-4xl font-semibold tracking-[-0.04em] text-gray-950 sm:text-6xl lg:text-7xl">
                 가족을 기다리는 아이들을
@@ -47,7 +47,7 @@ export default function AboutPage() {
                 더 쉽게 만날 수 있도록.
               </h1>
               <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-gray-600 sm:text-lg">
-                포유테일은 입양 정보를 한곳에서 연결하는
+                꼬순내는 입양 정보를 한곳에서 연결하는
                 유기동물 입양 정보 서비스입니다.
                 <br />
                 입양을 고민하는 순간부터 함께하는 순간까지 이어갑니다.
@@ -83,7 +83,7 @@ export default function AboutPage() {
               </h2>
               <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-gray-600 sm:text-lg">
                 잃어버린 반려동물을 찾을 때는 품종이나 지역만으로는 부족할 수 있습니다. <br />
-                포유테일은 사진과 특징을 기반으로 비슷한 아이를 찾아주는 AI 검색 흐름을 설계해, <br />
+                꼬순내는 사진과 특징을 기반으로 비슷한 아이를 찾아주는 AI 검색 흐름을 설계해, <br />
                 보호 공고 속 아이들과 사용자의 기억을 더 가깝게 연결합니다.
               </p>
             </div>
@@ -123,7 +123,7 @@ export default function AboutPage() {
               실제 만남과 입양 결정으로 이어지도록.
             </h2>
             <p className="mt-6 max-w-2xl text-base leading-8 text-gray-300 sm:text-lg">
-              포유테일은 유기동물 공고를 단순히 나열하는 데 그치지 않습니다.
+              꼬순내는 유기동물 공고를 단순히 나열하는 데 그치지 않습니다.
               사용자가 아이의 상태와 보호 정보를 살펴보며
               더 책임 있는 입양 결정을 할 수 있도록 돕습니다.
             </p>

@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase/client';
 import type { AiSearchFiltersValues } from '@/packages/components/search-animals/AiSearchFilters';
 import { sidoLocation } from '@/static/data/sidoLocation';
 
-const DAILY_LIMIT = 5;
+const DAILY_LIMIT = 10;
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 const SEARCH_CACHE_KEY = 'kkosunnae_search_animal_cache';
 const AI_SEARCH_URL =
