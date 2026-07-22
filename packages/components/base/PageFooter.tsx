@@ -3,16 +3,12 @@ import Link from 'next/link';
 
 const FOOTER_LINKS = {
   둘러보기: [
-    { label: '홈', href: '/' },
     { label: '입양 공고', href: '/shelter' },
-    { label: '보호소', href: '/animalShelter' },
-    { label: 'AI 찾기', href: '/search-animal' },
-    { label: '커뮤니티', href: '/community' },
+    { label: 'AI 찾기', href: '/' },
   ],
   서비스: [
     { label: '서비스 소개', href: '/about' },
     { label: '회원가입', href: '/register' },
-    { label: '글쓰기', href: '/write' },
   ],
   정책: [
     { label: '개인정보처리방침', href: '/privacy' },
@@ -36,7 +32,7 @@ export default function PageFooter() {
               />
             </Link>
             <p className="text-xs leading-6 text-gray-600">
-              유기동물 공고, 보호소 정보, 커뮤니티 경험을 하나의 흐름으로 연결하는 입양 탐색 서비스.
+              전국 유기동물 공고를 쉽고 빠르게 탐색할 수 있는 입양 정보 서비스.
             </p>
             <a
               href="https://www.instagram.com/kkosunnae_official/"

@@ -28,7 +28,6 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       NEXT_PUBLIC_ANIMALS_OPENAPI: ${{ secrets.NEXT_PUBLIC_ANIMALS_OPENAPI }}
       NEXT_PUBLIC_VWORLD_API_KEY: ${{ secrets.NEXT_PUBLIC_VWORLD_API_KEY }}
-      NEXT_PUBLIC_NAVER_MAP: ${{ secrets.NEXT_PUBLIC_NAVER_MAP }}
 
     steps:
       - name: Checkout
@@ -55,7 +54,6 @@ jobs:
             'SUPABASE_SERVICE_ROLE_KEY',
             'NEXT_PUBLIC_ANIMALS_OPENAPI',
             'NEXT_PUBLIC_VWORLD_API_KEY',
-            'NEXT_PUBLIC_NAVER_MAP',
           ];
 
           const missing = keys.filter((key) => !process.env[key]);

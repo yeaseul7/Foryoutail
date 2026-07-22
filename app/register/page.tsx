@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/supabase/auth';
 import { HiLockClosed } from 'react-icons/hi';
-import ShelterRegis from '@/packages/components/register/ShelterRegis';
 import {
   AdoptionQuestionStep,
   RegisterStepIndicator,
@@ -13,7 +12,6 @@ import {
   type AdoptionQuestionAnswers,
   type VolunteerQuestionAnswers,
 } from '@/packages/components/register/RegisterQuestionSteps';
-import type { ShelterOption } from '@/packages/type/shelterTyps';
 
 export default function RegisterPage() {
   const { user, loading: authLoading, updateUserProfile } = useAuth();
@@ -21,11 +19,9 @@ export default function RegisterPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [profileName, setProfileName] = useState('');
   const [intro, setIntro] = useState('');
-  const [isShelterStaff, setIsShelterStaff] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [shelterInfo, setShelterInfo] = useState<ShelterOption | null>(null);
   const [adoptionAnswers, setAdoptionAnswers] =
     useState<AdoptionQuestionAnswers>({
       householdSize: '',
@@ -152,11 +148,6 @@ export default function RegisterPage() {
       return false;
     }
 
-    if (isShelterStaff && !shelterInfo?.careRegNo) {
-      setError('보호소 직원/관리자인 경우 보호소를 선택해주세요.');
-      return false;
-    }
-
     return true;
   };
 
@@ -185,7 +176,7 @@ export default function RegisterPage() {
         email: user.email,
         nickname: profileName.trim(),
         profileImg: user.photoURL || null,
-        fulladmin: isShelterStaff,
+        fulladmin: false,
       });
 
       router.push('/');
@@ -259,7 +250,7 @@ export default function RegisterPage() {
                   required
                 />
                 <p className="mt-2 text-xs text-text3">
-                  프로필 이름은 필수 입력 항목이며 댓글과 게시글에 표시됩니다.
+                  프로필 이름은 필수 입력 항목입니다.
                 </p>
               </div>
 
@@ -291,22 +282,6 @@ export default function RegisterPage() {
                   required
                 />
               </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="isShelterStaff"
-                  checked={isShelterStaff}
-                  onChange={(e) => setIsShelterStaff(e.target.checked)}
-                  className="w-4 h-4 border-gray-300 rounded text-primary1 focus:ring-primary1"
-                />
-                <label htmlFor="isShelterStaff" className="text-sm text-text1">
-                  보호소 관련 직원 또는 관리자인가요?
-                </label>
-              </div>
-              {isShelterStaff && (
-                <ShelterRegis value={shelterInfo} onChange={setShelterInfo} />
-              )}
 
               <div className="flex items-center gap-2">
                 <input

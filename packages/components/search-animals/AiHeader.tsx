@@ -1,158 +1,131 @@
 'use client';
 
 import Image from 'next/image';
-import { useRef, useState } from 'react';
-import { MdPhotoCamera, MdSearch, MdCheckCircle } from 'react-icons/md';
+import { useRef } from 'react';
+import { MdPets, MdSearch } from 'react-icons/md';
 import AiSearchFilterSelects from './AiSearchFilterSelects';
 import type { AiSearchFiltersValues } from './AiSearchFilters';
 
 export interface AiHeaderProps {
-    previewUrl: string | null;
-    searchLoading: boolean;
-    modelReady?: boolean;
-    dailyAiUsed?: number | null;
-    dailyLimit?: number;
-    /** 지역·동물 필터 (선택) */
-    filters?: AiSearchFiltersValues;
-    onFiltersChange?: (value: AiSearchFiltersValues) => void;
-    onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    onSearch: () => void;
-    onLoadModel?: () => void;
+  previewUrl: string | null;
+  searchLoading: boolean;
+  modelReady?: boolean;
+  dailyAiUsed?: number | null;
+  dailyLimit?: number;
+  filters?: AiSearchFiltersValues;
+  onFiltersChange?: (value: AiSearchFiltersValues) => void;
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSearch: () => void;
+  onLoadModel?: () => void;
 }
 
 const defaultFilters: AiSearchFiltersValues = {
-    sidoCd: null,
-    petType: '',
+  sidoCd: null,
+  petType: '',
 };
 
 export default function AiHeader({
-    previewUrl,
-    searchLoading,
-    modelReady = false,
-    dailyAiUsed = null,
-    dailyLimit = 3,
-    filters = defaultFilters,
-    onFiltersChange,
-    onFileChange,
-    onSearch,
-    onLoadModel,
+  previewUrl,
+  searchLoading,
+  modelReady = false,
+  dailyAiUsed = null,
+  dailyLimit = 3,
+  filters = defaultFilters,
+  onFiltersChange,
+  onFileChange,
+  onSearch,
+  onLoadModel,
 }: AiHeaderProps) {
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const [internalFilters, setInternalFilters] = useState<AiSearchFiltersValues>(filters ?? defaultFilters);
-    const isControlled = onFiltersChange != null;
-    const currentFilters = isControlled ? (filters ?? defaultFilters) : internalFilters;
-    const handleFiltersChange = isControlled ? onFiltersChange : setInternalFilters;
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-    return (
-        <div className="w-full max-w-5xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-            {/* 헤더: AI 친구 찾기 + 사용 횟수(눈에 띄게) + 설명 */}
-            <header className="text-center mb-8">
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
-                    사진 한 장이면 충분해요
-                </h1>
-                <p className="text-xs sm:text-sm text-gray-500 leading-relaxed max-w-xl mx-auto">
-                    보호소 공고 사진을 기반으로 비슷한 아이를 찾아드려요.
-                    <br className="hidden sm:block" />
-                    최근 업데이트된 공고 데이터를 기준으로 분석합니다.
-                </p>
-            </header>
+  return (
+    <section className="mx-auto w-full max-w-5xl px-1 pb-8 pt-10 sm:px-4 sm:pb-12 sm:pt-14">
+      <header className="text-center">
+        <h1 className="text-3xl font-extrabold tracking-[-0.04em] text-[#4f8ed8] sm:text-4xl lg:text-[2.75rem]">
+          우리 아이와 닮은 유기견 찾기
+        </h1>
+        <p className="mt-4 text-sm font-medium text-slate-700 sm:text-base">
+          AI가 매일 업데이트되는 유기견 공고를 분석하여 가장 닮은 아이를 찾아드려요
+        </p>
+      </header>
 
-            {/* 메인 카드: 동물 버튼 + 업로드 + 필터 + 검색 */}
-            <div className="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="p-6 sm:p-7 md:p-8">
-                    <div className="mb-4 sm:mb-5">
-                        <AiSearchFilterSelects value={currentFilters} onChange={handleFiltersChange} />
-                    </div>
+      <div className="mx-auto mt-8 w-full max-w-[820px] p-0">
+        <AiSearchFilterSelects
+          value={filters ?? defaultFilters}
+          onChange={onFiltersChange ?? (() => undefined)}
+        />
 
-                    <div className="grid min-h-[260px] grid-cols-1 gap-4 md:min-h-[340px] md:grid-cols-2 md:gap-5">
-                        <div
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => fileInputRef.current?.click()}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault();
-                                    fileInputRef.current?.click();
-                                }
-                            }}
-                            className="cursor-pointer"
-                        >
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept="image/*"
-                                onChange={onFileChange}
-                                className="sr-only"
-                                aria-label="강아지/고양이 사진 업로드"
-                            />
-                            <div className="relative flex h-full min-h-[260px] w-full flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50/50 transition-colors hover:border-primary1 hover:bg-primary1/5 md:min-h-[340px]">
-                                {previewUrl ? (
-                                    <div className="absolute inset-0 rounded-2xl overflow-hidden">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={previewUrl} alt="업로드한 사진" className="h-full w-full object-contain" />
-                                    </div>
-                                ) : (
-                                    <>
-                                        <div className="relative mb-4">
-                                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 ring-4 ring-gray-200 sm:h-20 sm:w-20">
-                                                <MdPhotoCamera className="h-8 w-8 text-blue-500 sm:h-10 sm:w-10" />
-                                            </div>
-                                            <span className="absolute -right-0.5 -top-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-blue-500 bg-white text-sm font-bold text-blue-500 shadow-sm">
-                                                +
-                                            </span>
-                                        </div>
-                                        <p className="mb-1 text-base font-bold text-gray-800">
-                                            이미지 업로드
-                                        </p>
-                                        <p className="px-4 text-center text-sm text-gray-500">
-                                            드래그 앤 드롭 하거나 클릭하여 사진을 추가하세요
-                                        </p>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                        <div className="relative min-h-[260px] overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 md:min-h-[340px]">
-                            <Image
-                                src="/static/images/example1.jpeg"
-                                alt="좋은 예시"
-                                fill
-                                className="object-cover"
-                                sizes="(max-width: 768px) 100vw, 50vw"
-                                priority={false}
-                            />
-                            <div className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-black/55 px-2.5 py-1 text-xs font-medium text-white">
-                                <MdCheckCircle className="h-3.5 w-3.5 text-emerald-400" aria-hidden />
-                                좋은 예시
-                            </div>
-                        </div>
-                    </div>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="group flex aspect-square w-full flex-col items-center justify-center overflow-hidden rounded-[1.5rem] border border-dashed border-[#94b9d8] bg-[#edf5ff] text-center transition hover:border-[#4f8ed8] hover:bg-[#e7f1ff]"
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={onFileChange}
+              className="sr-only"
+              aria-label="강아지 또는 고양이 사진 업로드"
+            />
+            {previewUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={previewUrl}
+                alt="업로드한 사진"
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              <>
+                <MdPets className="h-12 w-12 text-[#4f8ed8] transition-transform group-hover:scale-105" aria-hidden />
+                <span className="mt-4 text-base font-bold leading-6 text-[#275978]">
+                  사진을 클릭하여
+                  <br />
+                  업로드하세요
+                </span>
+                <span className="mt-2 text-xs text-[#6f8da3]">JPG, PNG, WEBP</span>
+              </>
+            )}
+          </button>
 
-                    <div className="mt-4 sm:mt-5 flex flex-col gap-3">
-                        <button
-                            type="button"
-                            onClick={onSearch}
-                            disabled={!previewUrl || searchLoading}
-                            className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary1 hover:bg-primary1/90 text-white font-medium py-3 px-4 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            <MdSearch className="w-5 h-5 shrink-0" />
-                            {searchLoading
-                                ? '검색 중...'
-                                : dailyAiUsed != null
-                                    ? `AI로 닮은 친구 찾기 (${Math.max(dailyLimit - dailyAiUsed, 0)}회 남음)`
-                                    : 'AI로 닮은 친구 찾기'}
-                        </button>
-                        {!modelReady && !searchLoading && onLoadModel && (
-                            <button
-                                type="button"
-                                onClick={onLoadModel}
-                                className="text-sm text-gray-500 hover:text-gray-700 underline"
-                            >
-                                AI 모델 로드하기
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </div>
+          <div className="relative aspect-square overflow-hidden">
+            <Image
+              src="/static/images/ai-photo-guide.png"
+              alt="AI가 잘 분석하는 반려동물 사진 촬영 가이드"
+              fill
+              className="object-contain"
+              sizes="(max-width: 768px) 100vw, 410px"
+            />
+          </div>
         </div>
-    );
+      </div>
+
+      <div className="mt-6 flex flex-col items-center gap-3">
+        <button
+          type="button"
+          onClick={onSearch}
+          disabled={!previewUrl || searchLoading}
+          className="inline-flex min-w-[170px] items-center justify-center gap-2 rounded-full bg-[#4f8ed8] px-8 py-3 text-sm font-bold text-white shadow-[0_8px_18px_rgba(79,142,216,0.28)] transition hover:bg-[#3e7fc8] disabled:cursor-not-allowed disabled:opacity-45"
+        >
+          <MdSearch className="h-5 w-5" aria-hidden />
+          {searchLoading ? '검색 중...' : 'AI로 찾기'}
+        </button>
+        {dailyAiUsed != null && (
+          <p className="text-xs font-medium text-slate-500">
+            오늘 {Math.max(dailyLimit - dailyAiUsed, 0)}회 남았어요
+          </p>
+        )}
+        {!modelReady && !searchLoading && onLoadModel && (
+          <button
+            type="button"
+            onClick={onLoadModel}
+            className="text-xs text-slate-500 underline hover:text-slate-700"
+          >
+            AI 모델 로드하기
+          </button>
+        )}
+      </div>
+    </section>
+  );
 }

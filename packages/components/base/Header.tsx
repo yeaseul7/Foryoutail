@@ -2,14 +2,12 @@
 
 import Image from 'next/image';
 import RoundButton from '../common/RoundButton';
-import { useCallback, useState, useRef, useEffect } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import { useClickOutside } from '@/packages/utils/clickEvent';
-import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import HeaderUserIcon from './HeaderUserIcon';
 import HeaderUserMenu from './HeaderUserMenu';
 import { useAuth } from '@/lib/supabase/auth';
-import { getUnreadHistoryCount } from '@/lib/domain/community/history';
 import Link from 'next/link';
 import NavLink from '../common/NavLink';
 import { usePathname } from 'next/navigation';
@@ -19,25 +17,16 @@ const LoginModal = dynamic(
   { ssr: false }
 );
 
-const NotificationPop = dynamic(
-  () => import('../home/notification/NotificationPop'),
-  { ssr: false }
-);
-
 interface HeaderProps {
   visibleHeaderButtons?: boolean;
 }
 export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const router = useRouter();
   const pathname = usePathname();
   const { user, loading } = useAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isNotificationPopOpen, setIsNotificationPopOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [unreadHistoryCount, setUnreadHistoryCount] = useState(0);
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const notificationRef = useRef<HTMLDivElement>(null);
 
   useClickOutside<HTMLDivElement>(
     userMenuRef,
@@ -45,32 +34,9 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
     isUserMenuOpen,
   );
 
-  useClickOutside<HTMLDivElement>(
-    notificationRef,
-    () => setIsNotificationPopOpen(false),
-    isNotificationPopOpen,
-  );
-
-  const handleNotificationClick = useCallback(() => {
-    setIsNotificationPopOpen((prev) => !prev);
-  }, []);
-
-  const handleSearchClick = useCallback(() => {
-    router.push('/community');
-  }, [router]);
-
   const openLoginModal = useCallback(() => {
     setIsLoginModalOpen((prev) => !prev);
   }, []);
-
-  useEffect(() => {
-    const fetchUnreadHistoryCount = async () => {
-      if (!user?.uid) return;
-      const unreadHistoryCount = await getUnreadHistoryCount(user.uid);
-      setUnreadHistoryCount(unreadHistoryCount);
-    };
-    fetchUnreadHistoryCount();
-  }, [user]);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-main border-b border-gray-200">
@@ -103,11 +69,17 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
             <NavLink
               to="/"
               activeClassName="active"
-              isActive={() => pathname === '/'}
-              className={`!border-b-0 !p-0 text-sm lg:text-base transition-colors ${pathname === '/' ? '!text-primary1 font-semibold' : '!text-gray-700 hover:!text-primary1'
+              isActive={() =>
+                pathname === '/'
+              }
+              className={`!border-b-0 !p-0 text-sm lg:text-base transition-colors ${pathname === '/'
+                ? '!text-primary1 font-semibold'
+                : '!text-gray-700 hover:!text-primary1'
                 }`}
             >
-              홈
+              <span className="inline-flex items-center gap-1.5">
+                AI 찾기
+              </span>
             </NavLink>
             <NavLink
               to="/shelter"
@@ -122,46 +94,6 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
                 입양하기
               </span>
             </NavLink>
-            <NavLink
-              to="/search-animal"
-              activeClassName="active"
-              isActive={() =>
-                pathname === '/search-animal' || pathname.startsWith('/search-animal')
-              }
-              className={`!border-b-0 !p-0 text-sm lg:text-base transition-colors ${pathname === '/search-animal' || pathname.startsWith('/search-animal')
-                ? '!text-primary1 font-semibold'
-                : '!text-gray-700 hover:!text-primary1'
-                }`}
-            >
-              <span className="inline-flex items-center gap-1.5">
-                AI 찾기
-              </span>
-            </NavLink>
-            <NavLink
-              to="/community"
-              activeClassName="active"
-              isActive={() => pathname === '/community'}
-              className={`!border-b-0 !p-0 text-sm lg:text-base transition-colors ${pathname === '/community' ? '!text-primary1 font-semibold' : '!text-gray-700 hover:!text-primary1'
-                }`}
-            >
-              <span className="inline-flex items-center gap-1.5">
-                커뮤니티
-              </span>
-            </NavLink>
-            <NavLink
-              to="/animalShelter"
-              activeClassName="active"
-              isActive={() => pathname === '/animalShelter' || pathname.startsWith('/animalShelter')}
-              className={`!border-b-0 !p-0 text-sm lg:text-base transition-colors ${pathname === '/animalShelter' || pathname.startsWith('/animalShelter')
-                ? '!text-primary1 font-semibold'
-                : '!text-gray-700 hover:!text-primary1'
-                }`}
-            >
-              <span className="inline-flex items-center gap-1.5">
-                보호소
-              </span>
-            </NavLink>
-
           </div>
 
           {/* 모바일 햄버거 버튼 */}
@@ -181,44 +113,6 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
         </div>
         {visibleHeaderButtons && (
           <div className="flex gap-1 items-center sm:gap-2">
-            <div ref={notificationRef} className="relative">
-              <button
-                className="relative flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200 hover:bg-gray-100 active:scale-95"
-                onClick={handleNotificationClick}
-                aria-label="알림"
-              >
-                <Image
-                  src="/static/svg/icon-notification.svg"
-                  alt="Notification"
-                  width={24}
-                  height={24}
-                  className="h-6 w-6 transition-opacity hover:opacity-70"
-                />
-                {unreadHistoryCount > 0 && (
-                  <span className="flex absolute top-0 right-0 justify-center items-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full shadow-sm">
-                    {unreadHistoryCount > 99 ? '99+' : unreadHistoryCount}
-                  </span>
-                )}
-              </button>
-              {isNotificationPopOpen && (
-                <NotificationPop
-                  onClose={() => setIsNotificationPopOpen(false)}
-                />
-              )}
-            </div>
-            <button
-              className="flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200 hover:bg-gray-100 active:scale-95"
-              onClick={handleSearchClick}
-              aria-label="검색"
-            >
-              <Image
-                src="/static/svg/icon-search-3.svg"
-                alt="Search"
-                width={24}
-                height={24}
-                className="h-6 w-6 transition-opacity hover:opacity-70"
-              />
-            </button>
             {!loading && (
               <>
                 {user ? (
@@ -255,12 +149,18 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
           <NavLink
             to="/"
             activeClassName="active"
-            isActive={() => pathname === '/'}
-            className={`block px-4 py-3 !border-b-0 text-sm transition-colors hover:bg-gray-50 rounded-lg ${pathname === '/' ? '!text-primary1 bg-blue-50 font-semibold' : '!text-gray-700'
+            isActive={() =>
+              pathname === '/'
+            }
+            className={`block px-4 py-3 !border-b-0 text-sm transition-colors hover:bg-gray-50 rounded-lg ${pathname === '/'
+              ? '!text-primary1 bg-blue-50 font-semibold'
+              : '!text-gray-700'
               }`}
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            홈
+            <span className="inline-flex items-center gap-2">
+              AI 찾기
+            </span>
           </NavLink>
           <NavLink
             to="/shelter"
@@ -276,49 +176,6 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
               입양하기
             </span>
           </NavLink>
-          <NavLink
-            to="/search-animal"
-            activeClassName="active"
-            isActive={() =>
-              pathname === '/search-animal' || pathname.startsWith('/search-animal')
-            }
-            className={`block px-4 py-3 !border-b-0 text-sm transition-colors hover:bg-gray-50 rounded-lg ${pathname === '/search-animal' || pathname.startsWith('/search-animal')
-              ? '!text-primary1 bg-blue-50 font-semibold'
-              : '!text-gray-700'
-              }`}
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <span className="inline-flex items-center gap-2">
-              AI 찾기
-            </span>
-          </NavLink>
-          <NavLink
-            to="/community"
-            activeClassName="active"
-            isActive={() => pathname === '/community'}
-            className={`block px-4 py-3 !border-b-0 text-sm transition-colors hover:bg-gray-50 rounded-lg ${pathname === '/community' ? '!text-primary1 bg-blue-50 font-semibold' : '!text-gray-700'
-              }`}
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <span className="inline-flex items-center gap-2">
-              커뮤니티
-            </span>
-          </NavLink>
-          <NavLink
-            to="/animalShelter"
-            activeClassName="active"
-            isActive={() => pathname === '/animalShelter' || pathname.startsWith('/animalShelter')}
-            className={`block px-4 py-3 !border-b-0 text-sm transition-colors hover:bg-gray-50 rounded-lg ${pathname === '/animalShelter' || pathname.startsWith('/animalShelter')
-              ? '!text-primary1 bg-blue-50 font-semibold'
-              : '!text-gray-700'
-              }`}
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <span className="inline-flex items-center gap-2">
-              보호소
-            </span>
-          </NavLink>
-
         </div>
       </div>
 

@@ -18,7 +18,7 @@ export const metadata: Metadata = generateDefaultMetadata(
 function ShelterPostsFallback() {
   return (
     <div
-      className="mx-auto grid w-full min-w-0 max-w-7xl grid-cols-1 justify-items-stretch gap-x-3 gap-y-8 px-0 py-6 sm:grid-cols-2 sm:gap-y-10 lg:grid-cols-3 xl:grid-cols-4"
+      className="mx-auto grid w-full min-w-0 max-w-7xl grid-cols-1 justify-items-stretch gap-4 px-0 py-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5"
       aria-hidden
     >
       {Array.from({ length: 8 }).map((_, i) => (

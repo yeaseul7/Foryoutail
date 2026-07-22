@@ -29,20 +29,6 @@ export interface ShelterInfoItem {
     quarabtineCnt?: number;
     feedCnt?: number;
     dataStdDt?: string;
-    authorId?: string;
-    content?: string;
-    createdAt?: string;
-    updatedAt?: string;
-}
-
-/** 회원가입/프로필에서 저장하는 보호소 정보 */
-export interface ShelterOption {
-    careNm: string;      // 보호소명
-    careRegNo: string;   // 보호소 관리번호
-    careAddr?: string;   // 보호소 주소(위치)
-    jibunAddr?: string;  // 지번 주소
-    uprCd?: string;      // 시도 코드
-    orgCd?: string;      // 시군구 코드
 }
 export interface SidoLocationItem {
     SIDO_CD: string;

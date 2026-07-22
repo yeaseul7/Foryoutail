@@ -8,14 +8,11 @@ import {
   shouldBypassNextImageOptimization,
 } from '@/packages/utils/imageSource';
 import {
-  HiCalendar,
-  HiCalendarDays,
-  HiClock,
   HiHeart,
   HiOutlineHeart,
-  HiQuestionMarkCircle,
 } from 'react-icons/hi2';
-import { FaMars, FaPaw, FaVenus } from 'react-icons/fa';
+import { FaPaw } from 'react-icons/fa';
+import { MdLocationOn } from 'react-icons/md';
 import { useShelterLike } from '@/hooks/useShelterLike';
 import CardImage from '@/packages/components/common/CardImage';
 
@@ -115,41 +112,6 @@ export default function AbandonedCard({
     };
   }, [shelterAnimal]);
 
-  /** D-n은 공고 종료까지 7일 이하일 때만 표시. 그 외(보호중이나 8일 이상 남음)는 null */
-  const noticeEndBadge = useMemo(() => {
-    if (!shelterAnimal?.noticeEdt) return null;
-
-    const noticeEdtStr = shelterAnimal.noticeEdt;
-    const year = parseInt(noticeEdtStr.substring(0, 4));
-    const month = parseInt(noticeEdtStr.substring(4, 6)) - 1;
-    const day = parseInt(noticeEdtStr.substring(6, 8));
-    const endDate = new Date(year, month, day);
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    endDate.setHours(0, 0, 0, 0);
-
-    const diffTime = endDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    const isProtecting = shelterAnimal?.processState === '보호중';
-    if (isProtecting && diffDays >= 0 && diffDays <= 7) {
-      return {
-        text: `D-${diffDays}`,
-        bgColor: '#e54c41',
-        textColor: '#ffffff',
-      };
-    }
-    if (isProtecting && diffDays > 7) {
-      return null;
-    }
-    return {
-      text: '공고 종료',
-      bgColor: '#E5E5E5',
-      textColor: '#6B6B6B',
-    };
-  }, [shelterAnimal]);
-
   const headlineSpecialMark = useMemo(() => {
     const raw = shelterAnimal.specialMark?.trim();
     if (!raw || raw === '-') return '특징 없음';
@@ -169,18 +131,30 @@ export default function AbandonedCard({
     return shelterAnimal.sexCd;
   }, [shelterAnimal.sexCd]);
 
-  const rescueDateStr = useMemo(() => {
-    const dt = shelterAnimal.happenDt;
-    if (!dt || dt.length < 8) return '';
-    return `${dt.substring(0, 4)}.${dt.substring(4, 6)}.${dt.substring(6, 8)} 구조`;
-  }, [shelterAnimal.happenDt]);
+  const cardTitle = useMemo(() => {
+    const kind = shelterAnimal.kindNm?.trim();
+    return kind || headlineSpecialMark;
+  }, [shelterAnimal.kindNm, headlineSpecialMark]);
+
+  const locationLabel = useMemo(
+    () => shelterAnimal.careNm?.trim() || shelterAnimal.orgNm?.trim() || '보호소 확인',
+    [shelterAnimal.careNm, shelterAnimal.orgNm],
+  );
+
+  const summaryLabel = useMemo(
+    () =>
+      [shelterAnimal.colorCd?.trim(), sexLabel, ageLabel]
+        .filter(Boolean)
+        .join(' · ') || '정보 확인 중',
+    [shelterAnimal.colorCd, sexLabel, ageLabel],
+  );
 
   return (
     <article
       onClick={() => router.push(`/shelter/${shelterAnimal.desertionNo}`)}
-      className="flex h-full w-full max-w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-gray-100 border-b-0 bg-white shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98]"
+      className="flex h-full w-full max-w-full cursor-pointer flex-col overflow-hidden rounded-[1.35rem] border-2 border-[#bfd7e8] bg-white shadow-[0_5px_12px_rgba(62,112,151,0.10)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(62,112,151,0.18)] active:scale-[0.99]"
     >
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-t-2xl bg-gray-100">
+      <div className="relative m-2 mb-0 aspect-square w-[calc(100%-1rem)] overflow-hidden rounded-[1rem] bg-gray-100">
         <CardImage
           src={displayImage}
           alt={shelterAnimal?.desertionNo || '유기동물 이미지'}
@@ -204,26 +178,10 @@ export default function AbandonedCard({
             </div>
           </>
         )}
-        {/* 사진 오른쪽 상단: D-n(7일 이하만) 또는 공고 종료 → 그 오른쪽에 processState 뱃지 */}
-        {(noticeEndBadge || shelterAnimal?.processState) && (
-          <div className="absolute top-1 right-1 z-10 flex max-w-[calc(100%-0.5rem)] flex-row items-center justify-end gap-1 sm:top-1.5 sm:right-1.5 sm:gap-1.5">
-            {noticeEndBadge && (
+        {shelterAnimal?.processState && (
+          <div className="absolute right-2 top-2 z-10">
               <div
-                className="flex min-w-0 shrink items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold shadow-sm sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs whitespace-nowrap"
-                style={{
-                  backgroundColor: noticeEndBadge.bgColor,
-                  color: noticeEndBadge.textColor,
-                }}
-              >
-                {noticeEndBadge.text.startsWith('D-') && (
-                  <HiClock className="h-4 w-4 shrink-0 sm:h-[18px] sm:w-[18px]" aria-hidden />
-                )}
-                <span>{noticeEndBadge.text}</span>
-              </div>
-            )}
-            {shelterAnimal?.processState && (
-              <div
-                className="min-w-0 shrink rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap sm:px-3 sm:py-1.5 sm:text-xs"
+                className="rounded-full px-2.5 py-1 text-[11px] font-bold shadow-sm whitespace-nowrap"
                 style={{
                   backgroundColor: statusBadge.bgColor,
                   color: statusBadge.textColor,
@@ -231,86 +189,35 @@ export default function AbandonedCard({
               >
                 {statusBadge.text}
               </div>
-            )}
           </div>
         )}
-      </div>
-      <div className="relative flex flex-1 flex-col gap-2 px-3 pb-3 pt-3 sm:px-4 sm:pb-4 sm:pt-4">
-        {/* 특징(specialMark) + 찜 — 상태 뱃지는 사진 영역 상단 */}
-        <div className="flex min-w-0 items-start justify-between gap-2">
-          <h3 className="min-w-0 flex-1 truncate text-sm font-bold text-gray-900 sm:text-base">
-            {headlineSpecialMark}
-          </h3>
-          <button
-            type="button"
-            onClick={(e) => void handleLike(e)}
-            disabled={isUpdating || !desertionNo}
-            aria-label={isLiked ? '찜 해제' : '찜하기'}
-            className={`shrink-0 rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary1/30 ${isUpdating || !desertionNo ? 'cursor-not-allowed opacity-50' : ''
-              }`}
-          >
-            {isLiked ? (
-              <HiHeart className="h-5 w-5 text-red-500" aria-hidden />
-            ) : (
-              <HiOutlineHeart className="h-5 w-5" aria-hidden />
-            )}
-          </button>
-        </div>
-        {/* 생년월일 → 성별 → 구조일 (위에서 아래로 세로 나열) */}
-        {(ageLabel || sexLabel || rescueDateStr) && (
-          <ul
-            className="flex min-w-0 list-none flex-col gap-1.5 p-0"
-            aria-label="생년월일·성별·구조일"
-          >
-            <li className="flex min-w-0 flex-col gap-1">
-              <div className="flex min-w-0 items-center gap-2">
-                <HiCalendarDays
-                  className="h-5 w-5 shrink-0 text-gray-400"
-                  aria-hidden
-                />
-                <span className="min-w-0 truncate text-sm text-gray-700">
-                  {ageLabel || '—'}
-                </span>
-              </div>
-            </li>
-            <li className="flex min-w-0 flex-col gap-1">
-              <div className="flex min-w-0 items-center gap-2">
-                {shelterAnimal.sexCd === 'M' ? (
-                  <FaMars className="h-5 w-5 shrink-0 text-sky-600" aria-hidden />
-                ) : shelterAnimal.sexCd === 'F' ? (
-                  <FaVenus className="h-5 w-5 shrink-0 text-rose-500" aria-hidden />
-                ) : (
-                  <HiQuestionMarkCircle
-                    className="h-5 w-5 shrink-0 text-gray-400"
-                    aria-hidden
-                  />
-                )}
-                <span className="min-w-0 truncate text-sm text-gray-700">
-                  {sexLabel || '—'}
-                </span>
-              </div>
-            </li>
-            <li className="flex min-w-0 flex-col gap-1">
-              <div className="flex min-w-0 items-center gap-2">
-                <HiCalendar className="h-5 w-5 shrink-0 text-gray-400" aria-hidden />
-                <span className="min-w-0 truncate text-sm text-gray-700">
-                  {rescueDateStr || '—'}
-                </span>
-              </div>
-            </li>
-          </ul>
-        )}
-        {/* 자세히 보기 버튼 - 항상 노출, 보라 톤 */}
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            router.push(`/shelter/${shelterAnimal.desertionNo}`);
-          }}
-          className="flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition-colors sm:py-2.5 bg-primary1/10 text-primary1 hover:bg-primary1/20"
+          onClick={(event) => void handleLike(event)}
+          disabled={isUpdating || !desertionNo}
+          aria-label={isLiked ? '찜 해제' : '찜하기'}
+          className={`absolute left-2 top-2 z-10 rounded-full bg-white/90 p-1.5 text-slate-400 shadow-sm backdrop-blur-sm transition hover:text-red-500 ${isUpdating || !desertionNo ? 'cursor-not-allowed opacity-50' : ''}`}
         >
-          자세히 보기
+          {isLiked ? (
+            <HiHeart className="h-4 w-4 text-red-500" aria-hidden />
+          ) : (
+            <HiOutlineHeart className="h-4 w-4" aria-hidden />
+          )}
         </button>
+      </div>
+      <div className="relative flex flex-1 flex-col px-3 pb-3 pt-2.5">
+        <div className="flex min-w-0 items-start justify-between gap-1.5">
+          <h3 className="min-w-0 flex-1 truncate text-sm font-extrabold text-slate-900">
+            {cardTitle}
+          </h3>
+        </div>
+        <p className="mt-1 truncate text-xs font-medium text-slate-600">
+          {summaryLabel}
+        </p>
+        <p className="mt-1 flex min-w-0 items-center gap-1 text-[11px] text-[#4f7da3]">
+          <MdLocationOn className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          <span className="truncate">{locationLabel}</span>
+        </p>
       </div>
     </article>
   );
