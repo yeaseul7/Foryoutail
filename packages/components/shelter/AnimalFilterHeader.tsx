@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { RiResetLeftFill } from 'react-icons/ri';
 import { getShortSidoName } from '@/packages/utils/locationUtils';
 import type { QuickFilterKey } from '@/lib/client/shelter';
+import { sidoLocation } from '@/static/data/sidoLocation';
 
 interface SidoItem {
   SIDO_CD: string;
@@ -41,14 +42,14 @@ const sexOptions = [
 
 /** AnimalFilterHeader 전용 — 검색(더 높게) / 필터 pill(더 낮게) */
 const searchBarWrapClass =
-  'flex items-center w-full min-h-[48px] sm:min-h-[52px] bg-gray-100 border border-gray-300/90 rounded-full px-4 sm:px-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] focus-within:border-primary1 focus-within:ring-2 focus-within:ring-primary1/25 transition-shadow';
+  'flex min-w-0 flex-[1.4] items-center min-h-[42px] bg-white border border-slate-200 rounded-xl px-3 focus-within:border-[#4f8ed8] focus-within:ring-2 focus-within:ring-[#4f8ed8]/15 transition-shadow';
 const searchInputClass =
-  'flex-1 min-w-0 h-11 sm:h-12 py-2 text-sm sm:text-[15px] placeholder:text-gray-500 text-gray-900 bg-transparent border-none outline-none';
+  'flex-1 min-w-0 h-10 py-2 text-sm placeholder:text-slate-400 text-gray-900 bg-transparent border-none outline-none';
 
 const filterRowClass =
-  'flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:flex-nowrap sm:items-stretch sm:gap-3';
+  'flex min-w-0 flex-[2] flex-col gap-2 sm:flex-row sm:flex-nowrap sm:items-stretch';
 const filterPillButtonClass =
-  'flex w-full min-h-[36px] sm:min-h-[40px] items-center justify-between gap-1.5 px-3 py-1 sm:gap-2 sm:px-3.5 sm:py-1.5 min-w-0 text-sm font-medium text-gray-900 bg-gray-100 border border-gray-300/90 rounded-full shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] hover:border-gray-400 hover:bg-gray-200/90 transition-colors';
+  'flex w-full min-h-[42px] items-center justify-between gap-1.5 px-3 py-1 min-w-0 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:border-[#4f8ed8]/60 hover:bg-blue-50/30 transition-colors';
 const filterPillLeadClass = 'flex items-center gap-1.5 min-w-0 sm:gap-2';
 const filterPillIconClass = 'h-4 w-4 shrink-0 text-gray-600';
 const filterChevronClass = 'h-4 w-4 shrink-0 transition-transform';
@@ -66,7 +67,7 @@ const datePopoverInputClass =
 const datePopoverLabelClass = 'text-xs font-semibold text-gray-600 mb-1.5';
 const datePopoverLabelEndClass = 'text-xs font-semibold text-gray-600 mt-3 mb-1.5';
 const filterResetButtonClass =
-  'w-full shrink-0 min-h-[36px] sm:min-h-[40px] sm:w-auto sm:flex-none px-3 py-1 sm:px-3.5 sm:py-1.5 text-sm font-medium text-gray-700 border border-gray-300/90 bg-gray-50 flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-gray-100 rounded-full transition-colors';
+  'w-full shrink-0 min-h-[42px] sm:w-auto sm:flex-none px-3 py-1 text-sm font-medium text-gray-700 border border-slate-200 bg-white flex items-center justify-center gap-1.5 hover:bg-gray-50 rounded-xl transition-colors';
 
 function filterDropdownOptionStateClass(selected: boolean): string {
   return `${filterDropdownOptionClass} ${selected ? filterDropdownOptionSelectedClass : filterDropdownOptionIdleClass}`;
@@ -100,11 +101,14 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
     queueMicrotask(() => {
       try {
         const raw = localStorage.getItem('sido_data');
-        if (!raw) return;
+        if (!raw) {
+          setSidoList(sidoLocation.items ?? []);
+          return;
+        }
         const parsed = JSON.parse(raw) as SidoItem[];
-        if (Array.isArray(parsed)) setSidoList(parsed);
+        setSidoList(Array.isArray(parsed) && parsed.length > 0 ? parsed : sidoLocation.items ?? []);
       } catch {
-        /* ignore */
+        setSidoList(sidoLocation.items ?? []);
       }
     });
   }, []);
@@ -219,13 +223,8 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
   return (
     <div className="w-full">
       <div className="w-full max-w-7xl mx-auto">
-        {/* 카드 컨테이너: 흰 배경, 둥근 모서리, 그림자 */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl border border-gray-200/90 shadow-[0_8px_40px_rgba(0,0,0,0.06)] p-4 sm:p-8 flex flex-col">
-          <h1 className="mb-4 sm:mb-6 text-xl sm:text-[1.65rem] font-bold text-gray-900 tracking-tight leading-snug text-balance max-w-[22rem] sm:max-w-none">
-            기다리고 있는 아이들을 만나보세요
-          </h1>
-          {/* 검색창 — 아래 필터 줄과는 가깝게 */}
-          <div className={`mb-3 sm:mb-3.5 ${searchBarWrapClass}`}>
+        <div className="flex flex-col gap-2 rounded-xl border-2 border-[#7aa9cf] bg-white p-2 shadow-[0_5px_14px_rgba(70,125,170,0.12)] lg:flex-row">
+          <div className={searchBarWrapClass}>
             <Image
               src="/static/svg/icon-search-3.svg"
               alt="검색"
@@ -242,7 +241,6 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
             />
           </div>
 
-          {/* 필터: 모바일 세로 / 데스크톱 가로 — 성별·지역·접수일 (지역 없으면 1:1:2) */}
           <div className={filterRowClass}>
             {/* 성별 */}
             <div className={filterDropdownRootClass} data-filter-dropdown-root>

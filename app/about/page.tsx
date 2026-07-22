@@ -6,7 +6,7 @@ import { generateDefaultMetadata } from '@/packages/utils/metadata';
 
 export const metadata: Metadata = generateDefaultMetadata(
   '서비스 소개',
-  '포유테일이 어떤 방식으로 유기동물 공고, 보호소 정보, 커뮤니티 경험을 하나의 흐름으로 연결하는지 소개합니다.',
+  '포유테일이 유기동물 공고와 AI 검색을 통해 입양 탐색을 돕는 방식을 소개합니다.',
   'https://www.kkosunnae.com/about',
   {
     includeCanonical: true,
@@ -24,17 +24,11 @@ const featureRows = [
     title: '기억 속 모습과 닮은 아이를\n더 쉽게 찾을 수 있도록.',
     body: '사진과 특징을 기반으로 비슷한 공고를 탐색합니다. 잃어버린 반려동물을 찾거나, 원하는 외형의 아이를 찾는 과정을 더 자연스럽게 연결합니다.',
   },
-  {
-    eyebrow: 'Stories',
-    title: '입양 이후의 이야기도\n함께 이어질 수 있도록.',
-    body: '입양 후기와 반려 생활 경험을 나누는 공간입니다. 작은 기록들이 모여 다음 입양자에게 따뜻하고 현실적인 참고가 됩니다.',
-  },
 ] as const;
 
 const statCards = [
   { value: 'Adoption First', label: '사지 않고 입양하는 문화를 위한 서비스' },
   { value: 'Simple Search', label: '지역·축종·상태별로 빠르게 찾는 공고 탐색' },
-  { value: 'Shared Stories', label: '입양 후기와 반려 생활 경험이 쌓이는 커뮤니티' },
 ] as const;
 
 export default function AboutPage() {
@@ -54,7 +48,7 @@ export default function AboutPage() {
               </h1>
               <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-gray-600 sm:text-lg">
                 포유테일은 입양 정보를 한곳에서 연결하는
-                반려동물 입양 커뮤니티입니다.
+                유기동물 입양 정보 서비스입니다.
                 <br />
                 입양을 고민하는 순간부터 함께하는 순간까지 이어갑니다.
               </p>
@@ -130,7 +124,7 @@ export default function AboutPage() {
             </h2>
             <p className="mt-6 max-w-2xl text-base leading-8 text-gray-300 sm:text-lg">
               포유테일은 유기동물 공고를 단순히 나열하는 데 그치지 않습니다.
-              사용자가 아이의 상태를 확인하고, 보호소 정보를 살펴보고, 다른 사람들의 경험을 참고하며
+              사용자가 아이의 상태와 보호 정보를 살펴보며
               더 책임 있는 입양 결정을 할 수 있도록 돕습니다.
             </p>
             <div className="mt-10 flex flex-wrap gap-3">
@@ -139,18 +133,6 @@ export default function AboutPage() {
                 className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-gray-950 transition hover:bg-amber-100"
               >
                 입양 공고 찾아보기
-              </Link>
-              <Link
-                href="/animalShelter"
-                className="rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-              >
-                가까운 보호소 보기
-              </Link>
-              <Link
-                href="/community"
-                className="rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-              >
-                이야기 나누기
               </Link>
             </div>
           </section>

@@ -54,8 +54,6 @@ GitHub 저장소 `Settings -> Secrets and variables -> Actions`에 아래 시크
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `NEXT_PUBLIC_ANIMALS_OPENAPI`
-- `NEXT_PUBLIC_VWORLD_API_KEY`
-- `NEXT_PUBLIC_NAVER_MAP`
 
 설명:
 

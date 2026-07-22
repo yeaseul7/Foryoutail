@@ -15,10 +15,10 @@ const cafe24SsurroundAir = localFont({
 export const metadata: Metadata = {
   title: {
     template: '%s | 포유테일',
-    default: '포유테일 - 가족을 기다리는 따뜻한 발걸음, 유기동물 입양 커뮤니티',
+    default: '포유테일 - 유기동물 입양 공고와 AI 검색',
   },
   description:
-    '포유테일에서 전국 유기견·유기묘 입양 공고와 유기동물 보호소 정보를 확인하고, 반려동물 커뮤니티에서 입양 후기와 반려 생활 이야기를 나눠보세요.',
+    '포유테일에서 전국 유기견·유기묘 입양 공고를 확인하고 사진 기반 AI 검색으로 비슷한 동물을 찾아보세요.',
   keywords: [
     '포유테일',
     '유기동물 입양',
@@ -32,10 +32,7 @@ export const metadata: Metadata = {
     '보호소 찾기',
     '강아지 입양',
     '고양이 입양',
-    '반려동물 커뮤니티',
-    '반려견 커뮤니티',
-    '반려묘 커뮤니티',
-    '입양 후기',
+    '유기동물 AI 검색',
     '유기동물 정보',
   ],
   icons: {
@@ -46,9 +43,9 @@ export const metadata: Metadata = {
     google: 'WBwV06sSdVI6wLAiXlN3T32MSQlsqxdSv49eMBt7JWs',
   },
   openGraph: {
-    title: '유기동물 입양 공고·보호소 찾기·반려동물 커뮤니티 | 포유테일',
+    title: '유기동물 입양 공고·AI 검색 | 포유테일',
     description:
-      '전국 유기견·유기묘 공고, 유기동물 보호소 정보, 입양 후기와 반려동물 커뮤니티를 포유테일에서 한곳에 확인해보세요.',
+      '전국 유기견·유기묘 공고를 확인하고 사진 기반 AI 검색으로 비슷한 동물을 찾아보세요.',
     url: 'https://kkosunnae.com',
     siteName: '포유테일',
     locale: 'ko_KR',
@@ -58,15 +55,15 @@ export const metadata: Metadata = {
         url: 'https://kkosunnae.com/static/images/metabanner.png',
         width: 1200,
         height: 630,
-        alt: '포유테일 - 유기동물 입양 공고, 보호소 찾기, 반려동물 커뮤니티',
+        alt: '포유테일 - 유기동물 입양 공고와 AI 검색',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: '유기동물 입양 공고·보호소 찾기·반려동물 커뮤니티 | 포유테일',
+    title: '유기동물 입양 공고·AI 검색 | 포유테일',
     description:
-      '전국 유기동물 공고와 보호소 정보를 찾고, 반려인 커뮤니티에서 입양 후기와 반려 생활 이야기를 나눠보세요.',
+      '전국 유기동물 공고를 확인하고 사진 기반 AI 검색으로 비슷한 동물을 찾아보세요.',
     images: ['https://kkosunnae.com/static/images/metabanner.png'],
   },
   robots: {

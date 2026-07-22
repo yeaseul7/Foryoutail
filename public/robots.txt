@@ -2,8 +2,6 @@
 User-agent: *
 Allow: /
 Disallow: /api/*
-Disallow: /write
-Disallow: /edit/*
 
 # Host
 Host: https://www.kkosunnae.com/

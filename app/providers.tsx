@@ -1,17 +1,6 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import { AuthProvider } from '@/lib/supabase/auth';
-
-const LocationDataProvider = dynamic(
-  () => import('@/packages/components/base/LocationDataProvider'),
-  { ssr: false }
-);
-
-const SitePopupModal = dynamic(
-  () => import('@/packages/components/base/SitePopupModal'),
-  { ssr: false }
-);
 
 export default function Providers({
   children,
@@ -20,8 +9,6 @@ export default function Providers({
 }>) {
   return (
     <AuthProvider>
-      <LocationDataProvider />
-      <SitePopupModal />
       {children}
     </AuthProvider>
   );

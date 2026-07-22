@@ -36,7 +36,7 @@ export function getBaseUrl(): string {
     return `https://${process.env.VERCEL_URL}`;
   }
 
-  return 'http://localhost:3001';
+  return 'http://localhost:3003';
 }
 
 

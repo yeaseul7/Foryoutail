@@ -30,14 +30,10 @@ interface ShelterRow {
   vet_person_cnt: number | null;
   specs_person_cnt: number | null;
   medical_cnt: number | null;
-  author_id: string | null;
-  content: string | null;
   save_trgt_animal: string | null;
   division_nm: string | null;
   org_nm: string | null;
   shelter_migrated_data: Record<string, unknown> | null;
-  created_at: string | null;
-  updated_at: string | null;
 }
 
 function pickNestedString(
@@ -109,10 +105,6 @@ function normalizeShelterItem(row: ShelterRow): ShelterInfoItem {
     quarabtineCnt: pickNestedNumber(migrated, 'quarabtineCnt'),
     feedCnt: pickNestedNumber(migrated, 'feedCnt'),
     dataStdDt: pickNestedString(migrated, 'dataStdDt', 'data_std_dt'),
-    authorId: row.author_id?.trim() || pickNestedString(migrated, 'authorId', 'author_id'),
-    content: row.content?.trim() || pickNestedString(migrated, 'content'),
-    createdAt: row.created_at ?? pickNestedString(migrated, 'createdAt', 'created_at'),
-    updatedAt: row.updated_at ?? pickNestedString(migrated, 'updatedAt', 'updated_at'),
   };
 }
 
@@ -132,7 +124,7 @@ async function queryShelterDocs(params: ShelterInfoParams): Promise<ShelterInfoI
   let query = supabaseAdmin
     .from('shelters')
     .select(
-      'id, care_reg_no, care_nm, care_addr, jibun_addr, lat, lng, care_tel, close_day, week_opr_stime, week_opr_etime, weekend_opr_stime, weekend_opr_etime, breed_cnt, vet_person_cnt, specs_person_cnt, medical_cnt, author_id, content, save_trgt_animal, division_nm, org_nm, shelter_migrated_data, created_at, updated_at',
+      'id, care_reg_no, care_nm, care_addr, jibun_addr, lat, lng, care_tel, close_day, week_opr_stime, week_opr_etime, weekend_opr_stime, weekend_opr_etime, breed_cnt, vet_person_cnt, specs_person_cnt, medical_cnt, save_trgt_animal, division_nm, org_nm, shelter_migrated_data',
     )
     .order('care_nm', { ascending: true })
     .limit(Math.min(fetchLimit * 3, 3000));

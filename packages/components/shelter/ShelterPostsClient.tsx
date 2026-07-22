@@ -9,9 +9,10 @@ import AnimalFilterHeader, { AnimalFilterState } from './AnimalFilterHeader';
 import { fetchShelterAnimalData, FetchShelterAnimalDataResult } from '@/lib/client/shelter';
 import { gatherListQuickMatches, type ListQuickFilterId } from '@/lib/shelter/listQuickFilter';
 import { QUICK_FILTER_ICONS, QUICK_FILTER_LABEL } from '@/lib/shelter/quickFilterLabels';
-import SearchAi from './SearchAi';
 import { sidoLocation } from '@/static/data/sidoLocation';
-import { MdClose } from 'react-icons/md';
+import {
+  MdClose,
+} from 'react-icons/md';
 
 interface ShelterPostsClientProps {
   initialData: FetchShelterAnimalDataResult;
@@ -45,9 +46,9 @@ const LIST_QUICK_BUTTONS: {
   label: string;
 }[] = [
     { id: 'recentReg', emoji: '🆕', label: '최근 등록' },
-    { id: 'noticeEnding', emoji: '⏰', label: '공고 종료 임박' },
-    { id: 'birthYear', emoji: '👶', label: '어린 동물' },
-    { id: 'neutered', emoji: '🏥', label: '중성화 완료' },
+    { id: 'noticeEnding', emoji: '⏳', label: '마감 임박' },
+    { id: 'birthYear', emoji: '🐣', label: '어린 동물' },
+    { id: 'neutered', emoji: '🩺', label: '중성화 완료' },
   ];
 
 type FilterSummaryRow =
@@ -575,7 +576,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-7xl pb-4 sm:pb-5">
-      <div className="flex flex-col pt-5 sm:pt-6">
+      <div className="flex flex-col pt-4 sm:pt-5">
         <div className="flex min-w-0 w-full flex-1 flex-col items-stretch gap-2 sm:gap-2.5">
           <div
             className="flex flex-wrap items-center gap-2"
@@ -590,9 +591,9 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
                   type="button"
                   aria-pressed={active}
                   onClick={() => handleUpKindBadgePress(value)}
-                  className={`inline-flex items-center rounded-full px-3 py-2 text-sm font-medium transition-colors sm:px-3.5 sm:py-2 sm:text-[15px] ${active
-                    ? 'bg-primary1 text-white shadow-sm'
-                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200/90'
+                  className={`inline-flex min-w-[78px] items-center justify-center rounded-full border px-4 py-2 text-sm font-bold transition-colors ${active
+                    ? 'border-[#4f8ed8] bg-[#4f8ed8] text-white shadow-sm'
+                    : 'border-slate-200 bg-white text-slate-700 hover:border-[#4f8ed8]/50 hover:bg-blue-50'
                     }`}
                 >
                   {label}
@@ -604,19 +605,17 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
             filters={filters}
             onFilterChange={handleFilterChange}
           />
-          <SearchAi />
-
           {/* 입양 공고: 제목·설명·적용 필터 칩 아래에 빠른 선택 뱃지 */}
-          <div className="flex w-full flex-col gap-2 px-0 pb-2 pt-3 sm:pb-4 sm:pt-5">
+          <div className="flex w-full flex-col gap-2 px-0 pb-2 pt-5 sm:pb-4 sm:pt-7">
             <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0 flex-1">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900">입양 공고</h2>
+                <h2 className="text-lg font-extrabold text-slate-900 sm:text-xl">입양 공고 · 당신을 기다리는 아이들</h2>
                 <div className="mt-1.5 space-y-2">
-                  <p className="text-sm leading-snug text-gray-600">
-                    {filterSummaryRows.length > 0
-                      ? '적용한 조건에 맞는 보호소 입양 공고만 골라 보여드려요.'
-                      : '보호소에 등록된 아이들을 조건에 맞게 찾아볼 수 있어요.'}
-                  </p>
+                  {filterSummaryRows.length > 0 && (
+                    <p className="text-sm leading-snug text-gray-600">
+                      적용한 조건에 맞는 보호소 입양 공고만 골라 보여드려요.
+                    </p>
+                  )}
                   {filterSummaryRows.length > 0 && (
                     <div
                       className="flex flex-wrap gap-1.5"
@@ -674,14 +673,12 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
                         type="button"
                         aria-pressed={active}
                         onClick={() => handleListQuickChange(active ? null : id)}
-                        className={`inline-flex select-none items-center gap-1 rounded-full px-3 py-2 text-[13px] font-medium leading-none tracking-tight transition-colors active:opacity-90 sm:gap-1.5 sm:px-3.5 sm:py-2 sm:text-sm ${active
-                          ? 'bg-primary1 text-white shadow-sm'
-                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200/90'
+                        className={`inline-flex min-h-9 select-none items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-bold leading-none tracking-tight transition active:scale-[0.98] sm:text-sm ${active
+                          ? 'bg-[#62aef0] text-white'
+                          : 'bg-[#dceeff] text-slate-800 hover:bg-[#cce6ff]'
                           }`}
                       >
-                        <span aria-hidden className="text-[15px] sm:text-base">
-                          {emoji}
-                        </span>
+                        <span className="text-sm" aria-hidden>{emoji}</span>
                         <span>{label}</span>
                       </button>
                     );
@@ -718,7 +715,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
               <div className="mx-auto w-full min-w-0 ">
                 {loading && shelterAnimalData.length === 0 ? (
                   <div
-                    className="grid grid-cols-1 justify-items-stretch gap-x-3 gap-y-8 sm:grid-cols-2 sm:gap-y-10 lg:grid-cols-3 xl:grid-cols-4"
+                    className="grid grid-cols-1 justify-items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5"
                     role="list"
                     aria-busy="true"
                     aria-label="입양 공고 목록 불러오는 중"
@@ -732,7 +729,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
                 ) : shelterAnimalData.length > 0 ? (
                   <>
                     <div
-                      className="grid grid-cols-1 justify-items-stretch gap-x-3 gap-y-8 sm:grid-cols-2 sm:gap-y-10 lg:grid-cols-3 xl:grid-cols-4"
+                      className="grid grid-cols-1 justify-items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5"
                       role="list"
                       aria-label="입양 공고 목록"
                     >
