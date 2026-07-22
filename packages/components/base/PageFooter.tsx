@@ -24,12 +24,13 @@ export default function PageFooter() {
           <div className="flex max-w-sm flex-col items-center gap-3 text-center sm:items-start sm:text-left">
             <Link href="/" className="flex items-center gap-2 rounded focus:outline-none focus:ring-2 focus:ring-primary1/30">
               <Image
-                src="/static/images/foryoutail-textonly-240.png"
-                alt="포유테일 로고"
-                width={120}
-                height={24}
-                className="shrink-0"
+                src="/static/images/kkosunnae-logo.png"
+                alt="꼬순내 로고"
+                width={40}
+                height={40}
+                className="h-10 w-10 shrink-0 rounded-xl"
               />
+              <span className="text-lg font-extrabold tracking-[-0.04em] text-[#176de5]">꼬순내</span>
             </Link>
             <p className="text-xs leading-6 text-gray-600">
               전국 유기동물 공고를 쉽고 빠르게 탐색할 수 있는 입양 정보 서비스.
@@ -38,14 +39,14 @@ export default function PageFooter() {
               href="https://www.instagram.com/kkosunnae_official/"
               rel="noopener noreferrer"
               className="flex items-center gap-2 rounded text-gray-600 transition-colors hover:text-primary1 focus:outline-none focus:ring-2 focus:ring-primary1/30"
-              aria-label="Instagram 포유테일 인스타그램"
+              aria-label="Instagram 꼬순내 인스타그램"
             >
               <span className="text-xs">Instagram</span>
             </a>
             <a
               href="mailto:kkosunnaekr1@gmail.com"
               className="flex items-center gap-2 rounded text-gray-600 transition-colors hover:text-primary1 focus:outline-none focus:ring-2 focus:ring-primary1/30"
-              aria-label="kkosunnaekr1@gmail.com 포유테일 이메일"
+              aria-label="kkosunnaekr1@gmail.com 꼬순내 이메일"
             >
               <span className="text-xs">kkosunnaekr1@gmail.com</span>
             </a>

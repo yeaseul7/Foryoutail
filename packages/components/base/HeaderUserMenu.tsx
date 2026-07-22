@@ -1,6 +1,7 @@
 'use client';
 import { useAuth } from '@/lib/supabase/auth';
 import { useClickOutsideModal } from '@/packages/utils/clickEvent';
+import { useRouter } from 'next/navigation';
 import { useCallback, useRef } from 'react';
 
 export default function HeaderUserMenu({
@@ -11,6 +12,7 @@ export default function HeaderUserMenu({
   isUserMenuOpen: boolean;
 }) {
   const { logout } = useAuth();
+  const router = useRouter();
   const userMenuRef = useRef<HTMLDivElement>(null);
   const handleLogout = useCallback(async () => {
     try {
@@ -33,6 +35,16 @@ export default function HeaderUserMenu({
         ref={userMenuRef}
       >
         <div className="flex flex-col gap-2 p-2">
+          <button
+            type="button"
+            onClick={() => {
+              setIsUserMenuOpen(false);
+              router.push('/mypage/likes');
+            }}
+            className="p-2 text-left rounded text-text1 hover:bg-element2"
+          >
+            찜한 동물
+          </button>
           <button
             onClick={handleLogout}
             className="p-2 text-left rounded text-text1 hover:bg-element2"

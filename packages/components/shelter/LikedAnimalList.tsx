@@ -2,11 +2,10 @@
 
 import { useAuth } from '@/lib/supabase/auth';
 import { supabase } from '@/lib/supabase/client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Loading from '../base/Loading';
 import { ShelterAnimalItem, ShelterAnimalRow } from '@/packages/type/postType';
 import AbandonedCard from '../base/AbandonedCard';
-import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
 
 function mapAnimalRow(row: ShelterAnimalRow): ShelterAnimalItem {
   const popfiles = Array.isArray(row.popfiles)
@@ -93,7 +92,6 @@ export default function LikedAnimalList({ userId }: { userId?: string }) {
   const { user } = useAuth();
   const [animals, setAnimals] = useState<ShelterAnimalItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const scrollerRef = useRef<HTMLDivElement>(null);
 
   const targetUserId = userId || user?.uid;
 
@@ -174,32 +172,17 @@ export default function LikedAnimalList({ userId }: { userId?: string }) {
     );
   }
 
-  const scrollByCard = (dir: 'left' | 'right') => {
-    const node = scrollerRef.current;
-    if (!node) return;
-    node.scrollBy({ left: dir === 'left' ? -360 : 360, behavior: 'smooth' });
-  };
-
   return (
-    <div className="w-full pt-6">
-      <div className="mb-2 flex items-center justify-end gap-1">
-        <button type="button" onClick={() => scrollByCard('left')} className="inline-flex items-center gap-1 rounded-full border border-primary1/30 bg-primary1/10 px-2.5 py-1.5 text-xs font-semibold text-primary1 transition-colors hover:bg-primary1/20" aria-label="왼쪽으로 이동">
-          <MdChevronLeft className="h-4 w-4" />
-        </button>
-        <button type="button" onClick={() => scrollByCard('right')} className="inline-flex items-center gap-1 rounded-full border border-primary1/30 bg-primary1/10 px-2.5 py-1.5 text-xs font-semibold text-primary1 transition-colors hover:bg-primary1/20" aria-label="오른쪽으로 이동">
-          <MdChevronRight className="h-4 w-4" />
-        </button>
-      </div>
+    <div className="w-full">
       <div
-        ref={scrollerRef}
-        className="flex w-full gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5"
         role="list"
         aria-label="좋아요한 구조 동물 목록"
       >
         {animals.map((animal, index) => (
           <div
             key={`${animal.id ?? animal.desertionNo}-${animal.noticeNo ?? index}`}
-            className="min-w-0 snap-start shrink-0 basis-[82%] sm:basis-[48%] lg:basis-[32%]"
+            className="min-w-0"
           >
             <AbandonedCard shelterAnimal={animal} />
           </div>
