@@ -18,8 +18,10 @@ import CardImage from '@/packages/components/common/CardImage';
 
 export default function AbandonedCard({
   shelterAnimal,
+  priority = false,
 }: {
   shelterAnimal: ShelterAnimalItem;
+  priority?: boolean;
 }) {
   const router = useRouter();
   const desertionNo = shelterAnimal.desertionNo;
@@ -108,7 +110,7 @@ export default function AbandonedCard({
     return {
       text: state,
       bgColor: '#E9EBFD', // 연한 라벤더/퍼플 블루
-      textColor: '#575FE5', // 진한 블루 퍼플 텍스트
+      textColor: '#4249C7', // WCAG AA 대비를 만족하는 블루 퍼플 텍스트
     };
   }, [shelterAnimal]);
 
@@ -161,7 +163,9 @@ export default function AbandonedCard({
           className="object-cover"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 20vw"
           unoptimized={shouldUseUnoptimizedImage}
-          loading="lazy"
+          loading={priority ? undefined : 'lazy'}
+          priority={priority}
+          fetchPriority={priority ? 'high' : 'auto'}
         />
         {isProcessEnded && (
           <>
@@ -214,7 +218,7 @@ export default function AbandonedCard({
         <p className="mt-1 truncate text-xs font-medium text-slate-600">
           {summaryLabel}
         </p>
-        <p className="mt-1 flex min-w-0 items-center gap-1 text-[11px] text-[#4f7da3]">
+        <p className="mt-1 flex min-w-0 items-center gap-1 text-[11px] text-[#426f94]">
           <MdLocationOn className="h-3.5 w-3.5 shrink-0" aria-hidden />
           <span className="truncate">{locationLabel}</span>
         </p>

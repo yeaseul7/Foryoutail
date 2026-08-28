@@ -5,6 +5,74 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import type { ShelterAnimalItem } from '@/packages/type/postType';
 
+type LikeListener = (isLiked: boolean) => void;
+
+interface UserLikeBatch {
+  values: Map<string, boolean>;
+  pendingIds: Set<string>;
+  listeners: Map<string, Set<LikeListener>>;
+  timer: ReturnType<typeof setTimeout> | null;
+}
+
+const likeBatches = new Map<string, UserLikeBatch>();
+
+function getLikeBatch(userId: string): UserLikeBatch {
+  const existing = likeBatches.get(userId);
+  if (existing) return existing;
+
+  const created: UserLikeBatch = {
+    values: new Map(),
+    pendingIds: new Set(),
+    listeners: new Map(),
+    timer: null,
+  };
+  likeBatches.set(userId, created);
+  return created;
+}
+
+function publishLikeValue(
+  batch: UserLikeBatch,
+  animalId: string,
+  isLiked: boolean,
+) {
+  batch.values.set(animalId, isLiked);
+  batch.listeners.get(animalId)?.forEach((listener) => listener(isLiked));
+}
+
+function scheduleLikeBatch(userId: string) {
+  const batch = getLikeBatch(userId);
+  if (batch.timer) return;
+
+  batch.timer = setTimeout(async () => {
+    batch.timer = null;
+    const animalIds = [...batch.pendingIds];
+    batch.pendingIds.clear();
+    if (animalIds.length === 0) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('animal_likes')
+        .select('animal_id')
+        .eq('user_id', userId)
+        .in('animal_id', animalIds);
+
+      if (error) throw error;
+      const likedIds = new Set(
+        (data ?? [])
+          .map((row) => String(row.animal_id ?? '').trim())
+          .filter(Boolean),
+      );
+      animalIds.forEach((animalId) => {
+        publishLikeValue(batch, animalId, likedIds.has(animalId));
+      });
+    } catch {
+      animalIds.forEach((animalId) => {
+        publishLikeValue(batch, animalId, false);
+      });
+    }
+  }, 0);
+}
+
 export interface UseShelterLikeReturn {
   /** 현재 찜 여부 */
   isLiked: boolean;
@@ -40,25 +108,26 @@ export function useShelterLike(
       return;
     }
 
-    let cancelled = false;
-    (async () => {
-      try {
-        const { data, error } = await supabase
-          .from('animal_likes')
-          .select('id')
-          .eq('user_id', user.uid)
-          .eq('animal_id', animalId)
-          .limit(1);
+    const batch = getLikeBatch(user.uid);
+    const listener: LikeListener = (nextIsLiked) => setIsLiked(nextIsLiked);
+    const listeners = batch.listeners.get(animalId) ?? new Set<LikeListener>();
+    listeners.add(listener);
+    batch.listeners.set(animalId, listeners);
 
-        if (error) throw error;
-        if (!cancelled) setIsLiked((data ?? []).length > 0);
-      } catch {
-        if (!cancelled) setIsLiked(false);
-      }
-    })();
+    const cached = batch.values.get(animalId);
+    if (cached !== undefined) {
+      setIsLiked(cached);
+    } else {
+      batch.pendingIds.add(animalId);
+      scheduleLikeBatch(user.uid);
+    }
 
     return () => {
-      cancelled = true;
+      const currentListeners = batch.listeners.get(animalId);
+      currentListeners?.delete(listener);
+      if (currentListeners?.size === 0) {
+        batch.listeners.delete(animalId);
+      }
     };
   }, [animalId, desertionNo, user]);
 
@@ -86,7 +155,7 @@ export function useShelterLike(
           .eq('animal_id', animalId);
 
         if (error) throw error;
-        setIsLiked(false);
+        publishLikeValue(getLikeBatch(user.uid), animalId, false);
         return -1;
       }
 
@@ -96,7 +165,7 @@ export function useShelterLike(
       });
 
       if (error) throw error;
-      setIsLiked(true);
+      publishLikeValue(getLikeBatch(user.uid), animalId, true);
       return 1;
     } catch (error) {
       console.error('찜 처리 실패:', error);

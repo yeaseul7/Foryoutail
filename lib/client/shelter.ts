@@ -163,7 +163,7 @@ export interface FetchShelterAnimalDataResult {
 }
 
 /** 공공 API·프록시 한 번에 가져오는 행 수 (검색·특징 필터는 이후 클라이언트에서 적용) */
-export const SHELTER_API_PAGE_SIZE = 100;
+export const SHELTER_API_PAGE_SIZE = 24;
 
 function parseShelterItemsFromResponse(shelterAnimalResponse: {
   response?: {

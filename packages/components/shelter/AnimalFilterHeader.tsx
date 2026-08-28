@@ -282,7 +282,7 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
                   type="button"
                   aria-haspopup="listbox"
                   aria-expanded={openDropdown === 'upr_cd'}
-                  aria-label="시도 선택"
+                  aria-label={`구조 지역 · ${getRegionFilterLabel()}`}
                   onClick={() => {
                     setDateRangeOpen(false);
                     setOpenDropdown(openDropdown === 'upr_cd' ? null : 'upr_cd');

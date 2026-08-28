@@ -2,6 +2,7 @@ import ShelterPostsClient from './ShelterPostsClient';
 import { ShelterAnimalItem } from '@/packages/type/postType';
 
 const API_BASE_URL = 'https://apis.data.go.kr/1543061/abandonmentPublicService_v2';
+const INITIAL_PAGE_SIZE = 24;
 
 async function fetchInitialShelterData(): Promise<{
   items: ShelterAnimalItem[];
@@ -18,7 +19,7 @@ async function fetchInitialShelterData(): Promise<{
     const urlParams = new URLSearchParams();
     urlParams.append('serviceKey', serviceKey);
     urlParams.append('pageNo', '1');
-    urlParams.append('numOfRows', '100');
+    urlParams.append('numOfRows', String(INITIAL_PAGE_SIZE));
     urlParams.append('upkind', '417000');
     urlParams.append('_type', 'json');
 
@@ -61,7 +62,7 @@ async function fetchInitialShelterData(): Promise<{
 
     const items = shelterAnimalResponse?.response?.body?.items?.item;
     const itemsArray = items ? (Array.isArray(items) ? items : [items]) : [];
-    const hasMore = itemsArray.length === 100;
+    const hasMore = itemsArray.length === INITIAL_PAGE_SIZE;
 
     return {
       items: itemsArray as ShelterAnimalItem[],

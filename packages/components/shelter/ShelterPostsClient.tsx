@@ -18,6 +18,60 @@ interface ShelterPostsClientProps {
   initialData: FetchShelterAnimalDataResult;
 }
 
+interface ShelterListCache {
+  version: 1;
+  savedAt: number;
+  query: string;
+  items: ShelterAnimalItem[];
+  filters: AnimalFilterState;
+  listQuickFilter: ListQuickFilterId | null;
+  pageNo: number;
+  hasMore: boolean;
+  scrollY: number;
+}
+
+const SHELTER_LIST_CACHE_KEY = 'kkosunnae_shelter_list_cache';
+const SHELTER_LIST_CACHE_TTL_MS = 5 * 60 * 1000;
+
+function normalizeQueryString(value: string): string {
+  const params = new URLSearchParams(value);
+  params.sort();
+  return params.toString();
+}
+
+function readShelterListCache(query: string): ShelterListCache | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(SHELTER_LIST_CACHE_KEY);
+    if (!raw) return null;
+    const cache = JSON.parse(raw) as ShelterListCache;
+    const valid =
+      cache?.version === 1 &&
+      Date.now() - cache.savedAt <= SHELTER_LIST_CACHE_TTL_MS &&
+      normalizeQueryString(cache.query) === normalizeQueryString(query) &&
+      Array.isArray(cache.items) &&
+      cache.filters &&
+      typeof cache.filters === 'object';
+    if (!valid) {
+      sessionStorage.removeItem(SHELTER_LIST_CACHE_KEY);
+      return null;
+    }
+    return cache;
+  } catch {
+    sessionStorage.removeItem(SHELTER_LIST_CACHE_KEY);
+    return null;
+  }
+}
+
+function writeShelterListCache(cache: ShelterListCache): void {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(SHELTER_LIST_CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    // 저장 용량을 초과하면 UX를 방해하지 않고 캐시만 포기한다.
+  }
+}
+
 function dedupeShelterAnimals(
   items: ShelterAnimalItem[],
 ): ShelterAnimalItem[] {
@@ -211,6 +265,8 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const cacheReadRef = useRef(false);
+  const skipNextUrlSyncRef = useRef(false);
   const appliedUrlQueryRef = useRef(false);
   const [shelterAnimalData, setShelterAnimalData] = useState<ShelterAnimalItem[]>(
     initialData.items
@@ -246,6 +302,32 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
   const listQuickNextApiPageRef = useRef(1);
   const shelterAnimalDataRef = useRef(shelterAnimalData);
   const loadedInitialRef = useRef(initialData.items.length > 0);
+  const scrollYRef = useRef(0);
+  const [restoredScrollY, setRestoredScrollY] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (cacheReadRef.current) return;
+    cacheReadRef.current = true;
+    const cache = readShelterListCache(searchParams.toString());
+    if (!cache) return;
+
+    // 같은 마운트 사이클에서 아래 URL 동기화 effect가 빈/이전 쿼리로
+    // 방금 복원한 필터를 초기화하지 않도록 최초 실행을 한 번 건너뛴다.
+    skipNextUrlSyncRef.current = true;
+    loadedInitialRef.current = true;
+    shelterAnimalDataRef.current = cache.items;
+    filtersRef.current = cache.filters;
+    listQuickFilterRef.current = cache.listQuickFilter;
+    pageNoRef.current = cache.pageNo;
+    hasMoreRef.current = cache.hasMore;
+    scrollYRef.current = cache.scrollY;
+    setShelterAnimalData(cache.items);
+    setFilters(cache.filters);
+    setListQuickFilter(cache.listQuickFilter);
+    setPageNo(cache.pageNo);
+    setHasMore(cache.hasMore);
+    setRestoredScrollY(cache.scrollY);
+  }, [searchParams]);
 
   useEffect(() => {
     listQuickFilterRef.current = listQuickFilter;
@@ -262,6 +344,45 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
   useEffect(() => {
     isLoadingMoreRef.current = isLoadingMore;
   }, [isLoadingMore]);
+
+  const persistListCache = useCallback(() => {
+    writeShelterListCache({
+      version: 1,
+      savedAt: Date.now(),
+      query: searchParams.toString(),
+      items: shelterAnimalDataRef.current,
+      filters: filtersRef.current,
+      listQuickFilter: listQuickFilterRef.current,
+      pageNo: pageNoRef.current,
+      hasMore: hasMoreRef.current,
+      scrollY: scrollYRef.current,
+    });
+  }, [searchParams]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      scrollYRef.current = window.scrollY;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      scrollYRef.current = window.scrollY;
+      persistListCache();
+    };
+  }, [persistListCache]);
+
+  useEffect(() => {
+    if (!restoredScrollY || restoredScrollY <= 0) return;
+    const firstFrame = requestAnimationFrame(() => {
+      requestAnimationFrame(() => window.scrollTo({ top: restoredScrollY, behavior: 'auto' }));
+    });
+    return () => cancelAnimationFrame(firstFrame);
+  }, [restoredScrollY]);
+
+  useEffect(() => {
+    if (loading || isLoadingMore || isFilterRequestInProgress.current) return;
+    persistListCache();
+  }, [filters, hasMore, isLoadingMore, listQuickFilter, loading, pageNo, persistListCache, shelterAnimalData]);
 
   const handleFetchShelterAnimalData = useCallback(
     async (
@@ -556,6 +677,11 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
   }, [pathname, router, searchParams]);
 
   useEffect(() => {
+    if (skipNextUrlSyncRef.current) {
+      skipNextUrlSyncRef.current = false;
+      return;
+    }
+
     const q = searchParams.get('q')?.trim();
     const sex = searchParams.get('sex');
     const upkind = searchParams.get('upkind');
@@ -634,7 +760,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
     handleFetchShelterAnimalData(next, false, filtersRef.current);
   }, [handleFetchShelterAnimalData, handleLoadMoreListQuick]);
 
-  /** 전체 페이지 스크롤: 하단 감지 시 다음 100건 배치 자동 로드 */
+  /** 전체 페이지 스크롤: 하단 감지 시 다음 24건 배치 자동 로드 */
   useEffect(() => {
     const node = loadMoreSentinelRef.current;
     if (!node || !hasMore) return;
@@ -671,7 +797,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
                   aria-pressed={active}
                   onClick={() => handleUpKindBadgePress(value)}
                   className={`inline-flex min-w-[78px] items-center justify-center rounded-full border px-4 py-2 text-sm font-bold transition-colors ${active
-                    ? 'border-[#4f8ed8] bg-[#4f8ed8] text-white shadow-sm'
+                    ? 'border-[#3477c4] bg-[#3477c4] text-white shadow-sm'
                     : 'border-slate-200 bg-white text-slate-700 hover:border-[#4f8ed8]/50 hover:bg-blue-50'
                     }`}
                 >
@@ -818,7 +944,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
                           role="listitem"
                           className="min-w-0"
                         >
-                          <AbandonedCard shelterAnimal={item} />
+                          <AbandonedCard shelterAnimal={item} priority={index === 0} />
                         </div>
                       ))}
                     </div>
@@ -833,7 +959,7 @@ export default function ShelterPostsClient({ initialData }: ShelterPostsClientPr
                 ) : !loading && hasMore ? (
                   <div className="flex flex-col items-center gap-3 py-10 text-center text-sm text-gray-600 sm:py-14">
                     <p className="max-w-md leading-relaxed">
-                      방금 불러온 구간에는 조건에 맞는 공고가 없어요. 스크롤하면 다음 구간(100건)을
+                      방금 불러온 구간에는 조건에 맞는 공고가 없어요. 스크롤하면 다음 구간(24건)을
                       불러와 이어서 찾아볼게요.
                     </p>
                     <div
