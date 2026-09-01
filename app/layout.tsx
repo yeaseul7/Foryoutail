@@ -5,11 +5,13 @@ import './globals.css';
 import '@/styles/keyframe.css';
 import Providers from './providers';
 
-const cafe24SsurroundAir = localFont({
-  src: '../public/static/font/Cafe24SsurroundAir-v1.1/webfont/Cafe24SsurroundAir-v1.1.woff2',
-  variable: '--font-cafe24',
+const pretendard = localFont({
+  src: '../public/static/font/PretendardVariable.woff2',
+  variable: '--font-pretendard',
   display: 'swap',
-  preload: false,
+  weight: '45 920',
+  style: 'normal',
+  fallback: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
 });
 
 export const metadata: Metadata = {
@@ -36,8 +38,9 @@ export const metadata: Metadata = {
     '유기동물 정보',
   ],
   icons: {
-    icon: '/static/images/kkosunnae-logo.png',
-    apple: '/static/images/kkosunnae-logo.png',
+    icon: '/static/images/kkosunnae-app-icon.png',
+    shortcut: '/static/images/kkosunnae-app-icon.png',
+    apple: '/static/images/kkosunnae-app-icon.png',
   },
   verification: {
     google: 'WBwV06sSdVI6wLAiXlN3T32MSQlsqxdSv49eMBt7JWs',
@@ -80,7 +83,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: '#FFD700',
+  themeColor: '#F45F4A',
 };
 
 export default function RootLayout({
@@ -98,7 +101,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${cafe24SsurroundAir.variable} antialiased w-full min-h-screen font-sans bg-white`}
+        className={`${pretendard.variable} min-h-screen w-full bg-background font-sans text-text1 antialiased`}
       >
         <Script
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6471129158350904"

@@ -32,6 +32,8 @@ function mapAnimalRow(row: ShelterAnimalRow): ShelterAnimalItem {
     colorCd: row.color_cd?.trim() || undefined,
     age: row.age?.trim() || undefined,
     weight: row.weight?.trim() || undefined,
+    birthYear: row.birth_year ?? undefined,
+    weightKg: row.weight_kg ?? undefined,
     sexCd: row.sex_cd?.trim() || undefined,
     neuterYn: row.neuter_yn?.trim() || undefined,
     specialMark: row.special_mark?.trim() || undefined,

@@ -37,6 +37,9 @@ yarn-error.log*
 .vercel
 .open-next
 
+# supabase local project metadata
+/supabase/.temp/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

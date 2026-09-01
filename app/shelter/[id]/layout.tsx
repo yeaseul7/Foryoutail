@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { fetchShelterAnimalByDesertionNo } from '@/lib/client/shelter-data';
+import { getCachedShelterAnimal } from '@/lib/server/cached-shelter';
 import {
   generateMetadata as buildMetadata,
   getBaseUrl,
@@ -25,6 +25,15 @@ function buildAnimalDescription(kind: string, orgNm: string, processState: strin
   return `${orgNm}에서 ${processState} 상태인 ${kind} 공고를 꼬순내에서 확인하고, 보호소 정보와 입양 관련 내용을 함께 살펴보세요.`;
 }
 
+function processStateLabel(value: string | undefined): string {
+  if (value === 'notice') return '공고중';
+  if (value === 'protect') return '보호중';
+  if (value === 'adopted') return '입양 완료';
+  if (value === 'returned') return '반환 완료';
+  if (value === 'ended') return '종료';
+  return '상태 미확인';
+}
+
 export async function generateMetadata({
   params,
 }: ShelterDetailLayoutProps): Promise<Metadata> {
@@ -39,13 +48,10 @@ export async function generateMetadata({
   }
 
   try {
-    const animal = await fetchShelterAnimalByDesertionNo(desertionNo, {
-      baseUrl: normalizedBaseUrl,
-      cache: 'force-cache',
-    });
+    const animal = await getCachedShelterAnimal(desertionNo);
     const kind = animal?.kindNm?.trim() || animal?.kindFullNm?.trim() || '유기동물';
     const orgNm = animal?.orgNm?.trim() || animal?.careNm?.trim() || '보호소';
-    const processState = animal?.processState?.trim() || '보호중';
+    const processState = processStateLabel(animal?.processState?.trim());
     const imageUrl = animal?.popfile1 || animal?.popfile || null;
 
     return buildMetadata({

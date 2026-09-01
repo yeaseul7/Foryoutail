@@ -10,7 +10,7 @@ export default function PageTemplate({
   visibleHeaderButtons = true,
 }: PageTemplateProps) {
   return (
-    <div className="flex flex-col items-center w-full h-full min-h-0">
+    <div className="flex min-h-0 w-full flex-1 flex-col items-center">
       <div className="shrink-0 w-full">
         <Header visibleHeaderButtons={visibleHeaderButtons} />
       </div>

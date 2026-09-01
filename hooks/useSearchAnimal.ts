@@ -162,31 +162,33 @@ export function useSearchAnimal() {
     if (file) setPreviewUrl(URL.createObjectURL(file));
   }, [previewUrl]);
 
-  const runSearch = useCallback(async () => {
-    if (!selectedFile || !previewUrl) return;
+  const searchWithFile = useCallback(async (
+    file: File,
+    appliedFilters: AiSearchFiltersValues = filters,
+  ): Promise<SimilarMatch[] | null> => {
     if (!user) {
       setSearchError('AI 검색을 이용하려면 로그인이 필요합니다.');
-      return;
+      return null;
     }
     try {
       const remaining = await getDailyAiRemaining(user.uid);
       if (remaining <= 0) {
         setSearchError(`검색 횟수(${DAILY_LIMIT}회)를 모두 사용했습니다. 24시간이 지나면 다시 이용할 수 있습니다.`);
-        return;
+        return null;
       }
       const newRemaining = await decrementDailyAiRemaining(user.uid);
       setDailyAiUsed(DAILY_LIMIT - newRemaining);
     } catch (e) {
       setSearchError(e instanceof Error ? e.message : '검색 횟수 확인에 실패했습니다.');
-      return;
+      return null;
     }
     setSearchLoading(true);
     setSearchError(null);
     setSearchMatches(null);
     try {
       const formData = new FormData();
-      const hasFilters = Boolean(filters.sidoCd || filters.petType);
-      formData.append('file', selectedFile);
+      const hasFilters = Boolean(appliedFilters.sidoCd || appliedFilters.petType);
+      formData.append('file', file);
       formData.append('topK', String(hasFilters ? FILTERED_TOP_K : DEFAULT_TOP_K));
 
       const res = await fetch(AI_SEARCH_URL, {
@@ -197,18 +199,25 @@ export function useSearchAnimal() {
       if (!res.ok) {
         setSearchError(json.error ?? json.details ?? '검색에 실패했습니다.');
         setSearchLoading(false);
-        return;
+        return null;
       }
       const rawMatches = Array.isArray(json.matches) ? json.matches as SimilarMatch[] : [];
-      const matches = applyAiSearchFilters(rawMatches, filters).slice(0, DEFAULT_TOP_K);
+      const matches = applyAiSearchFilters(rawMatches, appliedFilters).slice(0, DEFAULT_TOP_K);
       setSearchMatches(matches);
-      writeSearchCache(matches, filters);
+      writeSearchCache(matches, appliedFilters);
+      return matches;
     } catch (e) {
       setSearchError(e instanceof Error ? e.message : '검색 중 오류가 발생했습니다.');
+      return null;
     } finally {
       setSearchLoading(false);
     }
-  }, [user, selectedFile, previewUrl, filters]);
+  }, [user, filters]);
+
+  const runSearch = useCallback(async () => {
+    if (!selectedFile || !previewUrl) return;
+    await searchWithFile(selectedFile, filters);
+  }, [selectedFile, previewUrl, searchWithFile, filters]);
 
   useEffect(() => {
     return () => {
@@ -239,6 +248,7 @@ export function useSearchAnimal() {
     setFilters,
     loadModel,
     onFileChange,
+    searchWithFile,
     runSearch,
   };
 }

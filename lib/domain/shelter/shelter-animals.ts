@@ -26,6 +26,7 @@ export interface ShelterDataQueryParams {
   notice_no?: string;
   searchQuery?: string;
   orgNm?: string;
+  listQuick?: 'noticeEnding';
 }
 
 const UP_KIND_CODE_TO_NAME: Record<string, string[]> = {
@@ -67,6 +68,8 @@ export function supabaseRowToShelterAnimal(row: ShelterAnimalRow): ShelterAnimal
     colorCd: row.color_cd?.trim() || undefined,
     age: row.age?.trim() || undefined,
     weight: row.weight?.trim() || undefined,
+    birthYear: row.birth_year ?? undefined,
+    weightKg: row.weight_kg ?? undefined,
     sexCd: row.sex_cd?.trim() || undefined,
     neuterYn: row.neuter_yn?.trim() || undefined,
     specialMark: row.special_mark?.trim() || undefined,
@@ -136,6 +139,23 @@ function itemUpdYyyymmdd(item: ShelterAnimalItem): string {
   return digits.slice(0, 8);
 }
 
+function yyyymmddToIsoDate(value?: string): string | undefined {
+  if (!value || !/^\d{8}$/.test(value)) return undefined;
+  return `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
+}
+
+function seoulIsoDateAfter(days: number): string {
+  const seoulToday = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+  const [year, month, day] = seoulToday.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day + days));
+  return date.toISOString().slice(0, 10);
+}
+
 function matchesDateRange(
   item: ShelterAnimalItem,
   bgnde?: string,
@@ -165,8 +185,6 @@ function matchesUpdDateRange(
 function matchesState(item: ShelterAnimalItem, state?: string): boolean {
   if (!state) return true;
   const ps = (item.processState || '').trim();
-  if (state === 'notice') return ps === 'notice' || ps === '공고중';
-  if (state === 'protect') return ps === 'protect' || ps === '보호중';
   return ps === state;
 }
 
@@ -176,12 +194,18 @@ function isListableState(item: ShelterAnimalItem): boolean {
 
 function matchesSearchQuery(item: ShelterAnimalItem, q: string): boolean {
   const searchLower = q.toLowerCase();
+  const rfidCd = item.rfidCd?.toLowerCase() || '';
   const happenPlace = item.happenPlace?.toLowerCase() || '';
+  const careAddr = item.careAddr?.toLowerCase() || '';
+  const careNm = item.careNm?.toLowerCase() || '';
   const kindNm = item.kindNm?.toLowerCase() || '';
   const kindFullNm = item.kindFullNm?.toLowerCase() || '';
   const specialMark = item.specialMark?.toLowerCase() || '';
   return (
+    rfidCd.includes(searchLower) ||
     happenPlace.includes(searchLower) ||
+    careAddr.includes(searchLower) ||
+    careNm.includes(searchLower) ||
     kindNm.includes(searchLower) ||
     kindFullNm.includes(searchLower) ||
     specialMark.includes(searchLower)
@@ -231,9 +255,7 @@ export function filterShelterAnimalsFromParams(
 }
 
 function stateQueryValues(state?: string): string[] | null {
-  if (!state) return ['notice', 'protect', '공고중', '보호중'];
-  if (state === 'notice') return ['notice', '공고중'];
-  if (state === 'protect') return ['protect', '보호중'];
+  if (!state) return ['notice', 'protect'];
   return [state];
 }
 
@@ -247,7 +269,7 @@ export async function loadAllShelterAnimals(): Promise<ShelterAnimalItem[]> {
   const { data, error } = await supabaseAdmin
     .from('animals')
     .select('*')
-    .order('notice_sdt', { ascending: false, nullsFirst: false })
+    .order('notice_start_date', { ascending: false, nullsFirst: false })
     .limit(5000);
 
   if (error) {
@@ -275,9 +297,28 @@ export async function queryShelterAnimals(
   const supabaseAdmin = createSupabaseAdminClient();
   let query = supabaseAdmin
     .from('animals')
-    .select('*')
-    .order('notice_sdt', { ascending: false, nullsFirst: false })
-    .range(from, Math.min(to, from + 999));
+    .select('*');
+
+  if (params.listQuick === 'noticeEnding') {
+    query = query
+      .gte('notice_end_date', seoulIsoDateAfter(0))
+      .lte('notice_end_date', seoulIsoDateAfter(7))
+      .order('notice_end_date', { ascending: true, nullsFirst: false })
+      .order('notice_start_date', { ascending: false, nullsFirst: false });
+  } else {
+    query = query.order('notice_start_date', { ascending: false, nullsFirst: false });
+  }
+
+  query = query.range(from, Math.min(to, from + 999));
+
+  const beginDate = yyyymmddToIsoDate(params.bgnde);
+  const endDate = yyyymmddToIsoDate(params.endde);
+  if (beginDate) {
+    query = query.gte('happened_date', beginDate);
+  }
+  if (endDate) {
+    query = query.lte('happened_date', endDate);
+  }
 
   if (params.desertion_no?.trim()) {
     query = query.eq('desertion_no', params.desertion_no.trim());
@@ -313,9 +354,12 @@ export async function queryShelterAnimals(
     throw new Error(error.message);
   }
 
-  const queried = (data ?? [])
-    .map((row) => supabaseRowToShelterAnimal(row as ShelterAnimalRow))
-    .sort(sortShelterItemsByRecencyDesc);
+  const queried = (data ?? []).map((row) =>
+    supabaseRowToShelterAnimal(row as ShelterAnimalRow),
+  );
+  if (params.listQuick !== 'noticeEnding') {
+    queried.sort(sortShelterItemsByRecencyDesc);
+  }
 
   const filtered = filterShelterAnimalsFromParams(queried, params).filter((item) =>
     params.state ? true : isListableState(item),
@@ -340,7 +384,7 @@ export async function getShelterAnimalByDesertionNo(
     .from('animals')
     .select('*')
     .eq('desertion_no', trimmed)
-    .order('notice_sdt', { ascending: false, nullsFirst: false })
+    .order('notice_start_date', { ascending: false, nullsFirst: false })
     .limit(1)
     .maybeSingle();
 

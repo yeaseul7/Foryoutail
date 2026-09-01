@@ -14,7 +14,6 @@ interface SyncPublicUserInput {
   email: string | null;
   nickname?: string | null;
   profile_img?: string | null;
-  fulladmin?: boolean | null;
 }
 
 export function createSupabaseAdminClient() {
@@ -71,48 +70,13 @@ export async function getPublicUsersByIds(
   return new Map((data ?? []).map((row) => [row.id, row]));
 }
 
-export async function syncPublicUserByEmailAwareUpsert({
+export async function syncPublicUserByAuthIdentity({
   id,
   email,
   nickname = null,
   profile_img = null,
-  fulladmin = null,
 }: SyncPublicUserInput): Promise<PublicUserProfile> {
   const supabaseAdmin = createSupabaseAdminClient();
-
-  if (email) {
-    const { data: existingByEmail, error: existingByEmailError } =
-      await supabaseAdmin
-        .from('users')
-        .select('id, email, nickname, profile_img, fulladmin, created_at')
-        .eq('email', email)
-        .maybeSingle();
-
-    if (existingByEmailError) {
-      throw new Error(existingByEmailError.message);
-    }
-
-    if (existingByEmail && existingByEmail.id !== id) {
-      const { data: updatedByEmail, error: updateByEmailError } =
-        await supabaseAdmin
-          .from('users')
-          .update({
-            id,
-            nickname: nickname ?? existingByEmail.nickname,
-            profile_img: profile_img ?? existingByEmail.profile_img,
-            ...(fulladmin !== null ? { fulladmin } : {}),
-          })
-          .eq('email', email)
-          .select('id, email, nickname, profile_img, fulladmin, created_at')
-          .single();
-
-      if (updateByEmailError) {
-        throw new Error(updateByEmailError.message);
-      }
-
-      return updatedByEmail;
-    }
-  }
 
   const { data: upserted, error: upsertError } = await supabaseAdmin
     .from('users')
@@ -122,7 +86,6 @@ export async function syncPublicUserByEmailAwareUpsert({
         email,
         nickname,
         profile_img,
-        ...(fulladmin !== null ? { fulladmin } : {}),
       },
       { onConflict: 'id' },
     )

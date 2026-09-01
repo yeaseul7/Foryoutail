@@ -35,6 +35,8 @@ function parseShelterDataParams(searchParams: URLSearchParams): ShelterDataQuery
   if (searchParams.has('org_nm')) params.orgNm = searchParams.get('org_nm')!;
   if (searchParams.has('searchQuery'))
     params.searchQuery = searchParams.get('searchQuery')!;
+  if (searchParams.get('listQuick') === 'noticeEnding')
+    params.listQuick = 'noticeEnding';
   return params;
 }
 

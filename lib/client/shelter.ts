@@ -1,12 +1,10 @@
 import type { ShelterAnimalData, ShelterAnimalItem } from '@/packages/type/shelterAnimalTypes';
 
-/** 공고/보호 중만 목록에 노출 (공공 API·Firestore에 따라 영문·한글 모두 허용) */
+/** 표준 상태 코드 기준으로 공고/보호 중인 동물만 목록에 노출 */
 export function isShelterAnimalListable(processState: string | null | undefined): boolean {
   if (!processState || !String(processState).trim()) return false;
   const s = String(processState).trim();
-  if (s === 'notice' || s === 'protect') return true;
-  if (s === '공고중' || s === '보호중') return true;
-  return false;
+  return s === 'notice' || s === 'protect';
 }
 
 function sortShelterItemsByRecencyDesc(a: ShelterAnimalItem, b: ShelterAnimalItem): number {
@@ -207,11 +205,17 @@ export function applyShelterClientFilters(
       const happenPlace = item.happenPlace?.toLowerCase() || '';
       const careAddr = item.careAddr?.toLowerCase() || '';
       const careNm = item.careNm?.toLowerCase() || '';
+      const kindNm = item.kindNm?.toLowerCase() || '';
+      const kindFullNm = item.kindFullNm?.toLowerCase() || '';
+      const specialMark = item.specialMark?.toLowerCase() || '';
       return (
         rfidCd.includes(searchLower) ||
         happenPlace.includes(searchLower) ||
         careAddr.includes(searchLower) ||
-        careNm.includes(searchLower)
+        careNm.includes(searchLower) ||
+        kindNm.includes(searchLower) ||
+        kindFullNm.includes(searchLower) ||
+        specialMark.includes(searchLower)
       );
     });
   }
@@ -228,6 +232,7 @@ export function applyShelterClientFilters(
 async function fetchShelterAnimalDataFromApi(
   page: number,
   filters: AnimalFilterState,
+  listQuick?: 'noticeEnding',
 ): Promise<FetchShelterAnimalDataResult> {
   const params = new URLSearchParams();
   params.append('pageNo', page.toString());
@@ -241,6 +246,8 @@ async function fetchShelterAnimalDataFromApi(
   if (filters.endde) params.append('endde', filters.endde);
   if (filters.upr_cd) params.append('upr_cd', filters.upr_cd);
   if (filters.orgNm) params.append('orgNm', filters.orgNm);
+  if (filters.searchQuery.trim()) params.append('searchQuery', filters.searchQuery.trim());
+  if (listQuick) params.append('listQuick', listQuick);
 
   const response = await fetch(`/api/shelter-data?${params.toString()}`);
   if (!response.ok) {
@@ -259,8 +266,9 @@ async function fetchShelterAnimalDataFromApi(
 export async function fetchShelterAnimalData(
   page: number,
   filters: AnimalFilterState,
+  listQuick?: 'noticeEnding',
 ): Promise<FetchShelterAnimalDataResult> {
-  const raw = await fetchShelterAnimalDataFromApi(page, filters);
+  const raw = await fetchShelterAnimalDataFromApi(page, filters, listQuick);
   return {
     items: applyShelterClientFilters(raw.items, filters),
     hasMore: raw.hasMore,

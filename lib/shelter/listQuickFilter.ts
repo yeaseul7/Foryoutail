@@ -35,6 +35,7 @@ export function matchListQuickFilter(
   if (!isShelterAnimalListable(item.processState)) return false;
   switch (mode) {
     case 'birthYear': {
+      if (item.birthYear !== undefined) return item.birthYear === opts.yearFull;
       const age = item.age?.trim();
       if (!age) return false;
       return age.includes(String(opts.yearFull));
@@ -74,7 +75,11 @@ export async function gatherListQuickMatches(
   recentWindowDays: number,
 ): Promise<{ picked: ShelterAnimalItem[]; nextPage: number; exhausted: boolean }> {
   const filters: AnimalFilterState = { ...baseFilters };
-  const { items, hasMore } = await fetchShelterAnimalData(startPage, filters);
+  const { items, hasMore } = await fetchShelterAnimalData(
+    startPage,
+    filters,
+    mode === 'noticeEnding' ? 'noticeEnding' : undefined,
+  );
   const picked: ShelterAnimalItem[] = [];
   for (const it of items) {
     const id = it.desertionNo?.trim();

@@ -25,12 +25,12 @@ export default function RoundButton({
   ...rest
 }: RoundButtonProps) {
   const baseClasses =
-    'px-2 py-1 sm:px-3 md:px-4 text-xs sm:text-sm md:text-base rounded-full border flex items-center justify-center font-medium transition-all duration-500 ease-in-out whitespace-nowrap';
+    'flex items-center justify-center whitespace-nowrap rounded-full border px-2 py-1 text-xs font-semibold transition-colors duration-200 sm:px-3 sm:text-sm md:px-4 md:text-base';
   const defaultBgColor = bgcolor || 'bg-white';
-  const defaultBorderColor = borderColor || 'border-stone-900';
-  const defaultTextColor = textColor || 'text-stone-900';
+  const defaultBorderColor = borderColor || 'border-primary1/45';
+  const defaultTextColor = textColor || 'text-primary1';
 
-  const defaultHoverColor = hoverColor || 'hover:bg-stone-900 hover:text-white';
+  const defaultHoverColor = hoverColor || 'hover:border-primary1 hover:bg-primary-soft hover:text-primary2';
 
   const buttonClasses = `${baseClasses} ${defaultBgColor} ${defaultBorderColor} ${defaultTextColor} ${defaultHoverColor} ${className}`;
 

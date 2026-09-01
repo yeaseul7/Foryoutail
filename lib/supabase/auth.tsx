@@ -32,10 +32,9 @@ interface UpdateAuthProfileParams {
 }
 
 interface SyncPublicUserParams {
-  id: string;
-  email: string | null;
   nickname: string | null;
   profile_img: string | null;
+  accessToken: string;
 }
 
 interface AuthContextType {
@@ -102,19 +101,17 @@ function getRedirectTo(path: string): string | undefined {
 }
 
 async function syncSupabasePublicUser({
-  id,
-  email,
   nickname,
   profile_img,
+  accessToken,
 }: SyncPublicUserParams): Promise<void> {
   const response = await fetch('/api/supabase/users/sync', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({
-      id,
-      email,
       nickname,
       profile_img,
     }),
@@ -180,10 +177,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (mappedUser) {
         void syncSupabasePublicUser({
-          id: mappedUser.uid,
-          email: mappedUser.email,
           nickname: mappedUser.displayName,
           profile_img: mappedUser.photoURL,
+          accessToken: session!.access_token,
         }).catch((error) => {
           console.error('Supabase public.users 초기 동기화 실패:', error);
         });
@@ -202,10 +198,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (mappedUser) {
         void syncSupabasePublicUser({
-          id: mappedUser.uid,
-          email: mappedUser.email,
           nickname: mappedUser.displayName,
           profile_img: mappedUser.photoURL,
+          accessToken: session!.access_token,
         }).catch((error) => {
           console.error('Supabase public.users 자동 동기화 실패:', error);
         });
@@ -342,11 +337,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (mappedUser) {
       setUser(mappedUser);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error('인증 세션이 없습니다.');
       await syncSupabasePublicUser({
-        id: mappedUser.uid,
-        email: mappedUser.email,
         nickname: mappedUser.displayName,
         profile_img: mappedUser.photoURL,
+        accessToken: session.access_token,
       });
     }
   };

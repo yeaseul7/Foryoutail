@@ -1,16 +1,16 @@
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
+import type { ReactNode } from 'react';
 import {
   MdArrowDropDown,
-  MdCalendarToday,
-  MdLocationOn,
-  MdPeople,
 } from 'react-icons/md';
 import Image from 'next/image';
 import { RiResetLeftFill } from 'react-icons/ri';
 import { getShortSidoName } from '@/packages/utils/locationUtils';
 import type { QuickFilterKey } from '@/lib/client/shelter';
 import { sidoLocation } from '@/static/data/sidoLocation';
+import { useLanguage } from '@/lib/i18n/language';
+import ImageSearchButton from './ImageSearchButton';
 
 interface SidoItem {
   SIDO_CD: string;
@@ -40,23 +40,28 @@ const sexOptions = [
   { value: 'Q', label: '미상' },
 ];
 
+const animalTypeOptions = [
+  { value: '417000', label: '강아지', englishLabel: 'Dogs' },
+  { value: '422400', label: '고양이', englishLabel: 'Cats' },
+  { value: '429900', label: '기타', englishLabel: 'Other' },
+] as const;
+
 /** AnimalFilterHeader 전용 — 검색(더 높게) / 필터 pill(더 낮게) */
 const searchBarWrapClass =
-  'flex min-w-0 flex-[1.4] items-center min-h-[42px] bg-white border border-slate-200 rounded-xl px-3 focus-within:border-[#4f8ed8] focus-within:ring-2 focus-within:ring-[#4f8ed8]/15 transition-shadow';
+  'mx-auto flex min-h-[54px] w-full max-w-2xl min-w-0 items-center rounded-full border border-primary1/40 bg-white px-5 transition hover:border-primary1/65 focus-within:border-primary1 focus-within:ring-2 focus-within:ring-primary1/15';
 const searchInputClass =
-  'flex-1 min-w-0 h-10 py-2 text-sm placeholder:text-slate-400 text-gray-900 bg-transparent border-none outline-none';
+  'h-12 min-w-0 flex-1 bg-transparent py-2 text-base text-[#332d2a] outline-none placeholder:text-[#a69d98]';
 
 const filterRowClass =
-  'flex min-w-0 flex-[2] flex-col gap-2 sm:flex-row sm:flex-nowrap sm:items-stretch';
+  'mx-auto flex w-full max-w-3xl min-w-0 flex-col justify-center gap-2 sm:flex-row sm:flex-wrap sm:items-stretch';
 const filterPillButtonClass =
-  'flex w-full min-h-[42px] items-center justify-between gap-1.5 px-3 py-1 min-w-0 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:border-[#4f8ed8]/60 hover:bg-blue-50/30 transition-colors';
+  'flex w-full min-h-9 items-center justify-between gap-1.5 px-2.5 py-1 min-w-0 text-xs font-medium text-[#332d2a] bg-white border border-[#eadfd7] rounded-lg hover:border-primary1/60 hover:bg-primary-soft transition-colors';
 const filterPillLeadClass = 'flex items-center gap-1.5 min-w-0 sm:gap-2';
-const filterPillIconClass = 'h-4 w-4 shrink-0 text-gray-600';
 const filterChevronClass = 'h-4 w-4 shrink-0 transition-transform';
-const filterDropdownRootClass = 'relative z-50 w-full min-w-0 sm:flex-1';
-const filterDateFieldWrapClass = 'relative z-40 w-full min-w-0 sm:flex-[2_1_0%]';
+const filterDropdownRootClass = 'relative w-full min-w-0 sm:w-32';
+const filterDateFieldWrapClass = 'relative w-full min-w-0 sm:w-72';
 const filterDropdownMenuBaseClass =
-  'absolute left-0 right-0 sm:right-auto top-full z-10 mt-2 min-w-[88px] w-full sm:w-auto rounded-2xl border border-gray-200/90 bg-white py-1.5 px-1.5 shadow-xl';
+  'absolute right-0 top-full z-10 mt-1 min-w-[88px] w-full rounded-2xl border border-gray-200/90 bg-white px-1.5 py-1.5 shadow-xl';
 const filterDropdownMenuScrollableClass = `${filterDropdownMenuBaseClass} max-h-[min(60vh,22rem)] overflow-y-auto`;
 const filterDropdownOptionClass =
   'cursor-pointer rounded-xl px-3 py-2.5 text-sm transition-colors';
@@ -67,7 +72,7 @@ const datePopoverInputClass =
 const datePopoverLabelClass = 'text-xs font-semibold text-gray-600 mb-1.5';
 const datePopoverLabelEndClass = 'text-xs font-semibold text-gray-600 mt-3 mb-1.5';
 const filterResetButtonClass =
-  'w-full shrink-0 min-h-[42px] sm:w-auto sm:flex-none px-3 py-1 text-sm font-medium text-gray-700 border border-slate-200 bg-white flex items-center justify-center gap-1.5 hover:bg-gray-50 rounded-xl transition-colors';
+  'w-full shrink-0 min-h-9 sm:w-auto sm:flex-none px-2.5 py-1 text-xs font-medium text-gray-700 border border-slate-200 bg-white flex items-center justify-center gap-1.5 hover:bg-gray-50 rounded-lg transition-colors';
 
 function filterDropdownOptionStateClass(selected: boolean): string {
   return `${filterDropdownOptionClass} ${selected ? filterDropdownOptionSelectedClass : filterDropdownOptionIdleClass}`;
@@ -89,9 +94,25 @@ export interface AnimalFilterState {
 interface AnimalFilterHeaderProps {
   filters: AnimalFilterState;
   onFilterChange: (filters: AnimalFilterState) => void;
+  onImageSearch: (file: File) => Promise<boolean>;
+  quickFilters?: ReactNode;
+  showSearch?: boolean;
+  showFilters?: boolean;
+  compactFilters?: boolean;
+  panelFilters?: boolean;
 }
 
-export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFilterHeaderProps) {
+export default function AnimalFilterHeader({
+  filters,
+  onFilterChange,
+  onImageSearch,
+  quickFilters,
+  showSearch = true,
+  showFilters = true,
+  compactFilters = false,
+  panelFilters = false,
+}: AnimalFilterHeaderProps) {
+  const { isEnglish } = useLanguage();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
   const [sidoList, setSidoList] = useState<SidoItem[]>([]);
@@ -208,7 +229,14 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
 
   const getSexFilterLabel = (): string => {
     const selected = sexOptions.find((opt) => opt.value === filters.sexCd);
-    return selected?.label || '전체';
+    if (!isEnglish) return selected?.label || '전체';
+    return ({ F: 'Female', M: 'Male', Q: 'Unknown' } as Record<string, string>)[filters.sexCd ?? ''] || 'All';
+  };
+
+  const getAnimalTypeLabel = (): string => {
+    const selected = animalTypeOptions.find((option) => option.value === filters.upKindCd);
+    if (!selected) return isEnglish ? 'Dogs' : '강아지';
+    return isEnglish ? selected.englishLabel : selected.label;
   };
 
   const getRegionFilterLabel = (): string => {
@@ -223,27 +251,64 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
   return (
     <div className="w-full">
       <div className="w-full max-w-7xl mx-auto">
-        <div className="flex flex-col gap-2 rounded-xl border-2 border-[#7aa9cf] bg-white p-2 shadow-[0_5px_14px_rgba(70,125,170,0.12)] lg:flex-row">
-          <div className={searchBarWrapClass}>
+        <div className={`flex flex-col gap-2 ${compactFilters ? 'py-0' : 'py-2'}`}>
+          {showSearch && <div className={searchBarWrapClass}>
             <Image
-              src="/static/svg/icon-search-3.svg"
-              alt="검색"
-              width={20}
-              height={20}
-              className="mr-3 text-gray-600 shrink-0"
+              src="/static/images/search-kk-mark.png"
+              alt=""
+              width={42}
+              height={28}
+              className="mr-3 h-7 w-[42px] shrink-0 self-center object-contain"
             />
             <input
               type="text"
               value={filters.searchQuery}
               onChange={handleSearchChange}
-              placeholder="품종, 색, 보호소명으로 검색해보세요"
+              placeholder={isEnglish ? 'Search breed, color, or shelter' : '품종, 색, 보호소명으로 검색해보세요'}
               className={searchInputClass}
             />
-          </div>
+            <ImageSearchButton onSearch={onImageSearch} />
+          </div>}
 
-          <div className={filterRowClass}>
+          {showSearch && quickFilters}
+
+          {showFilters && <div className={panelFilters ? 'grid w-full grid-cols-1 gap-2 sm:grid-cols-2 sm:[&>[data-filter-dropdown-root]]:!w-full' : compactFilters ? 'flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto' : filterRowClass}>
+            {/* 축종 */}
+            <div className={`${filterDropdownRootClass} ${openDropdown === 'upKindCd' ? 'z-[120]' : 'z-0'}`} data-filter-dropdown-root>
+              <button
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded={openDropdown === 'upKindCd'}
+                onClick={() => {
+                  setDateRangeOpen(false);
+                  setOpenDropdown(openDropdown === 'upKindCd' ? null : 'upKindCd');
+                }}
+                className={filterPillButtonClass}
+              >
+                <span className={filterPillLeadClass}>
+                  <span className="truncate">{getAnimalTypeLabel()}</span>
+                </span>
+                <MdArrowDropDown className={`${filterChevronClass} ${openDropdown === 'upKindCd' ? 'rotate-180' : ''}`} aria-hidden />
+              </button>
+              {openDropdown === 'upKindCd' && (
+                <ul className={filterDropdownMenuBaseClass} role="listbox" aria-label={isEnglish ? 'Animal type' : '축종 목록'}>
+                  {animalTypeOptions.map((option) => (
+                    <li
+                      key={option.value}
+                      role="option"
+                      aria-selected={filters.upKindCd === option.value}
+                      className={filterDropdownOptionStateClass(filters.upKindCd === option.value)}
+                      onClick={() => handleFilterChange('upKindCd', option.value)}
+                    >
+                      {isEnglish ? option.englishLabel : option.label}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
             {/* 성별 */}
-            <div className={filterDropdownRootClass} data-filter-dropdown-root>
+            <div className={`${filterDropdownRootClass} ${openDropdown === 'sexCd' ? 'z-[120]' : 'z-0'}`} data-filter-dropdown-root>
               <button
                 type="button"
                 onClick={() => {
@@ -253,8 +318,7 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
                 className={filterPillButtonClass}
               >
                 <span className={filterPillLeadClass}>
-                  <MdPeople className={filterPillIconClass} aria-hidden />
-                  <span className="truncate">성별 · {getSexFilterLabel()}</span>
+                  <span className="truncate">{getSexFilterLabel()}</span>
                 </span>
                 <MdArrowDropDown
                   className={`${filterChevronClass} ${openDropdown === 'sexCd' ? 'rotate-180' : ''}`}
@@ -268,7 +332,7 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
                       className={filterDropdownOptionStateClass(filters.sexCd === option.value)}
                       onClick={() => handleFilterChange('sexCd', option.value)}
                     >
-                      {option.label}
+                      {isEnglish ? ({ F: 'Female', M: 'Male', Q: 'Unknown' } as Record<string, string>)[option.value ?? ''] || 'All' : option.label}
                     </li>
                   ))}
                 </ul>
@@ -277,12 +341,12 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
 
             {/* 지역 (시도) */}
             {hasSidoList && (
-              <div className={filterDropdownRootClass} data-filter-dropdown-root>
+              <div className={`${filterDropdownRootClass} ${openDropdown === 'upr_cd' ? 'z-[120]' : 'z-0'}`} data-filter-dropdown-root>
                 <button
                   type="button"
                   aria-haspopup="listbox"
                   aria-expanded={openDropdown === 'upr_cd'}
-                  aria-label={`구조 지역 · ${getRegionFilterLabel()}`}
+                  aria-label={`${isEnglish ? 'Region' : '지역'} · ${getRegionFilterLabel()}`}
                   onClick={() => {
                     setDateRangeOpen(false);
                     setOpenDropdown(openDropdown === 'upr_cd' ? null : 'upr_cd');
@@ -290,8 +354,7 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
                   className={filterPillButtonClass}
                 >
                   <span className={filterPillLeadClass}>
-                    <MdLocationOn className={filterPillIconClass} aria-hidden />
-                    <span className="truncate">구조 지역 · {getRegionFilterLabel()}</span>
+                    <span className="truncate">{getRegionFilterLabel()}</span>
                   </span>
                   <MdArrowDropDown
                     className={`${filterChevronClass} ${openDropdown === 'upr_cd' ? 'rotate-180' : ''}`}
@@ -302,7 +365,7 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
                   <ul
                     className={filterDropdownMenuScrollableClass}
                     role="listbox"
-                    aria-label="시도 목록"
+                    aria-label={isEnglish ? 'Region list' : '시도 목록'}
                   >
                     <li
                       role="option"
@@ -310,7 +373,7 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
                       className={filterDropdownOptionStateClass(!filters.upr_cd && !filters.orgNm)}
                       onClick={() => handleRegionFilterChange(null)}
                     >
-                      전국
+                      {isEnglish ? 'All Korea' : '전국'}
                     </li>
                     {sidoList.map((sido) => (
                       <li
@@ -329,7 +392,7 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
             )}
 
             {/* 접수일: 한 컨트롤에서 from~to (팝오버) — 가로 2비율 */}
-            <div className={filterDateFieldWrapClass} data-filter-dropdown-root>
+            <div className={`${filterDateFieldWrapClass} ${dateRangeOpen ? 'z-[120]' : 'z-0'}`} data-filter-dropdown-root>
               <button
                 type="button"
                 onClick={() => {
@@ -339,9 +402,8 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
                 className={filterPillButtonClass}
               >
                 <span className={filterPillLeadClass}>
-                  <MdCalendarToday className={filterPillIconClass} aria-hidden />
                   <span className="truncate text-left">
-                    접수일 · {getDateRangeSummaryLabel(startDate, endDate)}
+                    {startDate || endDate ? getDateRangeSummaryLabel(startDate, endDate) : (isEnglish ? 'Select dates' : '기간 선택')}
                   </span>
                 </span>
                 <MdArrowDropDown
@@ -350,15 +412,15 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
                 />
               </button>
               {dateRangeOpen && (
-                <div className="absolute left-0 top-full z-[100] mt-2 w-[min(100vw-2rem,20rem)] rounded-2xl border border-gray-200/95 bg-white p-4 shadow-xl outline-none">
-                  <p className={datePopoverLabelClass}>시작일</p>
+                <div className="absolute right-0 top-full z-[100] mt-1 w-[min(100vw-2rem,20rem)] rounded-2xl border border-gray-200/95 bg-white p-4 shadow-xl outline-none">
+                  <p className={datePopoverLabelClass}>{isEnglish ? 'Start date' : '시작일'}</p>
                   <input
                     type="date"
                     value={startDate}
                     onChange={handleStartDateChange}
                     className={datePopoverInputClass}
                   />
-                  <p className={datePopoverLabelEndClass}>종료일</p>
+                  <p className={datePopoverLabelEndClass}>{isEnglish ? 'End date' : '종료일'}</p>
                   <input
                     type="date"
                     value={endDate}
@@ -371,14 +433,14 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
                       onClick={clearDateRangeInPopover}
                       className="rounded-full border border-gray-300 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
                     >
-                      기간 지우기
+                      {isEnglish ? 'Clear' : '기간 지우기'}
                     </button>
                     <button
                       type="button"
                       onClick={commitDateRange}
                       className="rounded-full bg-primary1 px-4 py-2 text-sm font-semibold text-white hover:opacity-95"
                     >
-                      적용
+                      {isEnglish ? 'Apply' : '적용'}
                     </button>
                   </div>
                 </div>
@@ -399,10 +461,10 @@ export default function AnimalFilterHeader({ filters, onFilterChange }: AnimalFi
                 className={filterResetButtonClass}
               >
                 <RiResetLeftFill className="w-4 h-4 shrink-0" />
-                필터 초기화
+                {isEnglish ? 'Reset filters' : '필터 초기화'}
               </button>
             )}
-          </div>
+          </div>}
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { getShortSidoName } from '@/packages/utils/locationUtils';
 import { sidoLocation } from '@/static/data/sidoLocation';
 import type { AiSearchFiltersValues } from './AiSearchFilters';
+import { useLanguage } from '@/lib/i18n/language';
 
 interface SidoItem {
   SIDO_CD: string;
@@ -16,18 +17,18 @@ export interface AiSearchFilterSelectsProps {
   sidoList?: SidoItem[];
 }
 
-const PET_BUTTONS: { value: AiSearchFiltersValues['petType']; label: string }[] = [
-  { value: '', label: '전체' },
-  { value: '417000', label: '강아지' },
-  { value: '422400', label: '고양이' },
-];
-
 export default function AiSearchFilterSelects({
   value,
   onChange,
   sidoList: sidoListProp,
 }: AiSearchFilterSelectsProps) {
+  const { isEnglish } = useLanguage();
   const [loadedSidoList, setLoadedSidoList] = useState<SidoItem[]>([]);
+  const petButtons: { value: AiSearchFiltersValues['petType']; label: string }[] = [
+    { value: '', label: isEnglish ? 'All' : '전체' },
+    { value: '417000', label: isEnglish ? 'Dogs' : '강아지' },
+    { value: '422400', label: isEnglish ? 'Cats' : '고양이' },
+  ];
 
   useEffect(() => {
     if (sidoListProp?.length) return;
@@ -38,8 +39,8 @@ export default function AiSearchFilterSelects({
 
   return (
     <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-      <div className="inline-flex rounded-full border border-slate-200 bg-white p-1 shadow-sm" role="group" aria-label="동물 종류">
-        {PET_BUTTONS.map((option) => {
+      <div className="inline-flex rounded-full border border-slate-200 bg-white p-1 shadow-sm" role="group" aria-label={isEnglish ? 'Animal type' : '동물 종류'}>
+        {petButtons.map((option) => {
           const isActive = value.petType === option.value;
           return (
             <button
@@ -65,9 +66,9 @@ export default function AiSearchFilterSelects({
             onChange({ ...value, sidoCd: event.target.value || null })
           }
           className="appearance-none rounded-full border border-slate-200 bg-white py-2 pl-4 pr-9 text-sm font-semibold text-slate-700 shadow-sm outline-none transition focus:border-[#4f8ed8]"
-          aria-label="검색 지역"
+          aria-label={isEnglish ? 'Search region' : '검색 지역'}
         >
-          <option value="">전국</option>
+          <option value="">{isEnglish ? 'All Korea' : '전국'}</option>
           {sidoList.map((sido) => (
             <option key={sido.SIDO_CD} value={sido.SIDO_CD}>
               {getShortSidoName(sido.SIDO_NAME)}

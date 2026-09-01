@@ -7,7 +7,7 @@ export default function ShelterOperationInfoComponent({ shelterInfo, animalData 
         return <div className="text-center text-gray-500">입양 문의 정보를 찾을 수 없습니다.</div>;
     }
     return (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 flex flex-col gap-4">
+        <div className="flex flex-col gap-4 rounded-[14px] border border-primary1/20 bg-primary-soft p-6">
             <div className="flex items-center gap-2">
                 <FaPaw className="w-5 h-5 text-primary1" />
                 <h3 className="text-lg font-bold text-gray-900">입양 문의</h3>

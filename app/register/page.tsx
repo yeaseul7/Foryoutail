@@ -44,41 +44,6 @@ export default function RegisterPage() {
       phoneNumber: '',
     });
 
-  const syncSupabaseProfile = async ({
-    id,
-    email,
-    nickname,
-    profileImg,
-    fulladmin,
-  }: {
-    id: string;
-    email: string | null;
-    nickname: string;
-    profileImg: string | null;
-    fulladmin: boolean;
-  }) => {
-    const response = await fetch('/api/supabase/users/sync', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        id,
-        email,
-        nickname,
-        profile_img: profileImg,
-        fulladmin,
-      }),
-    });
-
-    if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as
-        | { error?: string }
-        | null;
-      throw new Error(body?.error || 'Supabase 사용자 정보 저장에 실패했습니다.');
-    }
-  };
-
   const hasCompletedSupabaseProfile = async (id: string): Promise<boolean> => {
     const response = await fetch(
       `/api/supabase/users/sync?id=${encodeURIComponent(id)}`,
@@ -169,14 +134,6 @@ export default function RegisterPage() {
     try {
       await updateUserProfile({
         displayName: profileName.trim(),
-      });
-
-      await syncSupabaseProfile({
-        id: user.uid,
-        email: user.email,
-        nickname: profileName.trim(),
-        profileImg: user.photoURL || null,
-        fulladmin: false,
       });
 
       router.push('/');

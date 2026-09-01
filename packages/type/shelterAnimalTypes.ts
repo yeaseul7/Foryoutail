@@ -8,7 +8,7 @@ export interface ShelterAnimalItem {
   noticeEdt?: string; // 공고종료일
   happenDt?: string; // 접수일시
   happenPlace?: string; // 발견장소
-  processState?: string; // 상태 (예: 공고중, 보호중 / notice, protect)
+  processState?: string; // 표준 상태 코드: notice, protect, adopted, returned, ended
   kindCd?: string; // 품종코드
   kindNm?: string; // 품종명
   kindFullNm?: string; // 품종전체명
@@ -17,6 +17,8 @@ export interface ShelterAnimalItem {
   colorCd?: string; // 색상
   age?: string; // 나이 (예: "2025(년생)")
   weight?: string; // 체중 (예: "14.6(Kg)")
+  birthYear?: number;
+  weightKg?: number;
   sexCd?: string; // 성별 M/F/Q
   neuterYn?: string; // 중성화 Y/N/U
   specialMark?: string; // 특징
@@ -82,6 +84,8 @@ export interface ShelterAnimalRow {
   care_reg_no: string | null;
   age: string | null;
   weight: string | null;
+  birth_year: number | null;
+  weight_kg: number | null;
   color_cd: string | null;
   sex_cd: string | null;
   neuter_yn: string | null;
@@ -91,8 +95,11 @@ export interface ShelterAnimalRow {
   notice_no: string | null;
   notice_sdt: string | null;
   notice_edt: string | null;
+  notice_start_date: string | null;
+  notice_end_date: string | null;
   process_state: string | null;
   happen_dt: string | null;
+  happened_date: string | null;
   happen_place: string | null;
   special_mark: string | null;
   popfiles: string[] | null;
@@ -101,6 +108,7 @@ export interface ShelterAnimalRow {
   updated_at: string | null;
   rfid_cd: string | null;
   upd_tm: string | null;
+  source_updated_at: string | null;
   end_reason: string | null;
   care_nm: string | null;
   care_tel: string | null;

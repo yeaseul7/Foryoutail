@@ -1,4 +1,7 @@
+'use client';
+
 import { ShelterAnimalItem } from '@/packages/type/postType';
+import { useState } from 'react';
 import {
   normalizeAnimalImageUrl,
   shouldBypassNextImageOptimization,
@@ -6,19 +9,15 @@ import {
 import CardImage from '@/packages/components/common/CardImage';
 
 interface AnimalImgCardProps {
-  mainImage: string;
   animalData: ShelterAnimalItem;
   animalImgList: string[];
-  selectedImageIndex: number;
-  setSelectedImageIndex: (index: number) => void;
 }
 export default function AnimalImgCard({
-  mainImage,
   animalData,
   animalImgList,
-  selectedImageIndex,
-  setSelectedImageIndex,
 }: AnimalImgCardProps) {
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const mainImage = animalImgList[selectedImageIndex] || '/static/images/defaultDog.png';
   const normalizedMainImage = normalizeAnimalImageUrl(mainImage);
 
   return (
