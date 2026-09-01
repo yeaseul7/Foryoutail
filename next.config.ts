@@ -7,6 +7,15 @@ const withBundleAnalyzer = bundleAnalyzer({
 });
 
 const nextConfig: NextConfig = {
+  // OpenNext/Cloudflare 빌드에서도 브라우저 번들에 공개 Supabase 설정을
+  // 확실히 인라인합니다. 두 값은 클라이언트 공개용이며 비밀 키가 아닙니다.
+  env: {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+      '',
+  },
   async headers() {
     return [
       {

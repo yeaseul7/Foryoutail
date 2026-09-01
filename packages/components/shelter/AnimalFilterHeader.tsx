@@ -6,7 +6,7 @@ import {
 } from 'react-icons/md';
 import Image from 'next/image';
 import { RiResetLeftFill } from 'react-icons/ri';
-import { getShortSidoName } from '@/packages/utils/locationUtils';
+import { getSidoDisplayName } from '@/packages/utils/locationUtils';
 import type { QuickFilterKey } from '@/lib/client/shelter';
 import { sidoLocation } from '@/static/data/sidoLocation';
 import { useLanguage } from '@/lib/i18n/language';
@@ -240,10 +240,10 @@ export default function AnimalFilterHeader({
   };
 
   const getRegionFilterLabel = (): string => {
-    if (filters.orgNm?.trim()) return getShortSidoName(filters.orgNm.trim());
-    if (!filters.upr_cd) return '전국';
+    if (filters.orgNm?.trim()) return getSidoDisplayName(filters.orgNm.trim(), isEnglish);
+    if (!filters.upr_cd) return isEnglish ? 'All Korea' : '전국';
     const hit = sidoList.find((s) => s.SIDO_CD === filters.upr_cd);
-    return hit ? getShortSidoName(hit.SIDO_NAME) : '전국';
+    return hit ? getSidoDisplayName(hit.SIDO_NAME, isEnglish) : (isEnglish ? 'All Korea' : '전국');
   };
 
   const hasSidoList = sidoList.length > 0;
@@ -383,7 +383,7 @@ export default function AnimalFilterHeader({
                         className={filterDropdownOptionStateClass(filters.orgNm === sido.SIDO_NAME || filters.upr_cd === sido.SIDO_CD)}
                         onClick={() => handleRegionFilterChange(sido)}
                       >
-                        {getShortSidoName(sido.SIDO_NAME)}
+                        {getSidoDisplayName(sido.SIDO_NAME, isEnglish)}
                       </li>
                     ))}
                   </ul>

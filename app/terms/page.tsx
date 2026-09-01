@@ -80,6 +80,18 @@ const sections = [
   body: string[];
 }[];
 
+const englishSections = [
+  { title: '1. Purpose', body: ['These Terms define the conditions and procedures for using Kkosunnae’s shelter-animal listings, AI search, and related services, as well as the rights and responsibilities of Kkosunnae and its users.'] },
+  { title: '2. Services', body: ['Kkosunnae provides shelter-animal listings, location-based recommendations, AI similarity search, member profiles, and saved-animal features.', 'Some features may connect to external data providers, authentication services, maps, analytics, or advertising tools.'] },
+  { title: '3. Registration and account management', body: ['Members may register by email or social sign-in and must provide accurate, current information.', 'Members are responsible for protecting their account and authentication credentials and may not transfer or lend them to another person.', 'Some features may require completion of an additional profile after registration.'] },
+  { title: '4. User responsibilities', body: ['Users must comply with applicable laws, these Terms, operating policies, and notices.', 'Users may not submit false information, impersonate others, distribute unlawful promotions, publish obscene, hateful, or discriminatory content, infringe copyright, or defame shelters or other users.', 'Abnormal automated access, service disruption, and unauthorized data collection are prohibited.'] },
+  { title: '5. Changes and interruptions', body: ['Kkosunnae may change or discontinue all or part of the service for operational or technical reasons.', 'Maintenance, outages, external API failures, or infrastructure issues may temporarily limit the service. Notice will be provided where reasonably possible.'] },
+  { title: '6. Intellectual property', body: ['Rights in the Kkosunnae service, design, name, logo, and operator-created content belong to Kkosunnae or their lawful owners to the extent permitted by law.'] },
+  { title: '7. Limitation of liability', body: ['Kkosunnae is not liable for losses caused by natural disasters, communication failures, third-party service failures, or circumstances attributable to a user.', 'Kkosunnae does not guarantee the accuracy, completeness, or timeliness of information posted by users or shelters. Adoption and transaction decisions remain the user’s responsibility.'] },
+  { title: '8. Restrictions and termination', body: ['If a user violates these Terms or disrupts the service, Kkosunnae may issue a warning, temporarily suspend the account, or permanently restrict access.', 'Users may stop using the service and request account deletion at any time. Information required by law or for legitimate operations may be retained for a limited period.'] },
+  { title: '9. Governing law and contact', body: ['These Terms are governed by the laws of the Republic of Korea.', 'Questions about the service may be sent to `kkosunnaekr1@gmail.com`.'] },
+];
+
 export default function TermsPage() {
   return (
     <LegalDocumentPage
@@ -88,6 +100,12 @@ export default function TermsPage() {
       description="꼬순내 서비스 이용 시 적용되는 기본 규칙과 권리·의무, 책임 범위를 안내합니다."
       effectiveDate="2026년 4월 27일"
       sections={sections}
+      english={{
+        title: 'Terms of Service',
+        description: 'These are the basic rules, rights, responsibilities, and limitations that apply when using Kkosunnae.',
+        effectiveDate: 'April 27, 2026',
+        sections: englishSections,
+      }}
     />
   );
 }

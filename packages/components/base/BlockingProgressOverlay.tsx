@@ -1,6 +1,7 @@
 'use client';
 
 import { HiCheckCircle } from 'react-icons/hi2';
+import { useLanguage } from '@/lib/i18n/language';
 
 /**
  * 비동기 작업(업로드·저장 등) 중 전체 화면을 막고 진행 상태를 보여줄 때 사용합니다.
@@ -21,14 +22,16 @@ export default function BlockingProgressOverlay({
   open,
   variant = 'loading',
   title,
-  subtitle = '잠시만 기다려 주세요.',
+  subtitle,
   className,
 }: BlockingProgressOverlayProps) {
+  const { t } = useLanguage();
   if (!open) return null;
 
   const isSuccess = variant === 'success';
   const headline =
-    title ?? (isSuccess ? '완료되었습니다!' : '업로드 중');
+    title ?? (isSuccess ? t('완료되었습니다!', 'Completed!') : t('업로드 중', 'Uploading'));
+  const description = subtitle ?? t('잠시만 기다려 주세요.', 'Please wait a moment.');
   const busy = !isSuccess;
 
   return (
@@ -57,7 +60,7 @@ export default function BlockingProgressOverlay({
           {headline}
         </p>
         <p id="blocking-progress-desc" className="mt-1 text-sm text-gray-500">
-          {subtitle}
+          {description}
         </p>
 
         <div

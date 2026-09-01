@@ -17,10 +17,9 @@ const pretendard = localFont({
 export const metadata: Metadata = {
   title: {
     template: '%s | 꼬순내',
-    default: '꼬순내 - 유기동물 입양 공고와 AI 검색',
+    default: '꼬순내 | 유기동물 간편 검색',
   },
-  description:
-    '꼬순내에서 전국 유기견·유기묘 입양 공고를 확인하고 사진 기반 AI 검색으로 비슷한 동물을 찾아보세요.',
+  description: '사진 및 필터로 간편하게 유기동물 검색하고 찾아보세요',
   keywords: [
     '꼬순내',
     '유기동물 입양',
@@ -46,9 +45,8 @@ export const metadata: Metadata = {
     google: 'WBwV06sSdVI6wLAiXlN3T32MSQlsqxdSv49eMBt7JWs',
   },
   openGraph: {
-    title: '유기동물 입양 공고·AI 검색 | 꼬순내',
-    description:
-      '전국 유기견·유기묘 공고를 확인하고 사진 기반 AI 검색으로 비슷한 동물을 찾아보세요.',
+    title: '꼬순내 | 유기동물 간편 검색',
+    description: '사진 및 필터로 간편하게 유기동물 검색하고 찾아보세요',
     url: 'https://kkosunnae.com',
     siteName: '꼬순내',
     locale: 'ko_KR',
@@ -64,9 +62,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: '유기동물 입양 공고·AI 검색 | 꼬순내',
-    description:
-      '전국 유기동물 공고를 확인하고 사진 기반 AI 검색으로 비슷한 동물을 찾아보세요.',
+    title: '꼬순내 | 유기동물 간편 검색',
+    description: '사진 및 필터로 간편하게 유기동물 검색하고 찾아보세요',
     images: ['https://kkosunnae.com/static/images/kkosunnae-logo.png'],
   },
   robots: {

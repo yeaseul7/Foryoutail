@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/supabase/auth';
 import { supabase } from '@/lib/supabase/client';
 import type { AiSearchFiltersValues } from '@/packages/components/search-animals/AiSearchFilters';
 import { sidoLocation } from '@/static/data/sidoLocation';
+import { useLanguage } from '@/lib/i18n/language';
 
 const DAILY_LIMIT = 10;
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
@@ -126,6 +127,7 @@ async function decrementDailyAiRemaining(uid: string): Promise<number> {
 }
 
 export function useSearchAnimal() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -167,19 +169,19 @@ export function useSearchAnimal() {
     appliedFilters: AiSearchFiltersValues = filters,
   ): Promise<SimilarMatch[] | null> => {
     if (!user) {
-      setSearchError('AI 검색을 이용하려면 로그인이 필요합니다.');
+      setSearchError(t('AI 검색을 이용하려면 로그인이 필요합니다.', 'Sign in to use AI image search.'));
       return null;
     }
     try {
       const remaining = await getDailyAiRemaining(user.uid);
       if (remaining <= 0) {
-        setSearchError(`검색 횟수(${DAILY_LIMIT}회)를 모두 사용했습니다. 24시간이 지나면 다시 이용할 수 있습니다.`);
+        setSearchError(t(`검색 횟수(${DAILY_LIMIT}회)를 모두 사용했습니다. 24시간이 지나면 다시 이용할 수 있습니다.`, `You have used all ${DAILY_LIMIT} searches. Try again in 24 hours.`));
         return null;
       }
       const newRemaining = await decrementDailyAiRemaining(user.uid);
       setDailyAiUsed(DAILY_LIMIT - newRemaining);
     } catch (e) {
-      setSearchError(e instanceof Error ? e.message : '검색 횟수 확인에 실패했습니다.');
+      setSearchError(e instanceof Error ? e.message : t('검색 횟수 확인에 실패했습니다.', 'Unable to check your search allowance.'));
       return null;
     }
     setSearchLoading(true);
@@ -197,7 +199,7 @@ export function useSearchAnimal() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setSearchError(json.error ?? json.details ?? '검색에 실패했습니다.');
+        setSearchError(json.error ?? json.details ?? t('검색에 실패했습니다.', 'Search failed.'));
         setSearchLoading(false);
         return null;
       }
@@ -207,12 +209,12 @@ export function useSearchAnimal() {
       writeSearchCache(matches, appliedFilters);
       return matches;
     } catch (e) {
-      setSearchError(e instanceof Error ? e.message : '검색 중 오류가 발생했습니다.');
+      setSearchError(e instanceof Error ? e.message : t('검색 중 오류가 발생했습니다.', 'An error occurred during search.'));
       return null;
     } finally {
       setSearchLoading(false);
     }
-  }, [user, filters]);
+  }, [user, filters, t]);
 
   const runSearch = useCallback(async () => {
     if (!selectedFile || !previewUrl) return;

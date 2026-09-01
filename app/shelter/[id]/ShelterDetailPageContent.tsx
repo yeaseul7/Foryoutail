@@ -1,3 +1,5 @@
+'use client';
+
 import PageTemplate from '@/packages/components/base/PageTemplate';
 import PageFooter from '@/packages/components/base/PageFooter';
 import AnimalImgCard from '@/packages/components/shelter/AnimalImgCard';
@@ -7,6 +9,8 @@ import ShelterOperationInfoComponent from '@/packages/components/common/AnimalNo
 import type { ShelterAnimalItem } from '@/packages/type/postType';
 import type { ShelterInfoItem } from '@/packages/type/shelterTyps';
 import { getBaseUrl, normalizeImageUrl } from '@/packages/utils/metadata';
+import { useLanguage } from '@/lib/i18n/language';
+import { animalBreedLabel } from '@/lib/i18n/animal-labels';
 
 function animalImages(animal: ShelterAnimalItem): string[] {
   const images: string[] = [];
@@ -17,19 +21,19 @@ function animalImages(animal: ShelterAnimalItem): string[] {
   return images;
 }
 
-function normalizedStatus(value: string | undefined): string {
-  if (value === 'protect') return '보호중';
-  if (value === 'notice') return '공고중';
-  if (value === 'adopted') return '입양 완료';
-  if (value === 'returned') return '반환 완료';
-  if (value === 'ended') return '종료';
-  return value?.trim() || '미상';
+function normalizedStatus(value: string | undefined, isEnglish: boolean): string {
+  if (value === 'protect') return isEnglish ? 'In protection' : '보호중';
+  if (value === 'notice') return isEnglish ? 'Notice open' : '공고중';
+  if (value === 'adopted') return isEnglish ? 'Adopted' : '입양 완료';
+  if (value === 'returned') return isEnglish ? 'Returned' : '반환 완료';
+  if (value === 'ended') return isEnglish ? 'Closed' : '종료';
+  return value?.trim() || (isEnglish ? 'Unknown' : '미상');
 }
 
-function normalizedGender(value: string | undefined): string {
-  if (value === 'F') return '암컷';
-  if (value === 'M') return '수컷';
-  return '미상';
+function normalizedGender(value: string | undefined, isEnglish: boolean): string {
+  if (value === 'F') return isEnglish ? 'Female' : '암컷';
+  if (value === 'M') return isEnglish ? 'Male' : '수컷';
+  return isEnglish ? 'Unknown' : '미상';
 }
 
 function isoDate(value: string | undefined): string | undefined {
@@ -45,6 +49,7 @@ export default function ShelterDetailPageContent({
   animalData: ShelterAnimalItem;
   shelterInfo: ShelterInfoItem | null;
 }) {
+  const { isEnglish, t } = useLanguage();
   const images = animalImages(animalData);
   const desertionNo = animalData.desertionNo ?? '';
   const baseUrl = getBaseUrl().replace(/\/$/, '');
@@ -91,9 +96,9 @@ export default function ShelterDetailPageContent({
               <div className="flex flex-col gap-6">
                 <AnimalInfoCard
                   animalData={animalData}
-                  statusText={normalizedStatus(animalData.processState)}
-                  genderText={normalizedGender(animalData.sexCd)}
-                  breedText={animalData.kindNm || animalData.kindFullNm || '품종 미상'}
+                  statusText={normalizedStatus(animalData.processState, isEnglish)}
+                  genderText={normalizedGender(animalData.sexCd, isEnglish)}
+                  breedText={animalBreedLabel(animalData.kindNm || animalData.kindFullNm, isEnglish) || t('품종 미상', 'Unknown breed')}
                   desertionNo={desertionNo}
                 />
                 <ShelterOperationInfoComponent shelterInfo={shelterInfo} animalData={animalData} />

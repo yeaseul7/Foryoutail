@@ -3,6 +3,7 @@ import { useAuth } from '@/lib/supabase/auth';
 import { useClickOutsideModal } from '@/packages/utils/clickEvent';
 import { useRouter } from 'next/navigation';
 import { useCallback, useRef } from 'react';
+import { useLanguage } from '@/lib/i18n/language';
 
 export default function HeaderUserMenu({
   setIsUserMenuOpen,
@@ -12,6 +13,7 @@ export default function HeaderUserMenu({
   isUserMenuOpen: boolean;
 }) {
   const { logout } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const userMenuRef = useRef<HTMLDivElement>(null);
   const handleLogout = useCallback(async () => {
@@ -43,13 +45,13 @@ export default function HeaderUserMenu({
             }}
             className="p-2 text-left rounded text-text1 hover:bg-element2"
           >
-            찜한 동물
+            {t('찜한 동물', 'Saved animals')}
           </button>
           <button
             onClick={handleLogout}
             className="p-2 text-left rounded text-text1 hover:bg-element2"
           >
-            로그아웃
+            {t('로그아웃', 'Log out')}
           </button>
         </div>
       </div>
