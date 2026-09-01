@@ -42,7 +42,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Sync Cloudflare runtime secrets
+      - name: Lint
+        run: npm run lint
+
+      - name: Prepare Cloudflare runtime secrets
         run: |
           node <<'EOF'
           const fs = require('fs');
@@ -71,11 +74,10 @@ jobs:
             JSON.stringify(payload, null, 2),
           );
           EOF
-          npx wrangler secret bulk .cloudflare-secrets.json
-          rm .cloudflare-secrets.json
-
-      - name: Lint
-        run: npm run lint
 
       - name: Deploy
-        run: npm run deploy
+        run: npm run deploy -- --secrets-file .cloudflare-secrets.json
+
+      - name: Remove temporary secrets file
+        if: always()
+        run: rm -f .cloudflare-secrets.json
