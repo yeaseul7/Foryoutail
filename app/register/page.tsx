@@ -12,9 +12,11 @@ import {
   type AdoptionQuestionAnswers,
   type VolunteerQuestionAnswers,
 } from '@/packages/components/register/RegisterQuestionSteps';
+import { useLanguage } from '@/lib/i18n/language';
 
 export default function RegisterPage() {
   const { user, loading: authLoading, updateUserProfile } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [profileName, setProfileName] = useState('');
@@ -94,22 +96,22 @@ export default function RegisterPage() {
     setError('');
 
     if (!agreed) {
-      setError('이용약관에 동의해주세요.');
+      setError(t('이용약관에 동의해주세요.', 'Please agree to the Terms and Privacy Policy.'));
       return false;
     }
 
     if (!profileName.trim()) {
-      setError('프로필 이름은 필수입니다.');
+      setError(t('프로필 이름은 필수입니다.', 'A profile name is required.'));
       return false;
     }
 
     if (!intro.trim()) {
-      setError('한 줄 소개를 입력해주세요.');
+      setError(t('한 줄 소개를 입력해주세요.', 'Enter a short introduction.'));
       return false;
     }
 
     if (!user) {
-      setError('로그인이 필요합니다.');
+      setError(t('로그인이 필요합니다.', 'You need to sign in.'));
       return false;
     }
 
@@ -142,7 +144,7 @@ export default function RegisterPage() {
       const errorMessage =
         error instanceof Error
           ? error.message
-          : '회원가입 중 오류가 발생했습니다.';
+          : t('회원가입 중 오류가 발생했습니다.', 'An error occurred during registration.');
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -172,7 +174,7 @@ export default function RegisterPage() {
   if (authLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="text-text3">로딩 중...</div>
+        <div className="text-text3">{t('로딩 중...', 'Loading...')}</div>
       </div>
     );
   }
@@ -184,9 +186,9 @@ export default function RegisterPage() {
   return (
     <main className="page-container-full">
       <div className="w-full max-w-md px-6 py-12">
-        <h1 className="mb-2 text-3xl font-bold text-text1">환영합니다!</h1>
+        <h1 className="mb-2 text-3xl font-bold text-text1">{t('환영합니다!', 'Welcome!')}</h1>
         <p className="mb-8 text-base text-text1">
-          기본 회원 정보를 등록해주세요.
+          {t('기본 회원 정보를 등록해주세요.', 'Set up your basic profile.')}
         </p>
 
         <form onSubmit={handleFormSubmit} className="space-y-6">
@@ -196,24 +198,24 @@ export default function RegisterPage() {
 
               <div>
                 <label className="block mb-2 text-sm font-medium text-text1">
-                  프로필 이름 <span className="text-red-500">*</span>
+                  {t('프로필 이름', 'Profile name')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={profileName}
                   onChange={(e) => setProfileName(e.target.value)}
-                  placeholder="프로필 이름을 반드시 입력해주세요."
+                  placeholder={t('프로필 이름을 반드시 입력해주세요.', 'Enter your profile name.')}
                   className="w-full px-0 py-2 text-base text-text1 bg-transparent border-0 border-b border-border3 outline-none focus:border-primary1"
                   required
                 />
                 <p className="mt-2 text-xs text-text3">
-                  프로필 이름은 필수 입력 항목입니다.
+                  {t('프로필 이름은 필수 입력 항목입니다.', 'Your profile name is required.')}
                 </p>
               </div>
 
               <div>
                 <label className="block mb-2 text-sm font-medium text-text1">
-                  이메일
+                  {t('이메일', 'Email')}
                 </label>
                 <div className="relative">
                   <input
@@ -228,13 +230,13 @@ export default function RegisterPage() {
 
               <div>
                 <label className="block mb-2 text-sm font-medium text-text1">
-                  한 줄 소개 <span className="text-red-500">*</span>
+                  {t('한 줄 소개', 'Short introduction')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={intro}
                   onChange={(e) => setIntro(e.target.value)}
-                  placeholder="당신을 한 줄로 소개해보세요"
+                  placeholder={t('당신을 한 줄로 소개해보세요', 'Tell us about yourself in one line.')}
                   className="w-full px-0 py-2 text-base text-text1 bg-transparent border-0 border-b border-border3 outline-none focus:border-primary1"
                   required
                 />
@@ -251,13 +253,13 @@ export default function RegisterPage() {
                 <label htmlFor="agree" className="text-sm text-text1">
                   <span>
                     <Link href="/terms" className="text-primary1 hover:underline">
-                      이용약관
+                      {t('이용약관', 'Terms of Service')}
                     </Link>
-                    {' 및 '}
+                    {t(' 및 ', ' and ')}
                     <Link href="/privacy" className="text-primary1 hover:underline">
-                      개인정보처리방침
+                      {t('개인정보처리방침', 'Privacy Policy')}
                     </Link>
-                    에 동의합니다.
+                    {t('에 동의합니다.', '.')}
                   </span>
                 </label>
               </div>
@@ -274,7 +276,7 @@ export default function RegisterPage() {
                   onClick={handleCancel}
                   className="flex-1 px-6 py-3 text-base font-medium rounded-lg bg-gray-200 text-text1 hover:bg-gray-300 transition-colors"
                 >
-                  취소
+                  {t('취소', 'Cancel')}
                 </button>
                 <button
                   type="button"
@@ -282,7 +284,7 @@ export default function RegisterPage() {
                   disabled={!profileName.trim() || !intro.trim()}
                   className="flex-1 px-6 py-3 text-base font-medium text-white rounded-lg bg-primary1 hover:bg-primary2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  다음
+                  {t('다음', 'Next')}
                 </button>
               </div>
             </>

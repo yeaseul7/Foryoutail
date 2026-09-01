@@ -204,6 +204,12 @@ const NEUTER_LABEL: Record<string, string> = {
   U: '중성화 미상',
 };
 
+const ENGLISH_FILTER_LABEL: Record<string, string> = {
+  개: 'Dogs', 고양이: 'Cats', 기타: 'Other', 여자: 'Female', 남자: 'Male', 미상: 'Unknown',
+  공고중: 'Notice open', 보호중: 'In protection', '중성화 완료': 'Neutered', '중성화 전': 'Not neutered', '중성화 미상': 'Neuter status unknown',
+  '마감 임박': 'Ending soon', '어린 동물': 'Young animals',
+};
+
 function dashYmdFromCompact(ymd: string): string {
   if (ymd.length !== 8) return ymd;
   return `${ymd.slice(0, 4)}.${ymd.slice(4, 6)}.${ymd.slice(6, 8)}`;
@@ -908,15 +914,16 @@ export default function ShelterPostsClient({
                   )}
                 </div>
                 {filterSummaryRows.length > 0 && (
-                  <div className="flex min-w-0 flex-wrap items-center gap-1.5" role="list" aria-label="적용된 필터">
+                  <div className="flex min-w-0 flex-wrap items-center gap-1.5" role="list" aria-label={isEnglish ? 'Applied filters' : '적용된 필터'}>
                     {filterSummaryRows.map((row) => {
                       const chipClass =
                         'inline-flex h-9 max-w-full items-center gap-1.5 rounded-lg border-0 bg-primary1 px-3 text-sm font-medium text-white transition-colors hover:bg-primary2 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary1/30';
                       if (row.variant === 'quick') {
                         const Icon = QUICK_FILTER_ICONS[row.quick];
-                        const label = QUICK_FILTER_LABEL[row.quick];
+                        const koreanLabel = QUICK_FILTER_LABEL[row.quick];
+                        const label = isEnglish ? ENGLISH_FILTER_LABEL[koreanLabel] || koreanLabel : koreanLabel;
                         return (
-                          <button key={row.key} type="button" role="listitem" className={chipClass} aria-label={`${label} 필터 제거`} onClick={() => handleRemoveFilterSummary(row.removeKey)}>
+                          <button key={row.key} type="button" role="listitem" className={chipClass} aria-label={isEnglish ? `Remove ${label} filter` : `${label} 필터 제거`} onClick={() => handleRemoveFilterSummary(row.removeKey)}>
                             <Icon className="h-3.5 w-3.5 shrink-0 opacity-90" aria-hidden />
                             <span className="truncate">{label}</span>
                             <MdClose className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
@@ -924,8 +931,8 @@ export default function ShelterPostsClient({
                         );
                       }
                       return (
-                        <button key={row.key} type="button" role="listitem" className={chipClass} aria-label={`${row.text} 필터 제거`} onClick={() => handleRemoveFilterSummary(row.removeKey)}>
-                          <span className="truncate">{row.text}</span>
+                        <button key={row.key} type="button" role="listitem" className={chipClass} aria-label={isEnglish ? `Remove ${ENGLISH_FILTER_LABEL[row.text] || row.text} filter` : `${row.text} 필터 제거`} onClick={() => handleRemoveFilterSummary(row.removeKey)}>
+                          <span className="truncate">{isEnglish ? ENGLISH_FILTER_LABEL[row.text] || row.text : row.text}</span>
                           <MdClose className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
                         </button>
                       );

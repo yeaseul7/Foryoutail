@@ -79,7 +79,7 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="rounded-lg p-2 text-[#817873] transition-colors hover:bg-primary-soft md:hidden"
-            aria-label="메뉴"
+            aria-label={isEnglish ? 'Menu' : '메뉴'}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {isMobileMenuOpen ? (

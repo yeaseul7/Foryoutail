@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import Loading from '../base/Loading';
 import { ShelterAnimalItem, ShelterAnimalRow } from '@/packages/type/postType';
 import AbandonedCard from '../base/AbandonedCard';
+import { useLanguage } from '@/lib/i18n/language';
 
 function mapAnimalRow(row: ShelterAnimalRow): ShelterAnimalItem {
   const popfiles = Array.isArray(row.popfiles)
@@ -91,6 +92,7 @@ function mapAnimalRow(row: ShelterAnimalRow): ShelterAnimalItem {
 }
 
 export default function LikedAnimalList({ userId }: { userId?: string }) {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const [animals, setAnimals] = useState<ShelterAnimalItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -161,7 +163,7 @@ export default function LikedAnimalList({ userId }: { userId?: string }) {
   if (!targetUserId) {
     return (
       <div className="py-12 text-center text-gray-500">
-        사용자 정보를 불러올 수 없습니다.
+        {t('사용자 정보를 불러올 수 없습니다.', 'Unable to load user information.')}
       </div>
     );
   }
@@ -169,7 +171,7 @@ export default function LikedAnimalList({ userId }: { userId?: string }) {
   if (animals.length === 0) {
     return (
       <div className="py-12 text-center text-gray-500">
-        좋아요한 구조 동물이 없습니다.
+        {t('좋아요한 구조 동물이 없습니다.', 'You have not saved any animals yet.')}
       </div>
     );
   }
@@ -179,7 +181,7 @@ export default function LikedAnimalList({ userId }: { userId?: string }) {
       <div
         className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5"
         role="list"
-        aria-label="좋아요한 구조 동물 목록"
+        aria-label={t('좋아요한 구조 동물 목록', 'Saved shelter animals')}
       >
         {animals.map((animal, index) => (
           <div

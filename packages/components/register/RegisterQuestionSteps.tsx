@@ -1,5 +1,7 @@
 'use client';
 
+import { useLanguage } from '@/lib/i18n/language';
+
 export interface AdoptionQuestionAnswers {
   householdSize: string;
   housingType: string;
@@ -42,12 +44,12 @@ interface VolunteerQuestionStepProps {
   isSubmitting: boolean;
 }
 
-const STEP_LABELS = ['소개', '입양', '봉사'];
-
 function RegisterStepIndicator({ currentStep }: StepIndicatorProps) {
+  const { isEnglish, t } = useLanguage();
+  const stepLabels = isEnglish ? ['Profile', 'Adoption', 'Volunteer'] : ['소개', '입양', '봉사'];
   return (
-    <ol className="mb-8 grid grid-cols-3 gap-2" aria-label="회원가입 단계">
-      {STEP_LABELS.map((label, index) => {
+    <ol className="mb-8 grid grid-cols-3 gap-2" aria-label={t('회원가입 단계', 'Registration steps')}>
+      {stepLabels.map((label, index) => {
         const stepNumber = index + 1;
         const isActive = currentStep === stepNumber;
         const isDone = currentStep > stepNumber;
@@ -153,6 +155,11 @@ function QuestionSelect({
   onChange: (value: string) => void;
   options: string[];
 }) {
+  const { isEnglish, t } = useLanguage();
+  const englishOptions: Record<string, string> = {
+    아파트: 'Apartment', 빌라: 'Low-rise apartment', 단독주택: 'House', 기숙사: 'Dormitory', 사무실: 'Office',
+    오전: 'Morning', 오후: 'Afternoon', 산책: 'Walking', 청소: 'Cleaning', 급식: 'Feeding', 사진촬영: 'Photography', 이동봉사: 'Transport',
+  };
   return (
     <div>
       <label htmlFor={id} className="block mb-2 text-sm font-medium text-text1">
@@ -164,10 +171,10 @@ function QuestionSelect({
         onChange={(event) => onChange(event.target.value)}
         className="w-full px-3 py-3 text-sm text-text1 bg-white border border-border3 rounded-lg outline-none focus:border-primary1"
       >
-        <option value="">선택해주세요</option>
+        <option value="">{t('선택해주세요', 'Select an option')}</option>
         {options.map((option) => (
           <option key={option} value={option}>
-            {option}
+            {isEnglish ? englishOptions[option] || option : option}
           </option>
         ))}
       </select>
@@ -184,6 +191,7 @@ function YesNoField({
   value: '' | 'Y' | 'N';
   onChange: (value: '' | 'Y' | 'N') => void;
 }) {
+  const { t } = useLanguage();
   return (
     <div>
       <p className="mb-2 text-sm font-medium text-text1">{label}</p>
@@ -199,7 +207,7 @@ function YesNoField({
                 : 'border-border3 bg-white text-text1 hover:bg-gray-50'
             }`}
           >
-            {option === 'Y' ? '예' : '아니오'}
+            {option === 'Y' ? t('예', 'Yes') : t('아니오', 'No')}
           </button>
         ))}
       </div>
@@ -218,6 +226,8 @@ function MultiSelectCheckboxField({
   value: string[];
   onChange: (value: string[]) => void;
 }) {
+  const { isEnglish } = useLanguage();
+  const englishOptions: Record<string, string> = { 산책: 'Walking', 청소: 'Cleaning', 급식: 'Feeding', 사진촬영: 'Photography', 이동봉사: 'Transport' };
   const toggleOption = (option: string) => {
     if (value.includes(option)) {
       onChange(value.filter((item) => item !== option));
@@ -246,7 +256,7 @@ function MultiSelectCheckboxField({
               onChange={() => toggleOption(option)}
               className="sr-only"
             />
-            <span>{option}</span>
+            <span>{isEnglish ? englishOptions[option] || option : option}</span>
           </label>
         ))}
       </div>
@@ -261,35 +271,36 @@ export function AdoptionQuestionStep({
   onNext,
   onSkip,
 }: AdoptionQuestionStepProps) {
+  const { isEnglish, t } = useLanguage();
   return (
     <section className="space-y-6">
       <RegisterStepIndicator currentStep={2} />
       <div>
-        <h2 className="mb-2 text-2xl font-bold text-text1">입양 관련 질의응답</h2>
+        <h2 className="mb-2 text-2xl font-bold text-text1">{t('입양 관련 질의응답', 'Adoption questionnaire')}</h2>
         <p className="text-sm text-text3">
-          입양 준비 상태를 알려주세요.
+          {t('입양 준비 상태를 알려주세요.', 'Tell us how prepared you are to adopt.')}
         </p>
       </div>
 
       <QuestionNumberInput
         id="householdSize"
-        label="가구원 수"
-        placeholder="예: 2"
+        label={t('가구원 수', 'Household size')}
+        placeholder={t('예: 2', 'e.g. 2')}
         value={value.householdSize}
         onChange={(householdSize) => onChange({ ...value, householdSize })}
-        suffix="명"
+        suffix={isEnglish ? 'people' : '명'}
       />
 
       <QuestionSelect
         id="housingType"
-        label="주거 형태"
+        label={t('주거 형태', 'Housing type')}
         value={value.housingType}
         onChange={(housingType) => onChange({ ...value, housingType })}
         options={['아파트', '빌라', '단독주택', '기숙사', '사무실']}
       />
 
       <YesNoField
-        label="반려동물 양육 경험"
+        label={t('반려동물 양육 경험', 'Experience caring for pets')}
         value={value.hasPetExperience}
         onChange={(hasPetExperience) =>
           onChange({ ...value, hasPetExperience })
@@ -297,7 +308,7 @@ export function AdoptionQuestionStep({
       />
 
       <YesNoField
-        label="가족 동의 여부"
+        label={t('가족 동의 여부', 'Family agreement')}
         value={value.hasFamilyAgreement}
         onChange={(hasFamilyAgreement) =>
           onChange({ ...value, hasFamilyAgreement })
@@ -306,34 +317,34 @@ export function AdoptionQuestionStep({
 
       <QuestionNumberInput
         id="averageAwayHours"
-        label="평균 집 비우는 시간"
-        placeholder="예: 6"
+        label={t('평균 집 비우는 시간', 'Average hours away from home')}
+        placeholder={t('예: 6', 'e.g. 6')}
         value={value.averageAwayHours}
         onChange={(averageAwayHours) => onChange({ ...value, averageAwayHours })}
-        suffix="시간"
+        suffix={isEnglish ? 'hours' : '시간'}
       />
 
       <YesNoField
-        label="산책 가능 여부"
+        label={t('산책 가능 여부', 'Able to provide walks')}
         value={value.canWalk}
         onChange={(canWalk) => onChange({ ...value, canWalk })}
       />
 
       <QuestionTextarea
         id="adoptionPurpose"
-        label="입양 목적"
-        placeholder="입양을 생각하게 된 계기와 함께하려는 이유를 적어주세요."
+        label={t('입양 목적', 'Reason for adoption')}
+        placeholder={t('입양을 생각하게 된 계기와 함께하려는 이유를 적어주세요.', 'Tell us why you are considering adoption.')}
         value={value.adoptionPurpose}
         onChange={(adoptionPurpose) => onChange({ ...value, adoptionPurpose })}
       />
 
       <QuestionNumberInput
         id="medicalBudget"
-        label="중성화/치료비 부담 가능 금액"
-        placeholder="예: 300000"
+        label={t('중성화/치료비 부담 가능 금액', 'Available medical budget')}
+        placeholder={t('예: 300000', 'e.g. 300000')}
         value={value.medicalBudget}
         onChange={(medicalBudget) => onChange({ ...value, medicalBudget })}
-        suffix="원"
+        suffix={isEnglish ? 'KRW' : '원'}
       />
 
       <label className="flex items-start gap-3 text-sm text-text1">
@@ -348,7 +359,7 @@ export function AdoptionQuestionStep({
           }
           className="mt-1 w-4 h-4 border-gray-300 rounded text-primary1 focus:ring-primary1"
         />
-        <span>입양 후 파양하지 않고 끝까지 책임질 것을 확인합니다.</span>
+        <span>{t('입양 후 파양하지 않고 끝까지 책임질 것을 확인합니다.', 'I confirm that I will care for the animal responsibly for life.')}</span>
       </label>
 
       <div className="flex gap-3 pt-2">
@@ -357,21 +368,21 @@ export function AdoptionQuestionStep({
           onClick={onBack}
           className="flex-1 px-6 py-3 text-base font-medium rounded-lg bg-gray-200 text-text1 hover:bg-gray-300 transition-colors"
         >
-          이전
+          {t('이전', 'Back')}
         </button>
         <button
           type="button"
           onClick={onSkip}
           className="flex-1 px-6 py-3 text-base font-medium rounded-lg border border-border3 text-text1 hover:bg-gray-50 transition-colors"
         >
-          건너뛰기
+          {t('건너뛰기', 'Skip')}
         </button>
         <button
           type="button"
           onClick={onNext}
           className="flex-1 px-6 py-3 text-base font-medium text-white rounded-lg bg-primary1 hover:bg-primary2 transition-colors"
         >
-          다음
+          {t('다음', 'Next')}
         </button>
       </div>
     </section>
@@ -386,13 +397,14 @@ export function VolunteerQuestionStep({
   onSkip,
   isSubmitting,
 }: VolunteerQuestionStepProps) {
+  const { isEnglish, t } = useLanguage();
   return (
     <section className="space-y-6">
       <RegisterStepIndicator currentStep={3} />
       <div>
-        <h2 className="mb-2 text-2xl font-bold text-text1">봉사 관련 질의응답</h2>
+        <h2 className="mb-2 text-2xl font-bold text-text1">{t('봉사 관련 질의응답', 'Volunteer questionnaire')}</h2>
         <p className="text-sm text-text3">
-          봉사 참여 가능 정보를 알려주세요.
+          {t('봉사 참여 가능 정보를 알려주세요.', 'Tell us when and how you can volunteer.')}
         </p>
       </div>
 
@@ -401,7 +413,7 @@ export function VolunteerQuestionStep({
           htmlFor="availableDate"
           className="block mb-2 text-sm font-medium text-text1"
         >
-          가능한 날짜
+          {t('가능한 날짜', 'Available date')}
         </label>
         <input
           id="availableDate"
@@ -416,7 +428,7 @@ export function VolunteerQuestionStep({
 
       <QuestionSelect
         id="volunteerAvailableTime"
-        label="가능한 시간"
+        label={t('가능한 시간', 'Available time')}
         value={value.availableTime}
         onChange={(availableTime) =>
           onChange({
@@ -432,15 +444,15 @@ export function VolunteerQuestionStep({
 
       <QuestionNumberInput
         id="volunteerHeadcount"
-        label="인원 수"
-        placeholder="예: 2"
+        label={t('인원 수', 'Number of people')}
+        placeholder={t('예: 2', 'e.g. 2')}
         value={value.headcount}
         onChange={(headcount) => onChange({ ...value, headcount })}
-        suffix="명"
+        suffix={isEnglish ? 'people' : '명'}
       />
 
       <YesNoField
-        label="봉사 경험"
+        label={t('봉사 경험', 'Volunteer experience')}
         value={value.hasVolunteerExperience}
         onChange={(hasVolunteerExperience) =>
           onChange({ ...value, hasVolunteerExperience })
@@ -448,7 +460,7 @@ export function VolunteerQuestionStep({
       />
 
       <MultiSelectCheckboxField
-        label="가능한 활동"
+        label={t('가능한 활동', 'Activities')}
         options={['산책', '청소', '급식', '사진촬영', '이동봉사']}
         value={value.availableActivities}
         onChange={(availableActivities) =>
@@ -461,7 +473,7 @@ export function VolunteerQuestionStep({
           htmlFor="phoneNumber"
           className="block mb-2 text-sm font-medium text-text1"
         >
-          연락처
+          {t('연락처', 'Phone number')}
         </label>
         <input
           id="phoneNumber"
@@ -482,7 +494,7 @@ export function VolunteerQuestionStep({
           disabled={isSubmitting}
           className="flex-1 px-6 py-3 text-base font-medium rounded-lg bg-gray-200 text-text1 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          이전
+          {t('이전', 'Back')}
         </button>
         <button
           type="button"
@@ -490,7 +502,7 @@ export function VolunteerQuestionStep({
           disabled={isSubmitting}
           className="flex-1 px-6 py-3 text-base font-medium rounded-lg border border-border3 text-text1 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          건너뛰기
+          {t('건너뛰기', 'Skip')}
         </button>
         <button
           type="button"
@@ -498,7 +510,7 @@ export function VolunteerQuestionStep({
           disabled={isSubmitting}
           className="flex-1 px-6 py-3 text-base font-medium text-white rounded-lg bg-primary1 hover:bg-primary2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {isSubmitting ? '가입 중...' : '가입'}
+          {isSubmitting ? t('가입 중...', 'Finishing...') : t('가입', 'Finish')}
         </button>
       </div>
     </section>

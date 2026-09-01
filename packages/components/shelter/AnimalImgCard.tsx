@@ -7,6 +7,7 @@ import {
   shouldBypassNextImageOptimization,
 } from '@/packages/utils/imageSource';
 import CardImage from '@/packages/components/common/CardImage';
+import { useLanguage } from '@/lib/i18n/language';
 
 interface AnimalImgCardProps {
   animalData: ShelterAnimalItem;
@@ -16,6 +17,7 @@ export default function AnimalImgCard({
   animalData,
   animalImgList,
 }: AnimalImgCardProps) {
+  const { t } = useLanguage();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const mainImage = animalImgList[selectedImageIndex] || '/static/images/defaultDog.png';
   const normalizedMainImage = normalizeAnimalImageUrl(mainImage);
@@ -25,7 +27,7 @@ export default function AnimalImgCard({
       <div className="relative w-full aspect-square bg-gray-100 rounded-2xl overflow-hidden">
         <CardImage
           src={normalizedMainImage}
-          alt={animalData?.desertionNo || '동물 이미지'}
+          alt={animalData?.desertionNo || t('동물 이미지', 'Animal photo')}
           className="object-cover"
           sizes="(max-width: 1024px) 100vw, 50vw"
           unoptimized={shouldBypassNextImageOptimization(normalizedMainImage)}
@@ -49,7 +51,7 @@ export default function AnimalImgCard({
               >
                 <CardImage
                   src={normalizedImg}
-                  alt={`이미지 ${index + 1}`}
+                  alt={t(`이미지 ${index + 1}`, `Photo ${index + 1}`)}
                   className="object-cover"
                   sizes="(max-width: 1024px) 25vw, 12.5vw"
                   unoptimized={shouldBypassNextImageOptimization(normalizedImg)}

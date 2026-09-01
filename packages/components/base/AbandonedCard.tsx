@@ -15,6 +15,8 @@ import { FaPaw } from 'react-icons/fa';
 import { MdLocationOn } from 'react-icons/md';
 import { useShelterLike } from '@/hooks/useShelterLike';
 import CardImage from '@/packages/components/common/CardImage';
+import { useLanguage } from '@/lib/i18n/language';
+import { animalBreedLabel, animalColorLabel, animalNoteLabel } from '@/lib/i18n/animal-labels';
 
 export default function AbandonedCard({
   shelterAnimal,
@@ -24,6 +26,7 @@ export default function AbandonedCard({
   priority?: boolean;
 }) {
   const router = useRouter();
+  const { isEnglish, t } = useLanguage();
   const desertionNo = shelterAnimal.desertionNo;
   const { isLiked, isUpdating, handleLike } = useShelterLike(
     desertionNo,
@@ -92,13 +95,13 @@ export default function AbandonedCard({
 
   const processStateLabel = useMemo(() => {
     const state = shelterAnimal.processState?.trim();
-    if (state === 'notice') return '공고중';
-    if (state === 'protect') return '보호중';
-    if (state === 'adopted') return '입양 완료';
-    if (state === 'returned') return '반환 완료';
-    if (state === 'ended') return '종료';
-    return state || '상태 미확인';
-  }, [shelterAnimal.processState]);
+    if (state === 'notice') return t('공고중', 'Notice open');
+    if (state === 'protect') return t('보호중', 'In protection');
+    if (state === 'adopted') return t('입양 완료', 'Adopted');
+    if (state === 'returned') return t('반환 완료', 'Returned');
+    if (state === 'ended') return t('종료', 'Closed');
+    return state || t('상태 미확인', 'Status unknown');
+  }, [shelterAnimal.processState, t]);
 
   const isProcessEnded = useMemo(() => {
     const s = shelterAnimal.processState?.trim();
@@ -121,39 +124,40 @@ export default function AbandonedCard({
 
   const headlineSpecialMark = useMemo(() => {
     const raw = shelterAnimal.specialMark?.trim();
-    if (!raw || raw === '-') return '특징 없음';
-    return raw;
-  }, [shelterAnimal.specialMark]);
+    if (!raw || raw === '-') return t('특징 없음', 'No notes');
+    return animalNoteLabel(raw, isEnglish) || raw;
+  }, [isEnglish, shelterAnimal.specialMark, t]);
 
   const ageLabel = useMemo(() => {
+    if (isEnglish && shelterAnimal.birthYear) return `Born ${shelterAnimal.birthYear}`;
     if (!shelterAnimal.age?.trim()) return '';
     const a = shelterAnimal.age.trim();
     return a.includes('살') ? a : `${a}살`;
-  }, [shelterAnimal.age]);
+  }, [isEnglish, shelterAnimal.age, shelterAnimal.birthYear]);
 
   const sexLabel = useMemo(() => {
     if (!shelterAnimal.sexCd) return '';
-    if (shelterAnimal.sexCd === 'M') return '수컷';
-    if (shelterAnimal.sexCd === 'F') return '암컷';
+    if (shelterAnimal.sexCd === 'M') return t('수컷', 'Male');
+    if (shelterAnimal.sexCd === 'F') return t('암컷', 'Female');
     return shelterAnimal.sexCd;
-  }, [shelterAnimal.sexCd]);
+  }, [shelterAnimal.sexCd, t]);
 
   const cardTitle = useMemo(() => {
     const kind = shelterAnimal.kindNm?.trim();
-    return kind || headlineSpecialMark;
-  }, [shelterAnimal.kindNm, headlineSpecialMark]);
+    return animalBreedLabel(kind, isEnglish) || headlineSpecialMark;
+  }, [isEnglish, shelterAnimal.kindNm, headlineSpecialMark]);
 
   const locationLabel = useMemo(
-    () => shelterAnimal.careNm?.trim() || shelterAnimal.orgNm?.trim() || '보호소 확인',
-    [shelterAnimal.careNm, shelterAnimal.orgNm],
+    () => shelterAnimal.careNm?.trim() || shelterAnimal.orgNm?.trim() || t('보호소 확인', 'Check shelter'),
+    [shelterAnimal.careNm, shelterAnimal.orgNm, t],
   );
 
   const summaryLabel = useMemo(
     () =>
-      [shelterAnimal.colorCd?.trim(), sexLabel, ageLabel]
+      [animalColorLabel(shelterAnimal.colorCd?.trim(), isEnglish), sexLabel, ageLabel]
         .filter(Boolean)
-        .join(' · ') || '정보 확인 중',
-    [shelterAnimal.colorCd, sexLabel, ageLabel],
+        .join(' · ') || t('정보 확인 중', 'Details pending'),
+    [isEnglish, shelterAnimal.colorCd, sexLabel, ageLabel, t],
   );
 
   return (
@@ -164,7 +168,7 @@ export default function AbandonedCard({
       <div className="relative m-2 mb-0 aspect-square w-[calc(100%-1rem)] overflow-hidden rounded-[1rem] bg-gray-100">
         <CardImage
           src={displayImage}
-          alt={shelterAnimal?.desertionNo || '유기동물 이미지'}
+          alt={shelterAnimal?.desertionNo || t('유기동물 이미지', 'Shelter animal')}
           className="object-cover"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 20vw"
           unoptimized={shouldUseUnoptimizedImage}
@@ -181,7 +185,7 @@ export default function AbandonedCard({
             <div
               className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center"
               role="img"
-              aria-label="공고 종료"
+              aria-label={t('공고 종료', 'Listing closed')}
             >
               <FaPaw className="h-12 w-12 text-gray-300 drop-shadow-md sm:h-14 sm:w-14" />
             </div>
@@ -204,7 +208,7 @@ export default function AbandonedCard({
           type="button"
           onClick={(event) => void handleLike(event)}
           disabled={isUpdating || !desertionNo}
-          aria-label={isLiked ? '찜 해제' : '찜하기'}
+          aria-label={isLiked ? t('찜 해제', 'Remove from saved') : t('찜하기', 'Save animal')}
           className={`absolute left-2 top-2 z-10 rounded-full bg-white/90 p-1.5 text-[#817873] shadow-sm backdrop-blur-sm transition hover:text-alert ${isUpdating || !desertionNo ? 'cursor-not-allowed opacity-50' : ''}`}
         >
           {isLiked ? (

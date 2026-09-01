@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import type { ShelterAnimalItem } from '@/packages/type/postType';
+import { useLanguage } from '@/lib/i18n/language';
 
 type LikeListener = (isLiked: boolean) => void;
 
@@ -97,6 +98,7 @@ export function useShelterLike(
   animalData?: ShelterAnimalItem,
 ): UseShelterLikeReturn {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [isLiked, setIsLiked] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -135,12 +137,12 @@ export function useShelterLike(
     e?.stopPropagation();
 
     if (!user) {
-      alert('로그인이 필요합니다.');
+      alert(t('로그인이 필요합니다.', 'You need to sign in.'));
       return 0;
     }
     if (!desertionNo || !animalId || isUpdating) {
       if (!animalId && animalData) {
-        alert('동물 ID가 없어 처리할 수 없습니다.');
+        alert(t('동물 ID가 없어 처리할 수 없습니다.', 'This animal does not have a valid ID.'));
       }
       return 0;
     }
@@ -169,7 +171,7 @@ export function useShelterLike(
       return 1;
     } catch (error) {
       console.error('찜 처리 실패:', error);
-      alert('처리 중 오류가 발생했습니다.');
+      alert(t('처리 중 오류가 발생했습니다.', 'An error occurred while processing your request.'));
       return 0;
     } finally {
       setIsUpdating(false);
