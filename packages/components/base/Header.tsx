@@ -25,7 +25,6 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
   const { language, setLanguage, isEnglish } = useLanguage();
   const { user, loading } = useAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isHydrated = useSyncExternalStore(
     subscribeToHydration,
     () => true,
@@ -49,7 +48,7 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
         <div className="flex items-center gap-4 md:gap-10">
           <Link
             href="/shelter"
-            className="hidden items-center transition-opacity hover:opacity-80 md:flex"
+            className="flex min-w-0 items-center transition-opacity hover:opacity-80"
           >
             <Image
               src="/static/images/kkosunnae-header-logo.png"
@@ -57,7 +56,7 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
               width={150}
               height={32}
               priority
-              className="h-8 w-auto object-contain"
+              className="h-6 w-auto max-w-[112px] object-contain sm:h-7 sm:max-w-none md:h-8"
             />
           </Link>
 
@@ -77,21 +76,6 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
               </span>
             </NavLink>
           </div>
-
-          {/* 모바일 햄버거 버튼 */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#eadfd7] bg-white/90 text-[#817873] shadow-sm transition-colors hover:bg-primary-soft md:hidden"
-            aria-label={isEnglish ? 'Menu' : '메뉴'}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {isMobileMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
         </div>
         {visibleHeaderButtons && (
           <div className="flex gap-1 items-center sm:gap-2">
@@ -153,30 +137,6 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
           </div>
         )}
       </div>
-
-      {/* 모바일 메뉴 - 헤더 하단에 자연스럽게 확장 */}
-      <div
-        className={`overflow-hidden border-t border-[#eadfd7] bg-white transition-all duration-300 ease-in-out md:hidden ${isMobileMenuOpen ? 'max-h-[22rem] opacity-100' : 'max-h-0 opacity-0'
-          }`}
-      >
-        <div className="px-4 py-2 max-w-7xl mx-auto">
-          <NavLink
-            to="/shelter"
-            activeClassName="active"
-            isActive={() => pathname === '/shelter' || pathname.startsWith('/shelter')}
-            className={`block px-4 py-3 !border-b-0 text-sm transition-colors hover:bg-gray-50 rounded-lg ${pathname === '/shelter' || pathname.startsWith('/shelter')
-              ? '!text-primary1 bg-primary-soft font-semibold'
-              : '!text-[#817873]'
-              }`}
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <span className="inline-flex items-center gap-2">
-              {isEnglish ? 'Adopt' : '입양하기'}
-            </span>
-          </NavLink>
-        </div>
-      </div>
-
       {isLoginModalOpen && (
         <LoginModal onClose={() => setIsLoginModalOpen(false)} />
       )}

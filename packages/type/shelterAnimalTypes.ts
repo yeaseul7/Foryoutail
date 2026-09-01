@@ -1,6 +1,8 @@
 /** 앱 전역에서 사용하는 camelCase 유기동물 공고 타입 */
 export interface ShelterAnimalItem {
   id?: string;
+  /** AI 이미지 검색 결과에서만 사용하는 유사도(0~1) */
+  aiSimilarityScore?: number;
   desertionNo?: string; // 유기번호
   careRegNo?: string; // 보호소번호
   noticeNo?: string; // 공고번호

@@ -160,6 +160,8 @@ export default function AbandonedCard({
     [isEnglish, shelterAnimal.colorCd, sexLabel, ageLabel, t],
   );
 
+  const isAiSearchResult = typeof shelterAnimal.aiSimilarityScore === 'number';
+
   return (
     <article
       onClick={() => router.push(`/shelter/${shelterAnimal.desertionNo}`)}
@@ -204,6 +206,11 @@ export default function AbandonedCard({
               </div>
           </div>
         )}
+        {typeof shelterAnimal.aiSimilarityScore === 'number' && (
+          <span className="absolute bottom-2 right-2 z-10 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-primary1 shadow-sm backdrop-blur-sm">
+            {t('유사도', 'Similarity')} {Math.round(shelterAnimal.aiSimilarityScore * 100)}%
+          </span>
+        )}
         <button
           type="button"
           onClick={(event) => void handleLike(event)}
@@ -219,14 +226,18 @@ export default function AbandonedCard({
         </button>
       </div>
       <div className="relative flex flex-1 flex-col px-3 pb-3 pt-2.5">
-        <div className="flex min-w-0 items-start justify-between gap-1.5">
-          <h3 className="min-w-0 flex-1 truncate text-sm font-extrabold text-[#332d2a]">
-            {cardTitle}
-          </h3>
-        </div>
-        <p className="mt-1 truncate text-xs font-medium text-[#817873]">
-          {summaryLabel}
-        </p>
+        {!isAiSearchResult && (
+          <>
+            <div className="flex min-w-0 items-start justify-between gap-1.5">
+              <h3 className="min-w-0 flex-1 truncate text-sm font-extrabold text-[#332d2a]">
+                {cardTitle}
+              </h3>
+            </div>
+            <p className="mt-1 truncate text-xs font-medium text-[#817873]">
+              {summaryLabel}
+            </p>
+          </>
+        )}
         <p className="mt-1 flex min-w-0 items-center gap-1 text-[11px] text-[#817873]">
           <MdLocationOn className="h-3.5 w-3.5 shrink-0" aria-hidden />
           <span className="truncate">{locationLabel}</span>
