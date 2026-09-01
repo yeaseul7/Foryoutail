@@ -40,7 +40,9 @@ test('목록, 영문 전환, 로그인 UI가 브라우저에서 동작한다', a
   await expect(page).toHaveTitle(/꼬순내/);
   await expect(page.getByRole('button', { name: 'EN', exact: true })).toBeVisible();
 
-  await page.getByRole('button', { name: 'EN', exact: true }).click();
+  const englishButton = page.getByRole('button', { name: 'EN', exact: true });
+  await englishButton.click();
+  await expect(englishButton).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await expect(page.getByRole('link', { name: 'Adopt' }).first()).toBeVisible();
 
