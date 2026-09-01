@@ -16,7 +16,8 @@ async function authenticatedUser(request: NextRequest) {
   const token = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
   if (!token) return null;
 
-  const { data, error } = await createSupabaseAdminClient().auth.getUser(token);
+  const supabaseAdmin = await createSupabaseAdminClient();
+  const { data, error } = await supabaseAdmin.auth.getUser(token);
   if (error) return null;
   return data.user;
 }

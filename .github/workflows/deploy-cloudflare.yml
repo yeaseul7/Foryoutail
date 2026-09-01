@@ -97,8 +97,52 @@ jobs:
           }
           EOF
 
-      - name: Deploy
-        run: npx opennextjs-cloudflare deploy -- --keep-vars --secrets-file .cloudflare-secrets.json
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Upload Preview version
+        id: preview
+        shell: bash
+        run: |
+          set -o pipefail
+          output=$(npx wrangler versions upload \
+            --preview-alias ci \
+            --secrets-file .cloudflare-secrets.json \
+            --message "GitHub Actions preview ${GITHUB_SHA}")
+          echo "$output"
+
+          version_id=$(echo "$output" | sed -n 's/.*Worker Version ID: \([a-f0-9-]*\).*/\1/p' | tail -1)
+          if [ -z "$version_id" ]; then
+            echo "Could not determine uploaded Worker Version ID."
+            exit 1
+          fi
+
+          echo "version_id=$version_id" >> "$GITHUB_OUTPUT"
+          echo "preview_url=https://ci-foryoutail.cutie32769.workers.dev" >> "$GITHUB_OUTPUT"
+
+      - name: Run Preview E2E tests
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ steps.preview.outputs.preview_url }}
+        run: npm run test:e2e
+
+      - name: Promote verified version to Production
+        run: npx wrangler versions deploy "${{ steps.preview.outputs.version_id }}@100%" --yes
+
+      - name: Verify Production
+        env:
+          PLAYWRIGHT_BASE_URL: https://www.kkosunnae.com
+        run: npm run test:e2e
+
+      - name: Upload E2E failure report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Remove temporary secrets file
         if: always()

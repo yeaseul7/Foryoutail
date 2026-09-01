@@ -8,6 +8,7 @@
     "build:next": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:e2e": "playwright test",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy -- --keep-vars",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload -- --keep-vars",
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@opennextjs/cloudflare": "^1.19.4",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

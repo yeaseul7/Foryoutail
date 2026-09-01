@@ -120,7 +120,7 @@ async function queryShelterDocs(params: ShelterInfoParams): Promise<ShelterInfoI
   const numOfRows = params.numOfRows ?? 10;
   const fetchLimit = Math.max(pageNo * numOfRows, numOfRows);
 
-  const supabaseAdmin = createSupabaseAdminClient();
+  const supabaseAdmin = await createSupabaseAdminClient();
   let query = supabaseAdmin
     .from('shelters')
     .select(

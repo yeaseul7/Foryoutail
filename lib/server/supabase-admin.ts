@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 export interface PublicUserProfile {
   id: string;
@@ -16,9 +17,23 @@ interface SyncPublicUserInput {
   profile_img?: string | null;
 }
 
-export function createSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+export async function createSupabaseAdminClient() {
+  let url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  let serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !serviceRoleKey) {
+    try {
+      const { env } = await getCloudflareContext({ async: true });
+      const runtimeEnv = env as CloudflareEnv & {
+        NEXT_PUBLIC_SUPABASE_URL?: string;
+        SUPABASE_SERVICE_ROLE_KEY?: string;
+      };
+      url ||= runtimeEnv.NEXT_PUBLIC_SUPABASE_URL;
+      serviceRoleKey ||= runtimeEnv.SUPABASE_SERVICE_ROLE_KEY;
+    } catch {
+      // Next.js 로컬·빌드 환경에서는 Cloudflare context가 없을 수 있습니다.
+    }
+  }
 
   if (!url || !serviceRoleKey) {
     throw new Error(
@@ -37,7 +52,7 @@ export function createSupabaseAdminClient() {
 export async function getPublicUserById(
   id: string,
 ): Promise<PublicUserProfile | null> {
-  const supabaseAdmin = createSupabaseAdminClient();
+  const supabaseAdmin = await createSupabaseAdminClient();
   const { data, error } = await supabaseAdmin
     .from('users')
     .select('id, email, nickname, profile_img, fulladmin, created_at')
@@ -57,7 +72,7 @@ export async function getPublicUsersByIds(
   const uniqueIds = [...new Set(ids.filter(Boolean))];
   if (uniqueIds.length === 0) return new Map();
 
-  const supabaseAdmin = createSupabaseAdminClient();
+  const supabaseAdmin = await createSupabaseAdminClient();
   const { data, error } = await supabaseAdmin
     .from('users')
     .select('id, email, nickname, profile_img, fulladmin, created_at')
@@ -76,7 +91,7 @@ export async function syncPublicUserByAuthIdentity({
   nickname = null,
   profile_img = null,
 }: SyncPublicUserInput): Promise<PublicUserProfile> {
-  const supabaseAdmin = createSupabaseAdminClient();
+  const supabaseAdmin = await createSupabaseAdminClient();
 
   const { data: upserted, error: upsertError } = await supabaseAdmin
     .from('users')
