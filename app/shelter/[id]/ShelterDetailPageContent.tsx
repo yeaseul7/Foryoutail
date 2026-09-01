@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+
 import PageTemplate from '@/packages/components/base/PageTemplate';
 import PageFooter from '@/packages/components/base/PageFooter';
 import AnimalImgCard from '@/packages/components/shelter/AnimalImgCard';
@@ -11,6 +13,7 @@ import type { ShelterInfoItem } from '@/packages/type/shelterTyps';
 import { getBaseUrl, normalizeImageUrl } from '@/packages/utils/metadata';
 import { useLanguage } from '@/lib/i18n/language';
 import { animalBreedLabel } from '@/lib/i18n/animal-labels';
+import { trackEvent } from '@/lib/analytics';
 
 function animalImages(animal: ShelterAnimalItem): string[] {
   const images: string[] = [];
@@ -52,6 +55,15 @@ export default function ShelterDetailPageContent({
   const { isEnglish, t } = useLanguage();
   const images = animalImages(animalData);
   const desertionNo = animalData.desertionNo ?? '';
+  const animalId = animalData.id?.trim() || desertionNo;
+
+  useEffect(() => {
+    trackEvent('view_animal_detail', {
+      animal_id: animalId,
+      animal_type: animalData.upKindCd ?? animalData.upKindNm,
+    });
+  }, [animalData.upKindCd, animalData.upKindNm, animalId]);
+
   const baseUrl = getBaseUrl().replace(/\/$/, '');
   const pageUrl = `${baseUrl}/shelter/${desertionNo}`;
   const structuredData = {

@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase/client';
 import type { AiSearchFiltersValues } from '@/packages/components/search-animals/AiSearchFilters';
 import { sidoLocation } from '@/static/data/sidoLocation';
 import { useLanguage } from '@/lib/i18n/language';
+import { trackEvent } from '@/lib/analytics';
 
 const DAILY_LIMIT = 10;
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
@@ -207,6 +208,11 @@ export function useSearchAnimal() {
       const matches = applyAiSearchFilters(rawMatches, appliedFilters).slice(0, DEFAULT_TOP_K);
       setSearchMatches(matches);
       writeSearchCache(matches, appliedFilters);
+      trackEvent('complete_ai_search', {
+        result_count: matches.length,
+        animal_type: appliedFilters.petType || undefined,
+        region_used: Boolean(appliedFilters.sidoCd),
+      });
       return matches;
     } catch (e) {
       setSearchError(e instanceof Error ? e.message : t('검색 중 오류가 발생했습니다.', 'An error occurred during search.'));

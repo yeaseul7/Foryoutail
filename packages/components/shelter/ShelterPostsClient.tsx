@@ -13,6 +13,7 @@ import { sidoLocation } from '@/static/data/sidoLocation';
 import { useSearchAnimal } from '@/hooks/useSearchAnimal';
 import type { SimilarMatch } from '@/lib/search-animal/types';
 import { useLanguage } from '@/lib/i18n/language';
+import { trackEvent } from '@/lib/analytics';
 import {
   MdClose,
   MdRefresh,
@@ -324,6 +325,13 @@ export default function ShelterPostsClient({
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [imageSearchActive, setImageSearchActive] = useState(false);
   const imageSearchActiveRef = useRef(false);
+
+  useEffect(() => {
+    trackEvent('view_animal_list', {
+      result_count: initialData.items.length,
+      animal_type: initialFilters.upKindCd ?? undefined,
+    });
+  }, [initialData.items.length, initialFilters.upKindCd]);
 
   useEffect(() => {
     if (cacheReadRef.current) return;
