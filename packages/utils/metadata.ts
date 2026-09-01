@@ -78,6 +78,8 @@ export interface GenerateMetadataOptions {
   includeTwitterCreator?: boolean;
   includeOtherOgTags?: boolean;
   imageAlt?: string;
+  imageWidth?: number;
+  imageHeight?: number;
 }
 
 
@@ -94,6 +96,8 @@ export function generateMetadata(options: GenerateMetadataOptions): Metadata {
     includeCanonical = true, // 기본값을 true로 추천 (SEO 중복 방지)
     includeTwitterCreator = false,
     imageAlt,
+    imageWidth = 1200,
+    imageHeight = 630,
   } = options;
 
   const baseUrl = getBaseUrl();
@@ -119,8 +123,8 @@ export function generateMetadata(options: GenerateMetadataOptions): Metadata {
       images: [
         {
           url: normalizedImageUrl,
-          width: 1200,
-          height: 630,
+          width: imageWidth,
+          height: imageHeight,
           alt: imageAltText,
         },
       ],
@@ -152,6 +156,8 @@ export function generateDefaultMetadata(
     defaultImagePath?: string;
     includeCanonical?: boolean;
     includeTwitterCreator?: boolean;
+    imageWidth?: number;
+    imageHeight?: number;
   },
 ): Metadata {
   const {
@@ -159,6 +165,8 @@ export function generateDefaultMetadata(
     defaultImagePath = '/static/images/defaultDog.png',
     includeCanonical = false,
     includeTwitterCreator = false,
+    imageWidth = 1200,
+    imageHeight = 630,
   } = options || {};
 
   return generateMetadata({
@@ -170,5 +178,7 @@ export function generateDefaultMetadata(
     includeCanonical,
     includeTwitterCreator,
     imageAlt: '꼬순내',
+    imageWidth,
+    imageHeight,
   });
 }
