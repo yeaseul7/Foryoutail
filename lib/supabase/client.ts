@@ -1,16 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabasePublishableKey =
+let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+let supabasePublishableKey =
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const isSecretKey = supabasePublishableKey?.startsWith('sb_secret_') ?? false;
+let isSecretKey = supabasePublishableKey?.startsWith('sb_secret_') ?? false;
 
-export const hasSupabaseConfig = Boolean(
+export let hasSupabaseConfig = Boolean(
   supabaseUrl && supabasePublishableKey && !isSecretKey,
 );
 
-export const supabase = createClient(
+export let supabase = createClient(
   supabaseUrl || 'https://example.supabase.co',
   supabasePublishableKey || 'public-anon-key-placeholder',
   {
@@ -21,6 +21,40 @@ export const supabase = createClient(
     },
   },
 );
+
+let configPromise: Promise<boolean> | null = null;
+
+export function loadSupabaseBrowserConfig(): Promise<boolean> {
+  if (hasSupabaseConfig) return Promise.resolve(true);
+  if (configPromise) return configPromise;
+
+  configPromise = fetch('/api/public-config', { cache: 'no-store' })
+    .then(async (response) => {
+      if (!response.ok) return false;
+      const config = (await response.json()) as {
+        supabaseUrl?: string;
+        supabasePublishableKey?: string;
+      };
+      if (!config.supabaseUrl || !config.supabasePublishableKey) return false;
+      if (config.supabasePublishableKey.startsWith('sb_secret_')) return false;
+
+      supabaseUrl = config.supabaseUrl;
+      supabasePublishableKey = config.supabasePublishableKey;
+      isSecretKey = false;
+      hasSupabaseConfig = true;
+      supabase = createClient(supabaseUrl, supabasePublishableKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+        },
+      });
+      return true;
+    })
+    .catch(() => false);
+
+  return configPromise;
+}
 
 export async function getSupabaseAccessToken(): Promise<string | null> {
   if (!hasSupabaseConfig) return null;

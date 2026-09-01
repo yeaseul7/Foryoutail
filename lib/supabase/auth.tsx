@@ -12,6 +12,7 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 import {
   assertValidSupabaseBrowserKey,
   hasSupabaseConfig,
+  loadSupabaseBrowserConfig,
   supabase,
 } from '@/lib/supabase/client';
 
@@ -155,9 +156,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let active = true;
+    let unsubscribe: (() => void) | undefined;
 
     const init = async () => {
-      if (!hasSupabaseConfig) {
+      const configured = hasSupabaseConfig || await loadSupabaseBrowserConfig();
+      if (!configured) {
         if (active) {
           setUser(null);
           setLoading(false);
@@ -184,32 +187,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           console.error('Supabase public.users 초기 동기화 실패:', error);
         });
       }
+
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (!active) return;
+        const nextUser = mapSupabaseUser(session?.user ?? null);
+        setUser(nextUser);
+        setLoading(false);
+
+        if (nextUser) {
+          void syncSupabasePublicUser({
+            nickname: nextUser.displayName,
+            profile_img: nextUser.photoURL,
+            accessToken: session!.access_token,
+          }).catch((error) => {
+            console.error('Supabase public.users 자동 동기화 실패:', error);
+          });
+        }
+      });
+      unsubscribe = () => subscription.unsubscribe();
     };
 
-    init();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!active) return;
-      const mappedUser = mapSupabaseUser(session?.user ?? null);
-      setUser(mappedUser);
-      setLoading(false);
-
-      if (mappedUser) {
-        void syncSupabasePublicUser({
-          nickname: mappedUser.displayName,
-          profile_img: mappedUser.photoURL,
-          accessToken: session!.access_token,
-        }).catch((error) => {
-          console.error('Supabase public.users 자동 동기화 실패:', error);
-        });
-      }
-    });
+    void init();
 
     return () => {
       active = false;
-      subscription.unsubscribe();
+      unsubscribe?.();
     };
   }, []);
 
