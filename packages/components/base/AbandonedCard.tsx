@@ -18,8 +18,10 @@ import CardImage from '@/packages/components/common/CardImage';
 
 export default function AbandonedCard({
   shelterAnimal,
+  priority = false,
 }: {
   shelterAnimal: ShelterAnimalItem;
+  priority?: boolean;
 }) {
   const router = useRouter();
   const desertionNo = shelterAnimal.desertionNo;
@@ -88,29 +90,34 @@ export default function AbandonedCard({
     [displayImage],
   );
 
-  /** 공고종료·입양완료 등 processState에 '종료'가 포함된 경우 */
+  const processStateLabel = useMemo(() => {
+    const state = shelterAnimal.processState?.trim();
+    if (state === 'notice') return '공고중';
+    if (state === 'protect') return '보호중';
+    if (state === 'adopted') return '입양 완료';
+    if (state === 'returned') return '반환 완료';
+    if (state === 'ended') return '종료';
+    return state || '상태 미확인';
+  }, [shelterAnimal.processState]);
+
   const isProcessEnded = useMemo(() => {
     const s = shelterAnimal.processState?.trim();
-    return Boolean(s && s.includes('종료'));
+    return s === 'adopted' || s === 'returned' || s === 'ended' || Boolean(s?.includes('종료')) || Boolean(s?.includes('입양완료'));
   }, [shelterAnimal.processState]);
 
   const statusBadge = useMemo(() => {
-    const state = shelterAnimal?.processState || '상태 미확인';
-    const isProtecting = state === '보호중';
-    const hasEnd = state.includes('종료'); // 종료 포함 상태(예: 공고종료 등)
-    if (!isProtecting && hasEnd) {
-      return {
-        text: state,
-        bgColor: '#E5E5E5', // 연한 회색
-        textColor: '#6B6B6B', // 진한 회색 텍스트
-      };
+    const rawState = shelterAnimal.processState?.trim().toLowerCase() || '';
+    if (rawState.includes('실종') || rawState.includes('lost') || rawState.includes('긴급')) {
+      return { text: processStateLabel, bgColor: '#FDE8E6', textColor: '#D9473F' };
     }
-    return {
-      text: state,
-      bgColor: '#E9EBFD', // 연한 라벤더/퍼플 블루
-      textColor: '#575FE5', // 진한 블루 퍼플 텍스트
-    };
-  }, [shelterAnimal]);
+    if (rawState === 'adopted' || rawState.includes('입양완료') || rawState.includes('발견')) {
+      return { text: processStateLabel, bgColor: '#EAF1EC', textColor: '#587460' };
+    }
+    if (isProcessEnded) {
+      return { text: processStateLabel, bgColor: '#EEECEB', textColor: '#756E69' };
+    }
+    return { text: processStateLabel, bgColor: '#FFF0EC', textColor: '#C74736' };
+  }, [isProcessEnded, processStateLabel, shelterAnimal.processState]);
 
   const headlineSpecialMark = useMemo(() => {
     const raw = shelterAnimal.specialMark?.trim();
@@ -152,7 +159,7 @@ export default function AbandonedCard({
   return (
     <article
       onClick={() => router.push(`/shelter/${shelterAnimal.desertionNo}`)}
-      className="flex h-full w-full max-w-full cursor-pointer flex-col overflow-hidden rounded-[1.35rem] border-2 border-[#bfd7e8] bg-white shadow-[0_5px_12px_rgba(62,112,151,0.10)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(62,112,151,0.18)] active:scale-[0.99]"
+      className="flex h-full w-full max-w-full cursor-pointer flex-col overflow-hidden rounded-[20px] border border-[#eadfd7] bg-white shadow-[0_5px_14px_rgba(51,45,42,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-primary1/35 hover:shadow-[0_10px_22px_rgba(51,45,42,0.13)] active:scale-[0.99]"
     >
       <div className="relative m-2 mb-0 aspect-square w-[calc(100%-1rem)] overflow-hidden rounded-[1rem] bg-gray-100">
         <CardImage
@@ -161,7 +168,9 @@ export default function AbandonedCard({
           className="object-cover"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 20vw"
           unoptimized={shouldUseUnoptimizedImage}
-          loading="lazy"
+          loading={priority ? undefined : 'lazy'}
+          priority={priority}
+          fetchPriority={priority ? 'high' : 'auto'}
         />
         {isProcessEnded && (
           <>
@@ -196,10 +205,10 @@ export default function AbandonedCard({
           onClick={(event) => void handleLike(event)}
           disabled={isUpdating || !desertionNo}
           aria-label={isLiked ? '찜 해제' : '찜하기'}
-          className={`absolute left-2 top-2 z-10 rounded-full bg-white/90 p-1.5 text-slate-400 shadow-sm backdrop-blur-sm transition hover:text-red-500 ${isUpdating || !desertionNo ? 'cursor-not-allowed opacity-50' : ''}`}
+          className={`absolute left-2 top-2 z-10 rounded-full bg-white/90 p-1.5 text-[#817873] shadow-sm backdrop-blur-sm transition hover:text-alert ${isUpdating || !desertionNo ? 'cursor-not-allowed opacity-50' : ''}`}
         >
           {isLiked ? (
-            <HiHeart className="h-4 w-4 text-red-500" aria-hidden />
+            <HiHeart className="h-4 w-4 text-alert" aria-hidden />
           ) : (
             <HiOutlineHeart className="h-4 w-4" aria-hidden />
           )}
@@ -207,14 +216,14 @@ export default function AbandonedCard({
       </div>
       <div className="relative flex flex-1 flex-col px-3 pb-3 pt-2.5">
         <div className="flex min-w-0 items-start justify-between gap-1.5">
-          <h3 className="min-w-0 flex-1 truncate text-sm font-extrabold text-slate-900">
+          <h3 className="min-w-0 flex-1 truncate text-sm font-extrabold text-[#332d2a]">
             {cardTitle}
           </h3>
         </div>
-        <p className="mt-1 truncate text-xs font-medium text-slate-600">
+        <p className="mt-1 truncate text-xs font-medium text-[#817873]">
           {summaryLabel}
         </p>
-        <p className="mt-1 flex min-w-0 items-center gap-1 text-[11px] text-[#4f7da3]">
+        <p className="mt-1 flex min-w-0 items-center gap-1 text-[11px] text-[#817873]">
           <MdLocationOn className="h-3.5 w-3.5 shrink-0" aria-hidden />
           <span className="truncate">{locationLabel}</span>
         </p>

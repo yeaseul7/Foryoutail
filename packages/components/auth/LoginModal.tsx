@@ -1,6 +1,7 @@
 'use client';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '@/lib/supabase/auth';
 import { useClickOutsideModal } from '@/packages/utils/clickEvent';
 
@@ -24,6 +25,14 @@ export default function LoginModal({ onClose }: LoginModalProps) {
   const [isKakaoLoading, setIsKakaoLoading] = useState(false);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -124,12 +133,14 @@ export default function LoginModal({ onClose }: LoginModalProps) {
 
   const isLoading = isGoogleLoading || isGithubLoading || isKakaoLoading || isEmailLoading;
 
-  return (
-    <div className="flex fixed inset-0 justify-center items-center z-[9999]">
-      <div className="absolute inset-0 bg-opaque-layer z-[9998]" />
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto p-4 sm:p-6">
+      <div className="fixed inset-0 bg-[#332d2a]/40 backdrop-blur-[2px]" />
       <div
         ref={modalRef}
-        className="relative p-6 w-full max-w-md rounded-lg shadow-xl bg-element1 z-[9999]"
+        className="relative z-10 my-auto w-full max-w-md rounded-[20px] border border-[#eadfd7] bg-white p-6 shadow-[0_24px_70px_rgba(51,45,42,0.24)]"
       >
         <h3 className="mb-4 text-xl font-bold">
           {authMode === 'login' ? '로그인' : '회원가입'}
@@ -271,6 +282,7 @@ export default function LoginModal({ onClose }: LoginModalProps) {
           </button>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

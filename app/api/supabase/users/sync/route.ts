@@ -2,34 +2,42 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   getPublicUserById,
   getPublicUsersByIds,
-  syncPublicUserByEmailAwareUpsert,
+  createSupabaseAdminClient,
+  syncPublicUserByAuthIdentity,
 } from '@/lib/server/supabase-admin';
 
 interface SyncUserBody {
-  id?: string;
-  email?: string | null;
   nickname?: string | null;
   profile_img?: string | null;
-  fulladmin?: boolean | null;
+}
+
+async function authenticatedUser(request: NextRequest) {
+  const authorization = request.headers.get('authorization');
+  const token = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
+  if (!token) return null;
+
+  const { data, error } = await createSupabaseAdminClient().auth.getUser(token);
+  if (error) return null;
+  return data.user;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as SyncUserBody;
+    const authUser = await authenticatedUser(request);
 
-    if (!body.id) {
+    if (!authUser) {
       return NextResponse.json(
-        { error: 'id는 필수입니다.' },
-        { status: 400 },
+        { error: '인증이 필요합니다.' },
+        { status: 401 },
       );
     }
 
-    const user = await syncPublicUserByEmailAwareUpsert({
-      id: body.id,
-      email: body.email ?? null,
+    const user = await syncPublicUserByAuthIdentity({
+      id: authUser.id,
+      email: authUser.email ?? null,
       nickname: body.nickname ?? null,
       profile_img: body.profile_img ?? null,
-      fulladmin: typeof body.fulladmin === 'boolean' ? body.fulladmin : null,
     });
 
     return NextResponse.json({ ok: true, user });

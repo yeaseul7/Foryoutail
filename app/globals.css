@@ -1,7 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --color-primary: #f45f4a;
+  --color-primary-soft-value: #fff0ec;
+  --color-background-value: #f7f7f5;
+  --color-surface: #ffffff;
+  --color-text: #332d2a;
+  --color-text-muted: #817873;
+  --color-success-value: #72927b;
+  --color-alert-value: #d9473f;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --background: var(--color-background-value);
   /* --foreground: #171717; */
   --font-pretendard: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", system-ui, sans-serif;
   --font-system-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
@@ -27,19 +38,22 @@
   --color-invert: #1E1E1E;
   --color-inline-code: #E9ECEF;
   --color-tag: #F8F9FA;
-  --color-text1: #212529;
-  --color-text2: #495057;
-  --color-text3: #868E96;
+  --color-text1: var(--color-text);
+  --color-text2: var(--color-text-muted);
+  --color-text3: #9f9691;
   --color-text4: #CED4DA;
   --color-border1: #343A40;
   --color-border2: #ADB5BD;
   --color-border3: #DEE2E6;
   --color-border4: #F1F3F5;
-  --color-primary1: #4f63d7;
-  --color-primary2: #4455bf;
-  --color-lightBlue: #f9fcfe;
-  --color-destructive1: #FF6B6B;
-  --color-destructive2: #FF8787;
+  --color-primary1: var(--color-primary);
+  --color-primary2: #db4e3b;
+  --color-primary-soft: var(--color-primary-soft-value);
+  --color-lightBlue: var(--color-background);
+  --color-success: var(--color-success-value);
+  --color-alert: var(--color-alert-value);
+  --color-destructive1: var(--color-alert-value);
+  --color-destructive2: #e2635c;
   --color-button-text: #FFFFFF;
   --color-slight-layer: rgba(0, 0, 0, 0.05);
   --color-opaque-layer: rgba(249, 249, 249, 0.85);
@@ -106,7 +120,8 @@ html {
 body {
   min-height: 100%;
   height: 100%;
-  background: #fafafa;
+  background: var(--color-background);
+  color: var(--color-text);
   /* 항상 밝은 배경색 사용 */
   /* color: var(--foreground); */
   font-family: var(--font-pretendard);

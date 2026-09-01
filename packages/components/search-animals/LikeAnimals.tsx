@@ -65,11 +65,8 @@ export default function LikeAnimals({ searchError, searchMatches }: LikeAnimalsP
                     <div className="mb-4 flex items-end justify-between gap-3">
                         <div>
                             <h3 className="text-base font-bold text-slate-800 sm:text-[1.05rem]">
-                                제일 닮은 친구 <span className="text-primary1">({limited.length}건)</span>
+                                사진과 비슷한 동물 <span className="text-primary1">({limited.length}건)</span>
                             </h3>
-                            <p className="mt-1 text-xs text-slate-500 sm:text-[13px]">
-                                사진 특징과 분위기를 기준으로 가까운 결과를 보여드려요.
-                            </p>
                         </div>
                         <div className="hidden rounded-full border border-primary1/15 bg-primary1/8 px-3 py-1 text-[11px] font-semibold text-primary1 sm:inline-flex">
                             상위 {MAX_DISPLAY}건

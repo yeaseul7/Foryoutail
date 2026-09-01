@@ -1,6 +1,7 @@
 'use client';
 
 import { AuthProvider } from '@/lib/supabase/auth';
+import { LanguageProvider } from '@/lib/i18n/language';
 
 export default function Providers({
   children,
@@ -8,8 +9,8 @@ export default function Providers({
   children: React.ReactNode;
 }>) {
   return (
-    <AuthProvider>
-      {children}
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>{children}</AuthProvider>
+    </LanguageProvider>
   );
 }
