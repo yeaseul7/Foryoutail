@@ -42,10 +42,11 @@ export default function PageFooter() {
               />
             </Link>
             <p className="text-xs leading-6 text-gray-600">
-              {isEnglish ? 'Find shelter animal adoption listings across South Korea.' : '전국 유기동물 공고를 쉽고 빠르게 탐색할 수 있는 입양 정보 서비스.'}
+              {isEnglish ? 'Find shelter animal adoption listings across South Korea.' : '유기동물 공고를 빠르고 편하게 찾을 수 있는 서비스'}
             </p>
             <a
-              href="https://www.instagram.com/kkosunnae_official/"
+              href="https://www.instagram.com/earlys_day/"
+              target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 rounded text-gray-600 transition-colors hover:text-primary1 focus:outline-none focus:ring-2 focus:ring-primary1/30"
               aria-label={isEnglish ? 'Kkosunnae Instagram' : 'Instagram 꼬순내 인스타그램'}

@@ -29,6 +29,8 @@ function parseShelterDataParams(searchParams: URLSearchParams): ShelterDataQuery
   if (searchParams.has('rfid_cd')) params.rfid_cd = searchParams.get('rfid_cd')!;
   if (searchParams.has('desertion_no'))
     params.desertion_no = searchParams.get('desertion_no')!;
+  if (searchParams.has('desertion_nos'))
+    params.desertion_nos = searchParams.get('desertion_nos')!;
   if (searchParams.has('notice_no'))
     params.notice_no = searchParams.get('notice_no')!;
   if (searchParams.has('orgNm')) params.orgNm = searchParams.get('orgNm')!;

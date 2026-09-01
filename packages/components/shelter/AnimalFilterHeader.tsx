@@ -48,7 +48,7 @@ const animalTypeOptions = [
 
 /** AnimalFilterHeader 전용 — 검색(더 높게) / 필터 pill(더 낮게) */
 const searchBarWrapClass =
-  'mx-auto flex min-h-[54px] w-full max-w-2xl min-w-0 items-center rounded-full border border-primary1/40 bg-white px-5 transition hover:border-primary1/65 focus-within:border-primary1 focus-within:ring-2 focus-within:ring-primary1/15';
+  'mx-auto flex min-h-[54px] w-full max-w-2xl min-w-0 items-center rounded-full border border-primary1/40 bg-white px-3 transition hover:border-primary1/65 focus-within:border-primary1 focus-within:ring-2 focus-within:ring-primary1/15 sm:px-5';
 const searchInputClass =
   'h-12 min-w-0 flex-1 bg-transparent py-2 text-base text-[#332d2a] outline-none placeholder:text-[#a69d98]';
 
@@ -258,7 +258,7 @@ export default function AnimalFilterHeader({
               alt=""
               width={42}
               height={28}
-              className="mr-3 h-7 w-[42px] shrink-0 self-center object-contain"
+              className="h-7 w-[42px] shrink-0 self-center object-contain"
             />
             <input
               type="text"

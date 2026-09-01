@@ -23,6 +23,7 @@ export interface ShelterDataQueryParams {
   sex_cd?: string;
   rfid_cd?: string;
   desertion_no?: string;
+  desertion_nos?: string;
   notice_no?: string;
   searchQuery?: string;
   orgNm?: string;
@@ -320,7 +321,14 @@ export async function queryShelterAnimals(
     query = query.lte('happened_date', endDate);
   }
 
-  if (params.desertion_no?.trim()) {
+  const desertionNos = params.desertion_nos
+    ?.split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .slice(0, 50);
+  if (desertionNos?.length) {
+    query = query.in('desertion_no', desertionNos);
+  } else if (params.desertion_no?.trim()) {
     query = query.eq('desertion_no', params.desertion_no.trim());
   }
   if (params.notice_no?.trim()) {
