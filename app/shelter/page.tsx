@@ -17,6 +17,9 @@ export const metadata: Metadata = generateDefaultMetadata(
   '전국 유기견·유기묘 입양 공고를 지역과 상태별로 확인하고, 가족을 기다리는 아이들을 꼬순내에서 찾아보세요.',
   `${getBaseUrl().replace(/\/$/, '')}/shelter`,
   {
+    defaultImagePath: '/static/images/shelter-og.png',
+    imageWidth: 1536,
+    imageHeight: 1024,
     includeCanonical: true,
   },
 );
