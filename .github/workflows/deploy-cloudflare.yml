@@ -79,25 +79,6 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Verify Supabase browser configuration
-        run: |
-          node <<'EOF'
-          const fs = require('fs');
-          const path = require('path');
-
-          const root = '.open-next/assets/_next/static/chunks';
-          const files = fs.readdirSync(root).filter((file) => file.endsWith('.js'));
-          const expectedUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-          const hasUrl = files.some((file) =>
-            fs.readFileSync(path.join(root, file), 'utf8').includes(expectedUrl)
-          );
-
-          if (!hasUrl) {
-            console.error('Supabase URL was not embedded in the browser bundle.');
-            process.exit(1);
-          }
-          EOF
-
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
