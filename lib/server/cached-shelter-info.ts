@@ -53,7 +53,7 @@ function toShelterInfo(row: ShelterInfoRow): ShelterInfoItem {
 export const getCachedShelterInfo = unstable_cache(
   async (careRegNo: string): Promise<ShelterInfoItem | null> => {
     if (!careRegNo.trim()) return null;
-    const supabase = createSupabaseAdminClient();
+    const supabase = await createSupabaseAdminClient();
     const { data, error } = await supabase
       .from('shelters')
       .select('id, care_reg_no, care_nm, care_addr, jibun_addr, care_tel, close_day, week_opr_stime, week_opr_etime, weekend_opr_stime, weekend_opr_etime, org_nm, shelter_migrated_data')

@@ -46,7 +46,7 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
         <div className="flex items-center gap-4 md:gap-10">
           <Link
             href="/shelter"
-            className="flex items-center transition-opacity hover:opacity-80"
+            className="hidden items-center transition-opacity hover:opacity-80 md:flex"
           >
             <Image
               src="/static/images/kkosunnae-header-logo.png"
@@ -78,7 +78,7 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
           {/* 모바일 햄버거 버튼 */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="rounded-lg p-2 text-[#817873] transition-colors hover:bg-primary-soft md:hidden"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#eadfd7] bg-white/90 text-[#817873] shadow-sm transition-colors hover:bg-primary-soft md:hidden"
             aria-label={isEnglish ? 'Menu' : '메뉴'}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,7 +93,7 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
         {visibleHeaderButtons && (
           <div className="flex gap-1 items-center sm:gap-2">
             <div
-              className="inline-flex items-center gap-1 rounded-full border border-[#eadfd7] bg-white/90 p-1 text-xs font-bold shadow-sm ring-1 ring-white/70 backdrop-blur transition-all hover:border-primary1/40 hover:shadow-md"
+              className="inline-flex h-9 items-center gap-1 rounded-full border border-[#eadfd7] bg-white/90 p-1 text-xs font-bold shadow-sm ring-1 ring-white/70 backdrop-blur transition-all hover:border-primary1/40 hover:shadow-md"
               role="group"
               aria-label={isEnglish ? 'Select language' : '언어 선택'}
             >
@@ -139,7 +139,9 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
                     )}
                   </div>
                 ) : (
-                  <RoundButton onClick={openLoginModal}>{isEnglish ? 'Log in' : '로그인'}</RoundButton>
+                  <RoundButton className="h-9 min-w-[72px] px-3 text-xs sm:text-xs md:text-xs" onClick={openLoginModal}>
+                    {isEnglish ? 'Log in' : '로그인'}
+                  </RoundButton>
                 )}
               </>
             )}

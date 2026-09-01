@@ -265,7 +265,7 @@ function upKindNamesFromCode(upkind?: string): string[] | null {
 }
 
 export async function loadAllShelterAnimals(): Promise<ShelterAnimalItem[]> {
-  const supabaseAdmin = createSupabaseAdminClient();
+  const supabaseAdmin = await createSupabaseAdminClient();
   const { data, error } = await supabaseAdmin
     .from('animals')
     .select('*')
@@ -294,7 +294,7 @@ export async function queryShelterAnimals(
   const from = (pageNo - 1) * numOfRows;
   const to = from + numOfRows + 200;
 
-  const supabaseAdmin = createSupabaseAdminClient();
+  const supabaseAdmin = await createSupabaseAdminClient();
   let query = supabaseAdmin
     .from('animals')
     .select('*');
@@ -379,7 +379,7 @@ export async function getShelterAnimalByDesertionNo(
   const trimmed = desertionNo.trim();
   if (!trimmed) return null;
 
-  const supabaseAdmin = createSupabaseAdminClient();
+  const supabaseAdmin = await createSupabaseAdminClient();
   const { data, error } = await supabaseAdmin
     .from('animals')
     .select('*')

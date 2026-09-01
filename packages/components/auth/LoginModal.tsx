@@ -138,11 +138,11 @@ export default function LoginModal({ onClose }: LoginModalProps) {
   if (typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto p-4 sm:p-6">
+    <div className="fixed inset-0 z-[9999] grid min-h-[100dvh] place-items-center overflow-y-auto p-4 sm:p-6">
       <div className="fixed inset-0 bg-[#332d2a]/40 backdrop-blur-[2px]" />
       <div
         ref={modalRef}
-        className="relative z-10 my-auto w-full max-w-md rounded-[20px] border border-[#eadfd7] bg-white p-6 shadow-[0_24px_70px_rgba(51,45,42,0.24)]"
+        className="relative z-10 w-full max-w-md self-center rounded-[20px] border border-[#eadfd7] bg-white p-6 shadow-[0_24px_70px_rgba(51,45,42,0.24)]"
       >
         <h3 className="mb-4 text-xl font-bold">
           {authMode === 'login' ? t('로그인', 'Sign in') : t('회원가입', 'Sign up')}
