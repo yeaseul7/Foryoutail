@@ -69,7 +69,7 @@ export default function ImageSearchButton({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-[120] mt-3 w-[min(24rem,calc(100vw-2rem))] rounded-[20px] border border-[#eadfd7] bg-white p-5 shadow-[0_18px_50px_rgba(51,45,42,0.16)]">
+        <div className="absolute -right-5 top-full z-[120] mt-3 w-[min(24rem,calc(100vw-2rem))] rounded-[20px] border border-[#eadfd7] bg-white p-5 shadow-[0_18px_50px_rgba(51,45,42,0.16)] sm:right-0">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-base font-bold text-slate-900">{isEnglish ? 'Search with an image' : '이미지로 검색'}</h2>
             <button type="button" onClick={() => setOpen(false)} aria-label={isEnglish ? 'Close' : '닫기'} className="rounded-full p-1.5 text-slate-500 hover:bg-slate-100">

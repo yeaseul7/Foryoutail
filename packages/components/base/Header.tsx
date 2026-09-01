@@ -1,9 +1,9 @@
 'use client';
 
 import RoundButton from '../common/RoundButton';
-import { useCallback, useState, useRef } from 'react';
+import { useCallback, useState, useRef, useSyncExternalStore } from 'react';
 import { useClickOutside } from '@/packages/utils/clickEvent';
-import dynamic from 'next/dynamic';
+import LoginModal from '../auth/LoginModal';
 import HeaderUserIcon from './HeaderUserIcon';
 import HeaderUserMenu from './HeaderUserMenu';
 import { useAuth } from '@/lib/supabase/auth';
@@ -13,14 +13,12 @@ import NavLink from '../common/NavLink';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n/language';
 
-const LoginModal = dynamic(
-  () => import('../auth/LoginModal'),
-  { ssr: false }
-);
-
 interface HeaderProps {
   visibleHeaderButtons?: boolean;
 }
+
+const subscribeToHydration = () => () => {};
+
 export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const pathname = usePathname();
@@ -28,6 +26,11 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
   const { user, loading } = useAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const isHydrated = useSyncExternalStore(
+    subscribeToHydration,
+    () => true,
+    () => false,
+  );
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   useClickOutside<HTMLDivElement>(
@@ -105,17 +108,19 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
               </span>
               <button
                 type="button"
+                disabled={!isHydrated}
                 onClick={() => setLanguage('ko')}
                 aria-pressed={language === 'ko'}
-                className={`rounded-full px-3 py-1.5 transition-all ${language === 'ko' ? 'bg-primary1 text-white shadow-sm' : 'text-[#817873] hover:bg-primary-soft hover:text-[#332d2a]'}`}
+                className={`rounded-full px-3 py-1.5 transition-all disabled:cursor-wait ${language === 'ko' ? 'bg-primary1 text-white shadow-sm' : 'text-[#817873] hover:bg-primary-soft hover:text-[#332d2a]'}`}
               >
                 KR
               </button>
               <button
                 type="button"
+                disabled={!isHydrated}
                 onClick={() => setLanguage('en')}
                 aria-pressed={language === 'en'}
-                className={`rounded-full px-3 py-1.5 transition-all ${language === 'en' ? 'bg-primary1 text-white shadow-sm' : 'text-[#817873] hover:bg-primary-soft hover:text-[#332d2a]'}`}
+                className={`rounded-full px-3 py-1.5 transition-all disabled:cursor-wait ${language === 'en' ? 'bg-primary1 text-white shadow-sm' : 'text-[#817873] hover:bg-primary-soft hover:text-[#332d2a]'}`}
               >
                 EN
               </button>

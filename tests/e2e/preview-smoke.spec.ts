@@ -51,6 +51,7 @@ test('목록, 영문 전환, 로그인 UI가 브라우저에서 동작한다', a
   await expect(page.getByRole('button', { name: 'EN', exact: true })).toBeVisible();
 
   const englishButton = page.getByRole('button', { name: 'EN', exact: true });
+  await expect(englishButton).toBeEnabled();
   await englishButton.click();
   await expect(englishButton).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
