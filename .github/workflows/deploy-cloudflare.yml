@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - develop
   workflow_dispatch:
 
 concurrency:
@@ -105,8 +106,9 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
+          preview_alias="ci-${GITHUB_REF_NAME}"
           output=$(npx wrangler versions upload \
-            --preview-alias ci \
+            --preview-alias "$preview_alias" \
             --secrets-file .cloudflare-secrets.json \
             --message "GitHub Actions preview ${GITHUB_SHA}")
           echo "$output"
@@ -118,7 +120,7 @@ jobs:
           fi
 
           echo "version_id=$version_id" >> "$GITHUB_OUTPUT"
-          echo "preview_url=https://ci-foryoutail.cutie32769.workers.dev" >> "$GITHUB_OUTPUT"
+          echo "preview_url=https://${preview_alias}-foryoutail.cutie32769.workers.dev" >> "$GITHUB_OUTPUT"
 
       - name: Run Preview E2E tests
         env:
@@ -126,9 +128,11 @@ jobs:
         run: npm run test:e2e
 
       - name: Promote verified version to Production
+        if: github.ref == 'refs/heads/main'
         run: npx wrangler versions deploy "${{ steps.preview.outputs.version_id }}@100%" --yes
 
       - name: Verify Production
+        if: github.ref == 'refs/heads/main'
         env:
           PLAYWRIGHT_BASE_URL: https://www.kkosunnae.com
         run: npm run test:e2e

@@ -40,7 +40,9 @@ test('목록, 영문 전환, 로그인 UI가 브라우저에서 동작한다', a
   await expect(page).toHaveTitle(/꼬순내/);
   await expect(page.getByRole('button', { name: 'EN', exact: true })).toBeVisible();
 
-  await page.getByRole('button', { name: 'EN', exact: true }).click();
+  const englishButton = page.getByRole('button', { name: 'EN', exact: true });
+  await englishButton.click();
+  await expect(englishButton).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await expect(page.getByRole('link', { name: 'Adopt' }).first()).toBeVisible();
 
@@ -52,8 +54,11 @@ test('목록, 영문 전환, 로그인 UI가 브라우저에서 동작한다', a
 });
 
 test('동물 상세 페이지가 영문으로 렌더링된다', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('kkosunnae_language', 'en');
+  });
   await page.goto(DETAIL_PATH, { waitUntil: 'domcontentloaded' });
-  await page.getByRole('button', { name: 'EN', exact: true }).click();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await expect(page.getByText('Adoption inquiry')).toBeVisible();
   await expect(
     page.getByText('All times are in Korea Standard Time (KST, UTC+9).'),
