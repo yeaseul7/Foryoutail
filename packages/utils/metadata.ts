@@ -108,10 +108,7 @@ export function generateMetadata(options: GenerateMetadataOptions): Metadata {
   const truncatedDescription = extractText(description)?.substring(0, 160) || '';
 
   return {
-    title: {
-      default: title,
-      template: `%s | ${siteName}`,
-    },
+    title,
     description: truncatedDescription,
     metadataBase: new URL(baseUrl),
     alternates: includeCanonical ? { canonical: url } : undefined,
