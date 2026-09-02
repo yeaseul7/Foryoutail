@@ -5,6 +5,7 @@ export type AnalyticsEventName =
   | 'view_animal_detail'
   | 'save_animal'
   | 'complete_ai_search'
+  | 'search_animal_text'
   | 'share_animal';
 
 type AnalyticsValue = string | number | boolean;

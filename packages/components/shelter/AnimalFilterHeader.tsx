@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import {
   MdArrowDropDown,
+  MdSearch,
 } from 'react-icons/md';
 import Image from 'next/image';
 import { RiResetLeftFill } from 'react-icons/ri';
@@ -95,6 +96,8 @@ interface AnimalFilterHeaderProps {
   filters: AnimalFilterState;
   onFilterChange: (filters: AnimalFilterState) => void;
   onImageSearch: (file: File) => Promise<boolean>;
+  onTextSearch?: (query: string) => Promise<void>;
+  textSearchLoading?: boolean;
   quickFilters?: ReactNode;
   showSearch?: boolean;
   showFilters?: boolean;
@@ -106,6 +109,8 @@ export default function AnimalFilterHeader({
   filters,
   onFilterChange,
   onImageSearch,
+  onTextSearch,
+  textSearchLoading = false,
   quickFilters,
   showSearch = true,
   showFilters = true,
@@ -116,6 +121,12 @@ export default function AnimalFilterHeader({
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
   const [sidoList, setSidoList] = useState<SidoItem[]>([]);
+  const [textQuery, setTextQuery] = useState(filters.searchQuery);
+  const [searchMode, setSearchMode] = useState<'general' | 'ai'>('ai');
+
+  useEffect(() => {
+    queueMicrotask(() => setTextQuery(filters.searchQuery));
+  }, [filters.searchQuery]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -193,9 +204,15 @@ export default function AnimalFilterHeader({
     setDateRangeOpen(false);
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newFilters = { ...filters, searchQuery: e.target.value };
-    onFilterChange(newFilters);
+  const submitTextSearch = (event: React.FormEvent) => {
+    event.preventDefault();
+    const query = textQuery.trim();
+    if (!query || textSearchLoading) return;
+    if (searchMode === 'ai') {
+      if (onTextSearch) void onTextSearch(query);
+      return;
+    }
+    onFilterChange({ ...filters, searchQuery: query });
   };
 
   const formatDateToYYYYMMDD = (dateString: string): string | null => {
@@ -252,7 +269,7 @@ export default function AnimalFilterHeader({
     <div className="w-full">
       <div className="w-full max-w-7xl mx-auto">
         <div className={`flex flex-col gap-2 ${compactFilters ? 'py-0' : 'py-2'}`}>
-          {showSearch && <div className={searchBarWrapClass}>
+          {showSearch && <form className={searchBarWrapClass} onSubmit={submitTextSearch}>
             <Image
               src="/static/images/search-kk-mark.png"
               alt=""
@@ -262,13 +279,21 @@ export default function AnimalFilterHeader({
             />
             <input
               type="text"
-              value={filters.searchQuery}
-              onChange={handleSearchChange}
-              placeholder={isEnglish ? 'Search breed, color, or shelter' : '품종, 색, 보호소명으로 검색해보세요'}
+              value={textQuery}
+              onChange={(event) => setTextQuery(event.target.value)}
+              placeholder={searchMode === 'ai'
+                ? (isEnglish ? 'Describe the animal you want to find' : '찾고 싶은 아이를 자연어로 입력해보세요')
+                : (isEnglish ? 'Search breed, shelter, or features' : '품종, 보호소, 특징을 검색해보세요')}
               className={searchInputClass}
             />
+            <div className="relative grid h-8 w-[88px] shrink-0 grid-cols-2 rounded-full bg-[#f1eeeb] p-0.5 text-[10px] font-bold" role="group" aria-label={isEnglish ? 'Search mode' : '검색 모드'}>
+              <span className={`pointer-events-none absolute bottom-0.5 top-0.5 w-[42px] rounded-full bg-white shadow-sm transition-transform duration-200 ${searchMode === 'ai' ? 'translate-x-[44px]' : 'translate-x-0.5'}`} aria-hidden />
+              <button type="button" onClick={() => setSearchMode('general')} aria-pressed={searchMode === 'general'} className={`relative z-10 rounded-full transition ${searchMode === 'general' ? 'text-[#332d2a]' : 'text-[#9a918b]'}`}>{isEnglish ? 'Basic' : '일반'}</button>
+              <button type="button" onClick={() => setSearchMode('ai')} aria-pressed={searchMode === 'ai'} className={`relative z-10 rounded-full transition ${searchMode === 'ai' ? 'text-primary1' : 'text-[#9a918b]'} ${textSearchLoading && searchMode === 'ai' ? 'animate-pulse' : ''}`}>AI</button>
+            </div>
+            <button type="submit" disabled={!textQuery.trim() || textSearchLoading} className="ml-1.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-transparent text-primary1 transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-45" aria-label={isEnglish ? 'Search' : '검색'}><MdSearch className={`h-5 w-5 ${textSearchLoading ? 'animate-pulse' : ''}`} aria-hidden /></button>
             <ImageSearchButton onSearch={onImageSearch} />
-          </div>}
+          </form>}
 
           {showSearch && quickFilters}
 

@@ -1,8 +1,7 @@
 'use client';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useState, useMemo } from 'react';
 import { ShelterAnimalItem } from '@/packages/type/postType';
-import getOptimizedCloudinaryUrl from '@/packages/utils/optimization';
 import {
   normalizeAnimalImageUrl,
   shouldBypassNextImageOptimization,
@@ -25,7 +24,6 @@ export default function AbandonedCard({
   shelterAnimal: ShelterAnimalItem;
   priority?: boolean;
 }) {
-  const router = useRouter();
   const { isEnglish, t } = useLanguage();
   const desertionNo = shelterAnimal.desertionNo;
   const { isLiked, isUpdating, handleLike } = useShelterLike(
@@ -61,9 +59,6 @@ export default function AbandonedCard({
 
   const thumbnailImage = useMemo(() => {
     if (!currentImageUrl) return null;
-    if (currentImageUrl.includes('res.cloudinary.com')) {
-      return getOptimizedCloudinaryUrl(currentImageUrl, 150, 150);
-    }
     return normalizeAnimalImageUrl(currentImageUrl);
   }, [currentImageUrl]);
 
@@ -160,13 +155,17 @@ export default function AbandonedCard({
     [isEnglish, shelterAnimal.colorCd, sexLabel, ageLabel, t],
   );
 
-  const isAiSearchResult = typeof shelterAnimal.aiSimilarityScore === 'number';
-
   return (
     <article
-      onClick={() => router.push(`/shelter/${shelterAnimal.desertionNo}`)}
-      className="flex h-full w-full max-w-full cursor-pointer flex-col overflow-hidden rounded-[20px] border border-[#eadfd7] bg-white shadow-[0_5px_14px_rgba(51,45,42,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-primary1/35 hover:shadow-[0_10px_22px_rgba(51,45,42,0.13)] active:scale-[0.99]"
+      className="relative flex h-full w-full max-w-full cursor-pointer flex-col overflow-hidden rounded-[20px] border border-[#eadfd7] bg-white shadow-[0_5px_14px_rgba(51,45,42,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-primary1/35 hover:shadow-[0_10px_22px_rgba(51,45,42,0.13)] active:scale-[0.99]"
     >
+      <Link
+        href={`/${shelterAnimal.desertionNo}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={t('동물 상세 정보 새 창에서 보기', 'Open animal details in a new tab')}
+        className="absolute inset-0 z-10 rounded-[20px] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary1 focus-visible:ring-inset"
+      />
       <div className="relative m-2 mb-0 aspect-square w-[calc(100%-1rem)] overflow-hidden rounded-[1rem] bg-gray-100">
         <CardImage
           src={displayImage}
@@ -206,17 +205,12 @@ export default function AbandonedCard({
               </div>
           </div>
         )}
-        {typeof shelterAnimal.aiSimilarityScore === 'number' && (
-          <span className="absolute bottom-2 right-2 z-10 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-primary1 shadow-sm backdrop-blur-sm">
-            {t('유사도', 'Similarity')} {Math.round(shelterAnimal.aiSimilarityScore * 100)}%
-          </span>
-        )}
         <button
           type="button"
           onClick={(event) => void handleLike(event)}
           disabled={isUpdating || !desertionNo}
           aria-label={isLiked ? t('찜 해제', 'Remove from saved') : t('찜하기', 'Save animal')}
-          className={`absolute left-2 top-2 z-10 rounded-full bg-white/90 p-1.5 text-[#817873] shadow-sm backdrop-blur-sm transition hover:text-alert ${isUpdating || !desertionNo ? 'cursor-not-allowed opacity-50' : ''}`}
+          className={`absolute left-2 top-2 z-20 rounded-full bg-white/90 p-1.5 text-[#817873] shadow-sm backdrop-blur-sm transition hover:text-alert ${isUpdating || !desertionNo ? 'cursor-not-allowed opacity-50' : ''}`}
         >
           {isLiked ? (
             <HiHeart className="h-4 w-4 text-alert" aria-hidden />
@@ -226,18 +220,14 @@ export default function AbandonedCard({
         </button>
       </div>
       <div className="relative flex flex-1 flex-col px-3 pb-3 pt-2.5">
-        {!isAiSearchResult && (
-          <>
-            <div className="flex min-w-0 items-start justify-between gap-1.5">
-              <h3 className="min-w-0 flex-1 truncate text-sm font-extrabold text-[#332d2a]">
-                {cardTitle}
-              </h3>
-            </div>
-            <p className="mt-1 truncate text-xs font-medium text-[#817873]">
-              {summaryLabel}
-            </p>
-          </>
-        )}
+        <div className="flex min-w-0 items-start justify-between gap-1.5">
+          <h3 className="min-w-0 flex-1 truncate text-sm font-extrabold text-[#332d2a]">
+            {cardTitle}
+          </h3>
+        </div>
+        <p className="mt-1 truncate text-xs font-medium text-[#817873]">
+          {summaryLabel}
+        </p>
         <p className="mt-1 flex min-w-0 items-center gap-1 text-[11px] text-[#817873]">
           <MdLocationOn className="h-3.5 w-3.5 shrink-0" aria-hidden />
           <span className="truncate">{locationLabel}</span>

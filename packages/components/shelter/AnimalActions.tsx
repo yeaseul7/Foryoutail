@@ -12,7 +12,7 @@ export default function AnimalActions({ animal }: { animal: ShelterAnimalItem })
   const { t } = useLanguage();
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/shelter/${desertionNo}`;
+    const url = `${window.location.origin}/${desertionNo}`;
     if (navigator.share) {
       try {
         await navigator.share({ title: t('꼬순내 입양 공고', 'Kkosunnae adoption listing'), url });

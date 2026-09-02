@@ -1,11 +1,19 @@
 'use client';
 
+import Image from 'next/image';
 import { ShelterAnimalItem } from '@/packages/type/postType';
 import { formatDateToKorean } from '@/packages/utils/dateFormatting';
 import AnimalActions from './AnimalActions';
 import { FaBuilding, FaLeaf, FaPaw } from 'react-icons/fa';
 import { useLanguage } from '@/lib/i18n/language';
 import { animalColorLabel, animalNoteLabel, animalWeightLabel } from '@/lib/i18n/animal-labels';
+
+function validShelterAddress(value: string | undefined): string | null {
+  const address = value?.trim();
+  if (!address || address.length < 5) return null;
+  if (/^(?:-|미상|없음|주소\s*없음|확인\s*필요|null|undefined)$/i.test(address)) return null;
+  return address;
+}
 
 interface AnimalInfoCardProps {
   animalData: ShelterAnimalItem;
@@ -22,6 +30,13 @@ export default function AnimalInfoCard({
   desertionNo,
 }: AnimalInfoCardProps) {
   const { isEnglish, t } = useLanguage();
+  const shelterAddress = validShelterAddress(animalData.careAddr);
+  const googleDirectionsUrl = shelterAddress
+    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(shelterAddress)}`
+    : null;
+  const naverDirectionsUrl = shelterAddress
+    ? `https://map.naver.com/p/search/${encodeURIComponent(shelterAddress)}`
+    : null;
   return (
     <div className="bg-white rounded-2xl shadow-sm p-6 lg:p-8 flex flex-col gap-6">
       <div className="flex items-start justify-between">
@@ -166,12 +181,48 @@ export default function AnimalInfoCard({
             </div>
           )}
 
-          {animalData?.careAddr && (
+          {shelterAddress && (
             <div className="flex items-start gap-3 py-2 border-b border-gray-100">
               <span className="text-xs font-semibold text-gray-500 min-w-[80px]">{t('주소:', 'Address:')}</span>
-              <span className="text-sm text-gray-700 flex-1">
-                {animalData.careAddr}
-              </span>
+              <div className="flex min-w-0 flex-1 flex-col gap-2">
+                <span className="text-sm text-gray-700">
+                  {shelterAddress}
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href={googleDirectionsUrl!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-[#4285f4]/40 bg-white px-3 py-1.5 text-xs font-semibold text-[#1967d2] transition hover:border-[#4285f4]/70 hover:bg-[#4285f4]/10"
+                  >
+                    <Image
+                      src="/static/images/google-maps-icon.png"
+                      alt=""
+                      width={18}
+                      height={18}
+                      className="h-[18px] w-[18px] shrink-0 object-contain"
+                      aria-hidden
+                    />
+                    {t('Google 길찾기', 'Google directions')}
+                  </a>
+                  <a
+                    href={naverDirectionsUrl!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-[#03c75a]/40 bg-white px-3 py-1.5 text-xs font-semibold text-[#16883f] transition hover:border-[#03c75a]/70 hover:bg-[#03c75a]/10"
+                  >
+                    <Image
+                      src="/static/images/naver-map-icon.png"
+                      alt=""
+                      width={18}
+                      height={18}
+                      className="h-[18px] w-[18px] shrink-0 object-contain"
+                      aria-hidden
+                    />
+                    {t('네이버 길찾기', 'Naver directions')}
+                  </a>
+                </div>
+              </div>
             </div>
           )}
         </div>

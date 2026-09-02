@@ -6,7 +6,8 @@ import { useLanguage } from '@/lib/i18n/language';
 
 const FOOTER_LINKS = {
   둘러보기: [
-    { label: '입양 공고', href: '/shelter' },
+    { label: '입양 공고', href: '/' },
+    { label: '오순도순', href: '/community' },
   ],
   서비스: [
     { label: '회원가입', href: '/register' },
@@ -21,7 +22,7 @@ export default function PageFooter() {
   const { isEnglish } = useLanguage();
   const footerLinks = isEnglish
     ? {
-        Explore: [{ label: 'Adoption listings', href: '/shelter' }],
+        Explore: [{ label: 'Adoption listings', href: '/' }, { label: 'Community', href: '/community' }],
         Service: [{ label: 'Sign up', href: '/register' }],
         Policies: [{ label: 'Privacy Policy', href: '/privacy' }, { label: 'Terms of Service', href: '/terms' }],
       }
@@ -32,7 +33,7 @@ export default function PageFooter() {
       <div className="mx-auto max-w-6xl px-8 py-8 sm:px-12 md:px-16">
         <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex max-w-sm flex-col items-center gap-3 text-center sm:items-start sm:text-left">
-            <Link href="/shelter" className="flex items-center gap-2 rounded focus:outline-none focus:ring-2 focus:ring-primary1/30">
+            <Link href="/" className="flex items-center gap-2 rounded focus:outline-none focus:ring-2 focus:ring-primary1/30">
               <Image
                 src="/static/images/kkosunnae-header-logo.png"
                 alt={isEnglish ? 'Kkosunnae logo' : '꼬순내 로고'}

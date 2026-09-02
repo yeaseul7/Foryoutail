@@ -22,7 +22,7 @@ function sitemapDate(value: string | undefined): Date | undefined {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
     {
-      url: `${baseUrl}/shelter`,
+      url: baseUrl,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 1,
@@ -32,6 +32,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.3,
+    },
+    {
+      url: `${baseUrl}/community`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.8,
     },
     {
       url: `${baseUrl}/terms`,
@@ -45,7 +51,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const detailPages: MetadataRoute.Sitemap = animals
     .filter((animal) => animal.desertionNo && isShelterAnimalListable(animal.processState))
     .map((animal) => ({
-      url: `${baseUrl}/shelter/${encodeURIComponent(animal.desertionNo!)}`,
+      url: `${baseUrl}/${encodeURIComponent(animal.desertionNo!)}`,
       lastModified: sitemapDate(animal.updTm || animal.noticeSdt || animal.happenDt),
       changeFrequency: 'daily' as const,
       priority: 0.7,

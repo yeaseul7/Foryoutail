@@ -64,7 +64,7 @@ export default function ShelterDetailPageContent({
   }, [animalData.upKindCd, animalData.upKindNm, animalId]);
 
   const baseUrl = getBaseUrl().replace(/\/$/, '');
-  const pageUrl = `${baseUrl}/shelter/${desertionNo}`;
+  const pageUrl = `${baseUrl}/${desertionNo}`;
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Article',

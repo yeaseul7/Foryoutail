@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
 
-const DETAIL_PATH = '/shelter/413587202600220';
+const DETAIL_PATH = '/413587202600220';
 
 test('주요 페이지와 API가 정상 응답한다', async ({ request }) => {
   const pages = [
     '/',
-    '/shelter',
+    '/',
     DETAIL_PATH,
     '/register',
     '/mypage/likes',
@@ -46,7 +46,7 @@ test('목록, 영문 전환, 로그인 UI가 브라우저에서 동작한다', a
     if (message.type() === 'error') runtimeErrors.push(message.text());
   });
 
-  await page.goto('/shelter', { waitUntil: 'domcontentloaded' });
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page).toHaveTitle(/꼬순내/);
   await expect(page.getByRole('button', { name: 'EN', exact: true })).toBeVisible();
 

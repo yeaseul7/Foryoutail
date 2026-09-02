@@ -20,7 +20,7 @@
 | 스타일 | Tailwind CSS 4, Sass |
 | 인증·데이터베이스 | Supabase Auth, Supabase PostgreSQL |
 | 지역 데이터 | 국가동물보호정보 시도 코드 |
-| 이미지·AI | Cloud Run 백엔드, Cloudinary, 이미지 유사도 검색 API |
+| 이미지·AI | Supabase Storage, Cloud Run 백엔드, 이미지 유사도 검색 API |
 | 배포 | Cloudflare Workers, OpenNext, Wrangler |
 | 품질·SEO | ESLint, next-sitemap, Next.js Metadata API |
 
