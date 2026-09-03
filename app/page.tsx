@@ -58,6 +58,7 @@ export default async function Shelter({
     upr_cd: filters.upr_cd ?? undefined,
     orgNm: filters.orgNm ?? undefined,
     searchQuery: filters.searchQuery || undefined,
+    sort: filters.sortOrder,
   });
   let items = applyShelterClientFilters(result.items, filters);
   if (listQuickFilter) {

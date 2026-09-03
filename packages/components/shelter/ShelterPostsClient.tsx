@@ -16,6 +16,7 @@ import { useLanguage } from '@/lib/i18n/language';
 import { trackEvent } from '@/lib/analytics';
 import { searchShelterAnimalsByText, TextSearchError } from '@/lib/client/textSearch';
 import {
+  MdArrowDropDown,
   MdClose,
   MdRefresh,
   MdTune,
@@ -182,6 +183,7 @@ function createFilterSearchParams(
   if (filters.endde) params.set('endde', filters.endde);
   if (filters.upr_cd) params.set('upr_cd', filters.upr_cd);
   if (filters.orgNm?.trim()) params.set('orgNm', filters.orgNm.trim());
+  if (filters.sortOrder === 'rescue') params.set('sort', 'rescue');
   if (listQuickFilter) params.set('listQuick', listQuickFilter);
 
   return params;
@@ -324,6 +326,7 @@ export default function ShelterPostsClient({
   const scrollYRef = useRef(0);
   const [restoredScrollY, setRestoredScrollY] = useState<number | null>(null);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
   const [imageSearchActive, setImageSearchActive] = useState(false);
   const imageSearchActiveRef = useRef(false);
   const [textSearchLoading, setTextSearchLoading] = useState(false);
@@ -516,7 +519,8 @@ export default function ShelterPostsClient({
       prevFilters.endde !== newFilters.endde ||
       prevFilters.upr_cd !== newFilters.upr_cd ||
       prevFilters.orgNm !== newFilters.orgNm;
-    if (!isSearchQueryChanged && !isOtherFilterChanged) {
+    const isSortChanged = prevFilters.sortOrder !== newFilters.sortOrder;
+    if (!isSearchQueryChanged && !isOtherFilterChanged && !isSortChanged) {
       return;
     }
 
@@ -807,11 +811,13 @@ export default function ShelterPostsClient({
     const orgNm = searchParams.get('orgNm')?.trim() || searchParams.get('org_nm')?.trim();
     const bgnde = searchParams.get('bgnde');
     const endde = searchParams.get('endde');
+    const sort = searchParams.get('sort');
     const hasUrlFilterParams = Boolean(
-      q || sex || upkind || neuter || state || quickFilterRaw || listQuickRaw || uprCd || orgNm || bgnde || endde,
+      q || sex || upkind || neuter || state || quickFilterRaw || listQuickRaw || uprCd || orgNm || bgnde || endde || sort,
     );
     if (hasUrlFilterParams) appliedUrlQueryRef.current = true;
     const nextFilters: AnimalFilterState = {
+      sortOrder: sort === 'rescue' ? 'rescue' : 'notice',
       searchQuery: q ?? '',
       sexCd: sex === 'M' || sex === 'F' || sex === 'Q' ? sex : null,
       upKindCd:
@@ -841,13 +847,14 @@ export default function ShelterPostsClient({
       currentFilters.endde !== nextFilters.endde ||
       currentFilters.upr_cd !== nextFilters.upr_cd ||
       currentFilters.orgNm !== nextFilters.orgNm;
+    const sortChanged = currentFilters.sortOrder !== nextFilters.sortOrder;
     const listQuickChanged = listQuickFilterRef.current !== parsedListQuick;
 
     if (listQuickChanged) {
       listQuickFilterRef.current = parsedListQuick;
       setListQuickFilter(parsedListQuick);
     }
-    if (regularFilterChanged) {
+    if (regularFilterChanged || sortChanged) {
       handleFilterChange(nextFilters, false);
     } else if (listQuickChanged) {
       handleListQuickChange(parsedListQuick, false);
@@ -931,7 +938,7 @@ export default function ShelterPostsClient({
           )}
           {/* 입양 공고: 제목·설명·적용 필터 칩 아래에 빠른 선택 뱃지 */}
           <div className="flex w-full flex-col gap-2 px-0 pb-1 pt-0 sm:pb-4 sm:pt-7">
-            <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex w-full flex-row items-start justify-between gap-2 sm:items-center">
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                 <div className={`relative shrink-0 ${filterModalOpen ? 'z-[210]' : ''}`}>
                   {imageSearchActive ? (
@@ -1032,6 +1039,40 @@ export default function ShelterPostsClient({
                   </div>
                 )}
               </div>
+              {!imageSearchActive && <div className={`relative shrink-0 ${sortOpen ? 'z-[210]' : ''}`}>
+                <button
+                  type="button"
+                  onClick={() => setSortOpen((open) => !open)}
+                  aria-haspopup="listbox"
+                  aria-expanded={sortOpen}
+                  className="flex h-9 min-w-[112px] items-center justify-between gap-1.5 rounded-lg border border-[#eadfd7] bg-white px-2.5 text-xs font-medium text-[#332d2a] transition-colors hover:border-primary1/60 hover:bg-primary-soft sm:min-w-[132px] sm:text-sm"
+                >
+                  <span>{filters.sortOrder === 'rescue' ? (isEnglish ? 'Newest rescues' : '구조 최신순') : (isEnglish ? 'Newest notices' : '공고 최신순')}</span>
+                  <MdArrowDropDown className={`h-4 w-4 shrink-0 transition-transform ${sortOpen ? 'rotate-180' : ''}`} aria-hidden />
+                </button>
+                {sortOpen && <>
+                  <button type="button" className="fixed inset-0 z-0 cursor-default" onClick={() => setSortOpen(false)} aria-label={isEnglish ? 'Close sort menu' : '정렬 메뉴 닫기'} />
+                  <div role="listbox" aria-label={isEnglish ? 'Sort adoption listings' : '공고 정렬'} className="absolute right-0 top-full z-10 mt-1 w-full min-w-[132px] rounded-2xl border border-gray-200/90 bg-white p-1.5 shadow-xl">
+                    {(['notice', 'rescue'] as const).map((sortOrder) => {
+                      const selected = filters.sortOrder === sortOrder;
+                      const label = sortOrder === 'notice'
+                        ? (isEnglish ? 'Newest notices' : '공고 최신순')
+                        : (isEnglish ? 'Newest rescues' : '구조 최신순');
+                      return <button
+                        key={sortOrder}
+                        type="button"
+                        role="option"
+                        aria-selected={selected}
+                        onClick={() => {
+                          setSortOpen(false);
+                          handleFilterChange({ ...filters, sortOrder });
+                        }}
+                        className={`block w-full cursor-pointer rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${selected ? 'bg-primary1 text-white' : 'text-[#332d2a] hover:bg-gray-100'}`}
+                      >{label}</button>;
+                    })}
+                  </div>
+                </>}
+              </div>}
             </div>
           </div>
 

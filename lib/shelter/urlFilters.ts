@@ -30,9 +30,11 @@ export function parseShelterUrlFilters(params: ShelterSearchParams): {
   const orgNm = first(params.orgNm) || first(params.org_nm);
   const bgnde = first(params.bgnde);
   const endde = first(params.endde);
+  const sort = first(params.sort);
 
   return {
     filters: {
+      sortOrder: sort === 'rescue' ? 'rescue' : 'notice',
       searchQuery: first(params.q)?.trim() ?? '',
       sexCd: sex === 'M' || sex === 'F' || sex === 'Q' ? sex : null,
       state: state === 'notice' || state === 'protect' ? state : null,

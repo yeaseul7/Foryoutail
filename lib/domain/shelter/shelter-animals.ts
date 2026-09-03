@@ -28,6 +28,7 @@ export interface ShelterDataQueryParams {
   searchQuery?: string;
   orgNm?: string;
   listQuick?: 'noticeEnding';
+  sort?: 'notice' | 'rescue';
 }
 
 const UP_KIND_CODE_TO_NAME: Record<string, string[]> = {
@@ -215,7 +216,13 @@ function matchesSearchQuery(item: ShelterAnimalItem, q: string): boolean {
 
 function sortShelterItemsByRecencyDesc(a: ShelterAnimalItem, b: ShelterAnimalItem): number {
   const toNum = (it: ShelterAnimalItem) =>
-    parseInt(String(it.noticeSdt || it.happenDt || '0').replace(/\D/g, ''), 10) || 0;
+    parseInt(String(it.noticeSdt || '0').replace(/\D/g, ''), 10) || 0;
+  return toNum(b) - toNum(a);
+}
+
+function sortShelterItemsByRescueDateDesc(a: ShelterAnimalItem, b: ShelterAnimalItem): number {
+  const toNum = (item: ShelterAnimalItem) =>
+    parseInt(String(item.happenDt || '0').replace(/\D/g, ''), 10) || 0;
   return toNum(b) - toNum(a);
 }
 
@@ -307,7 +314,9 @@ export async function queryShelterAnimals(
       .order('notice_end_date', { ascending: true, nullsFirst: false })
       .order('notice_start_date', { ascending: false, nullsFirst: false });
   } else {
-    query = query.order('notice_start_date', { ascending: false, nullsFirst: false });
+    query = params.sort === 'rescue'
+      ? query.order('happened_date', { ascending: false, nullsFirst: false })
+      : query.order('notice_start_date', { ascending: false, nullsFirst: false });
   }
 
   query = query.range(from, Math.min(to, from + 999));
@@ -366,7 +375,7 @@ export async function queryShelterAnimals(
     supabaseRowToShelterAnimal(row as ShelterAnimalRow),
   );
   if (params.listQuick !== 'noticeEnding') {
-    queried.sort(sortShelterItemsByRecencyDesc);
+    queried.sort(params.sort === 'rescue' ? sortShelterItemsByRescueDateDesc : sortShelterItemsByRecencyDesc);
   }
 
   const filtered = filterShelterAnimalsFromParams(queried, params).filter((item) =>

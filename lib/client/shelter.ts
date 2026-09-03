@@ -75,8 +75,10 @@ function mergeShelterItemsByDesertionNo(
 }
 
 export type QuickFilterKey = 'likesHuman' | 'gentle' | 'nearby' | 'young';
+export type ShelterSortOrder = 'notice' | 'rescue';
 
 export interface AnimalFilterState {
+  sortOrder: ShelterSortOrder;
   sexCd: string | null;
   state: string | null;
   upKindCd: string | null;
@@ -247,6 +249,7 @@ async function fetchShelterAnimalDataFromApi(
   if (filters.upr_cd) params.append('upr_cd', filters.upr_cd);
   if (filters.orgNm) params.append('orgNm', filters.orgNm);
   if (filters.searchQuery.trim()) params.append('searchQuery', filters.searchQuery.trim());
+  params.append('sort', filters.sortOrder);
   if (listQuick) params.append('listQuick', listQuick);
 
   const response = await fetch(`/api/shelter-data?${params.toString()}`);

@@ -8,7 +8,7 @@ import {
 import Image from 'next/image';
 import { RiResetLeftFill } from 'react-icons/ri';
 import { getSidoDisplayName } from '@/packages/utils/locationUtils';
-import type { QuickFilterKey } from '@/lib/client/shelter';
+import type { QuickFilterKey, ShelterSortOrder } from '@/lib/client/shelter';
 import { sidoLocation } from '@/static/data/sidoLocation';
 import { useLanguage } from '@/lib/i18n/language';
 import ImageSearchButton from './ImageSearchButton';
@@ -80,6 +80,7 @@ function filterDropdownOptionStateClass(selected: boolean): string {
 }
 
 export interface AnimalFilterState {
+  sortOrder: ShelterSortOrder;
   sexCd: string | null;
   state: string | null;
   upKindCd: string | null;
@@ -477,7 +478,7 @@ export default function AnimalFilterHeader({
               <button
                 type="button"
                 onClick={() => {
-                  const resetFilters = { sexCd: null, state: null, upKindCd: '417000', neuterYn: null, quickFilter: null, searchQuery: '', bgnde: null, endde: null, upr_cd: null, orgNm: null };
+                  const resetFilters = { sortOrder: filters.sortOrder, sexCd: null, state: null, upKindCd: '417000', neuterYn: null, quickFilter: null, searchQuery: '', bgnde: null, endde: null, upr_cd: null, orgNm: null };
                   onFilterChange(resetFilters);
                   setStartDate('');
                   setEndDate('');

@@ -39,6 +39,8 @@ function parseShelterDataParams(searchParams: URLSearchParams): ShelterDataQuery
     params.searchQuery = searchParams.get('searchQuery')!;
   if (searchParams.get('listQuick') === 'noticeEnding')
     params.listQuick = 'noticeEnding';
+  if (searchParams.get('sort') === 'rescue') params.sort = 'rescue';
+  else params.sort = 'notice';
   return params;
 }
 
