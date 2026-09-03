@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import type { ShelterAnimalItem } from '@/packages/type/postType';
 import { useLanguage } from '@/lib/i18n/language';
+import { trackEvent } from '@/lib/analytics';
 
 type LikeListener = (isLiked: boolean) => void;
 
@@ -168,6 +169,10 @@ export function useShelterLike(
 
       if (error) throw error;
       publishLikeValue(getLikeBatch(user.uid), animalId, true);
+      trackEvent('save_animal', {
+        animal_id: animalId,
+        animal_type: animalData?.upKindCd ?? animalData?.upKindNm,
+      });
       return 1;
     } catch (error) {
       console.error('찜 처리 실패:', error);

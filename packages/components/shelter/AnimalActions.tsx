@@ -4,6 +4,7 @@ import { HiHeart, HiOutlineHeart, HiShare } from 'react-icons/hi2';
 import { useShelterLike } from '@/hooks/useShelterLike';
 import type { ShelterAnimalItem } from '@/packages/type/postType';
 import { useLanguage } from '@/lib/i18n/language';
+import { trackEvent } from '@/lib/analytics';
 
 export default function AnimalActions({ animal }: { animal: ShelterAnimalItem }) {
   const desertionNo = animal.desertionNo ?? '';
@@ -11,12 +12,18 @@ export default function AnimalActions({ animal }: { animal: ShelterAnimalItem })
   const { t } = useLanguage();
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/shelter/${desertionNo}`;
+    const url = `${window.location.origin}/${desertionNo}`;
     if (navigator.share) {
-      await navigator.share({ title: t('꼬순내 입양 공고', 'Kkosunnae adoption listing'), url }).catch(() => undefined);
+      try {
+        await navigator.share({ title: t('꼬순내 입양 공고', 'Kkosunnae adoption listing'), url });
+        trackEvent('share_animal', { animal_id: animal.id, method: 'native' });
+      } catch {
+        // 공유 취소는 성공 이벤트로 기록하지 않는다.
+      }
       return;
     }
     await navigator.clipboard.writeText(url);
+    trackEvent('share_animal', { animal_id: animal.id, method: 'clipboard' });
     alert(t('공유 링크가 복사되었습니다.', 'The share link was copied.'));
   };
 

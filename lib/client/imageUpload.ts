@@ -31,9 +31,9 @@ export async function uploadCardImages(
     const data = (await res.json()) as {
       url?: string;
       publicId?: string;
-      image?: { secureUrl?: string; publicId?: string };
+      image?: { publicUrl?: string; path?: string };
     };
-    const uploadedUrl = data.url ?? data.image?.secureUrl;
+    const uploadedUrl = data.url ?? data.image?.publicUrl;
     if (uploadedUrl) urls.push(uploadedUrl);
   }
 

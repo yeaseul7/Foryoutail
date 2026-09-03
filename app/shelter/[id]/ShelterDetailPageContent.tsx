@@ -1,16 +1,18 @@
 'use client';
 
+import { useEffect } from 'react';
+
 import PageTemplate from '@/packages/components/base/PageTemplate';
 import PageFooter from '@/packages/components/base/PageFooter';
 import AnimalImgCard from '@/packages/components/shelter/AnimalImgCard';
 import AnimalInfoCard from '@/packages/components/shelter/AnimalInfoCard';
-import ShelterBackButton from '@/packages/components/shelter/ShelterBackButton';
 import ShelterOperationInfoComponent from '@/packages/components/common/AnimalNotice';
 import type { ShelterAnimalItem } from '@/packages/type/postType';
 import type { ShelterInfoItem } from '@/packages/type/shelterTyps';
 import { getBaseUrl, normalizeImageUrl } from '@/packages/utils/metadata';
 import { useLanguage } from '@/lib/i18n/language';
 import { animalBreedLabel } from '@/lib/i18n/animal-labels';
+import { trackEvent } from '@/lib/analytics';
 
 function animalImages(animal: ShelterAnimalItem): string[] {
   const images: string[] = [];
@@ -52,6 +54,15 @@ export default function ShelterDetailPageContent({
   const { isEnglish, t } = useLanguage();
   const images = animalImages(animalData);
   const desertionNo = animalData.desertionNo ?? '';
+  const animalId = animalData.id?.trim() || desertionNo;
+
+  useEffect(() => {
+    trackEvent('view_animal_detail', {
+      animal_id: animalId,
+      animal_type: animalData.upKindCd ?? animalData.upKindNm,
+    });
+  }, [animalData.upKindCd, animalData.upKindNm, animalId]);
+
   const baseUrl = getBaseUrl().replace(/\/$/, '');
   const pageUrl = `${baseUrl}/shelter/${desertionNo}`;
   const structuredData = {
@@ -87,7 +98,6 @@ export default function ShelterDetailPageContent({
       <main className="flex min-h-screen w-full flex-col items-center justify-between bg-white">
         <PageTemplate>
           <article className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
-            <ShelterBackButton />
             <div className="grid w-full grid-cols-1 gap-6 lg:grid-cols-2">
               <AnimalImgCard
                 animalData={animalData}

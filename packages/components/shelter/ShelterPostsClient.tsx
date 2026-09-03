@@ -13,6 +13,8 @@ import { sidoLocation } from '@/static/data/sidoLocation';
 import { useSearchAnimal } from '@/hooks/useSearchAnimal';
 import type { SimilarMatch } from '@/lib/search-animal/types';
 import { useLanguage } from '@/lib/i18n/language';
+import { trackEvent } from '@/lib/analytics';
+import { searchShelterAnimalsByText, TextSearchError } from '@/lib/client/textSearch';
 import {
   MdClose,
   MdRefresh,
@@ -324,6 +326,15 @@ export default function ShelterPostsClient({
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [imageSearchActive, setImageSearchActive] = useState(false);
   const imageSearchActiveRef = useRef(false);
+  const [textSearchLoading, setTextSearchLoading] = useState(false);
+  const [textSearchError, setTextSearchError] = useState<string | null>(null);
+
+  useEffect(() => {
+    trackEvent('view_animal_list', {
+      result_count: initialData.items.length,
+      animal_type: initialFilters.upKindCd ?? undefined,
+    });
+  }, [initialData.items.length, initialFilters.upKindCd]);
 
   useEffect(() => {
     if (cacheReadRef.current) return;
@@ -721,15 +732,59 @@ export default function ShelterPostsClient({
     return true;
   }, [searchWithFile]);
 
+  const handleTextSearch = useCallback(async (query: string): Promise<void> => {
+    const normalizedQuery = query.trim();
+    if (!normalizedQuery || textSearchLoading) return;
+
+    setTextSearchLoading(true);
+    setTextSearchError(null);
+    setLoading(true);
+    try {
+      const animals = await searchShelterAnimalsByText(normalizedQuery, 24);
+      const nextFilters = { ...filtersRef.current, searchQuery: normalizedQuery };
+      filtersRef.current = nextFilters;
+      setFilters(nextFilters);
+      imageSearchActiveRef.current = true;
+      setImageSearchActive(true);
+      listQuickFilterRef.current = null;
+      setListQuickFilter(null);
+      setShelterAnimalData(dedupeShelterAnimals(animals));
+      setPageNo(1);
+      setHasMore(false);
+      trackEvent('search_animal_text', {
+        result_count: animals.length,
+        query_length: normalizedQuery.length,
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (error) {
+      if (error instanceof TextSearchError && error.status === 429) {
+        setTextSearchError(isEnglish
+          ? 'You have reached today’s search limit. Sign in for up to 30 searches per day.'
+          : '오늘의 검색 횟수를 모두 사용했습니다. 로그인하면 하루 30회까지 검색할 수 있어요.');
+      } else {
+        setTextSearchError(error instanceof Error
+          ? error.message
+          : (isEnglish ? 'Natural language search failed.' : '자연어 검색에 실패했습니다.'));
+      }
+    } finally {
+      setLoading(false);
+      setTextSearchLoading(false);
+    }
+  }, [isEnglish, textSearchLoading]);
+
   const handleResetImageSearch = useCallback(async () => {
     imageSearchActiveRef.current = false;
     setImageSearchActive(false);
     setFilterModalOpen(false);
+    const nextFilters = { ...filtersRef.current, searchQuery: '' };
+    filtersRef.current = nextFilters;
+    setFilters(nextFilters);
+    setTextSearchError(null);
     setPageNo(1);
     setShelterAnimalData([]);
     setHasMore(true);
     setLoading(true);
-    await handleFetchShelterAnimalData(1, true, filtersRef.current);
+    await handleFetchShelterAnimalData(1, true, nextFilters);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [handleFetchShelterAnimalData]);
 
@@ -844,6 +899,8 @@ export default function ShelterPostsClient({
             filters={filters}
             onFilterChange={handleFilterChange}
             onImageSearch={handleImageSearch}
+            onTextSearch={handleTextSearch}
+            textSearchLoading={textSearchLoading}
             showFilters={false}
             quickFilters={(
               <div className="mx-auto flex w-full max-w-2xl flex-wrap items-center justify-start gap-1.5" role="group" aria-label={isEnglish ? 'Quick filters' : '빠른 찾기'}>
@@ -867,9 +924,9 @@ export default function ShelterPostsClient({
               </div>
             )}
           />
-          {imageSearchError && (
+          {(imageSearchError || textSearchError) && (
             <p className="mx-auto w-full max-w-2xl text-center text-sm font-medium text-red-600">
-              {imageSearchError}
+              {imageSearchError || textSearchError}
             </p>
           )}
           {/* 입양 공고: 제목·설명·적용 필터 칩 아래에 빠른 선택 뱃지 */}
@@ -929,6 +986,8 @@ export default function ShelterPostsClient({
                             filters={filters}
                             onFilterChange={handleFilterChange}
                             onImageSearch={handleImageSearch}
+                            onTextSearch={handleTextSearch}
+                            textSearchLoading={textSearchLoading}
                             showSearch={false}
                             panelFilters
                           />

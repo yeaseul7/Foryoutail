@@ -1,11 +1,9 @@
 'use client';
 
 import RoundButton from '../common/RoundButton';
-import { useCallback, useState, useRef, useSyncExternalStore } from 'react';
-import { useClickOutside } from '@/packages/utils/clickEvent';
+import { useCallback, useState, useSyncExternalStore } from 'react';
 import LoginModal from '../auth/LoginModal';
 import HeaderUserIcon from './HeaderUserIcon';
-import HeaderUserMenu from './HeaderUserMenu';
 import { useAuth } from '@/lib/supabase/auth';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -24,18 +22,10 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
   const pathname = usePathname();
   const { language, setLanguage, isEnglish } = useLanguage();
   const { user, loading } = useAuth();
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const isHydrated = useSyncExternalStore(
     subscribeToHydration,
     () => true,
     () => false,
-  );
-  const userMenuRef = useRef<HTMLDivElement>(null);
-
-  useClickOutside<HTMLDivElement>(
-    userMenuRef,
-    () => setIsUserMenuOpen(false),
-    isUserMenuOpen,
   );
 
   const openLoginModal = useCallback(() => {
@@ -47,7 +37,7 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
       <div className="flex justify-between items-center px-4 mx-auto w-full max-w-7xl h-16 sm:px-6">
         <div className="flex items-center gap-4 md:gap-10">
           <Link
-            href="/shelter"
+            href="/"
             className="flex min-w-0 items-center transition-opacity hover:opacity-80"
           >
             <Image
@@ -63,16 +53,29 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
           {/* 데스크탑 메뉴 */}
           <div className="hidden md:flex items-center gap-4 lg:gap-6">
             <NavLink
-              to="/shelter"
+              to="/"
               activeClassName="active"
-              isActive={() => pathname === '/shelter' || pathname.startsWith('/shelter')}
-              className={`!border-b-0 !p-0 text-sm lg:text-base transition-colors ${pathname === '/shelter' || pathname.startsWith('/shelter')
+              isActive={() => pathname === '/' || /^\/\d+$/.test(pathname)}
+              className={`!border-b-0 !p-0 text-sm lg:text-base transition-colors ${pathname === '/' || /^\/\d+$/.test(pathname)
                 ? '!text-primary1 font-semibold'
                 : '!text-[#817873] hover:!text-primary1'
                 }`}
             >
               <span className="inline-flex items-center gap-1.5">
                 {isEnglish ? 'Adopt' : '입양하기'}
+              </span>
+            </NavLink>
+            <NavLink
+              to="/community"
+              activeClassName="active"
+              isActive={() => pathname === '/community' || pathname.startsWith('/community/')}
+              className={`!border-b-0 !p-0 text-sm lg:text-base transition-colors ${pathname === '/community' || pathname.startsWith('/community/')
+                ? '!text-primary1 font-semibold'
+                : '!text-[#817873] hover:!text-primary1'
+                }`}
+            >
+              <span className="inline-flex items-center gap-1.5">
+                {isEnglish ? 'Community' : '오순도순'}
               </span>
             </NavLink>
           </div>
@@ -112,20 +115,8 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
             {!loading && (
               <>
                 {user ? (
-                  <div
-                    ref={userMenuRef}
-                    className="flex relative gap-2 items-center sm:gap-3"
-                  >
-                    <HeaderUserIcon
-                      setIsUserMenuOpen={setIsUserMenuOpen}
-                      isUserMenuOpen={isUserMenuOpen}
-                    />
-                    {isUserMenuOpen && (
-                      <HeaderUserMenu
-                        setIsUserMenuOpen={setIsUserMenuOpen}
-                        isUserMenuOpen={isUserMenuOpen}
-                      />
-                    )}
+                  <div className="flex items-center">
+                    <HeaderUserIcon />
                   </div>
                 ) : (
                   <RoundButton className="h-9 min-w-[72px] px-3 text-xs sm:text-xs md:text-xs" onClick={openLoginModal}>

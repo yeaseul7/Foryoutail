@@ -86,7 +86,7 @@ export default function LikeAnimals({ searchError, searchMatches }: LikeAnimalsP
                                     return (
                                         <li key={m.id}>
                                             <Link
-                                                href={`/shelter/${desertionNo}`}
+                                                href={`/${desertionNo}`}
                                                 className="group block overflow-hidden rounded-[22px] border border-slate-200/80 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_18px_38px_rgba(15,23,42,0.14)]"
                                             >
                                                 <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">

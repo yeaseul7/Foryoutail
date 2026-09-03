@@ -1,21 +1,17 @@
 'use client';
+import Link from 'next/link';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import UserProfile from '../common/UserProfile';
 
-export default function HeaderUserIcon({
-  setIsUserMenuOpen,
-  isUserMenuOpen,
-}: {
-  setIsUserMenuOpen: (isOpen: boolean) => void;
-  isUserMenuOpen: boolean;
-}) {
+export default function HeaderUserIcon() {
   const { photoURL: userPhotoURL, nickname: userDisplayName } =
     useUserProfile();
 
   return (
-    <button
-      className="flex items-center ml-2 cursor-pointer group"
-      onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+    <Link
+      href="/mypage"
+      className="ml-2 flex cursor-pointer items-center rounded-full transition-opacity hover:opacity-80"
+      aria-label="프로필"
     >
       <UserProfile
         profileUrl={userPhotoURL || ''}
@@ -25,9 +21,6 @@ export default function HeaderUserIcon({
         existName={false}
         iconSize="text-xl"
       />
-      <span className="ml-1 text-text3 transition-all duration-125 ease-in -mr-1.75 text-lg group-hover:text-text1">
-        ▾
-      </span>
-    </button>
+    </Link>
   );
 }
