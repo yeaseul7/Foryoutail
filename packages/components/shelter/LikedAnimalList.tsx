@@ -3,10 +3,13 @@
 import { useAuth } from '@/lib/supabase/auth';
 import { supabase } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import Loading from '../base/Loading';
 import { ShelterAnimalItem, ShelterAnimalRow } from '@/packages/type/postType';
 import AbandonedCard from '../base/AbandonedCard';
 import { useLanguage } from '@/lib/i18n/language';
+import CardImage from '../common/CardImage';
+import { normalizeAnimalImageUrl, shouldBypassNextImageOptimization } from '@/packages/utils/imageSource';
 
 function mapAnimalRow(row: ShelterAnimalRow): ShelterAnimalItem {
   const popfiles = Array.isArray(row.popfiles)
@@ -91,7 +94,7 @@ function mapAnimalRow(row: ShelterAnimalRow): ShelterAnimalItem {
   };
 }
 
-export default function LikedAnimalList({ userId }: { userId?: string }) {
+export default function LikedAnimalList({ userId, compact = false }: { userId?: string; compact?: boolean }) {
   const { t } = useLanguage();
   const { user } = useAuth();
   const [animals, setAnimals] = useState<ShelterAnimalItem[]>([]);
@@ -172,6 +175,31 @@ export default function LikedAnimalList({ userId }: { userId?: string }) {
     return (
       <div className="py-12 text-center text-gray-500">
         {t('좋아요한 구조 동물이 없습니다.', 'You have not saved any animals yet.')}
+      </div>
+    );
+  }
+
+  if (compact) {
+    return (
+      <div className="grid w-full grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2" role="list" aria-label={t('찜한 구조 동물 목록', 'Saved shelter animals')}>
+        {animals.map((animal, index) => {
+          const image = normalizeAnimalImageUrl(animal.popfile || animal.popfile1 || '/static/images/notfound_img_700.jpg');
+          const shelterName = animal.careNm?.trim() || animal.orgNm?.trim() || t('보호소 확인', 'Check shelter');
+          return <Link
+            key={`${animal.id ?? animal.desertionNo}-${animal.noticeNo ?? index}`}
+            href={`/${animal.desertionNo}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            role="listitem"
+            className="group relative aspect-square overflow-hidden bg-[#f5f2ef]"
+            aria-label={t(`${shelterName} 동물 공고 보기`, `View animal listing from ${shelterName}`)}
+          >
+            <CardImage src={image} alt="" sizes="(max-width: 640px) 50vw, 320px" className="object-cover transition duration-200 group-hover:scale-105" unoptimized={shouldBypassNextImageOptimization(image)} />
+            <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/75 to-transparent px-3 pb-3 pt-10">
+              <p className="truncate text-sm font-bold text-white">{shelterName}</p>
+            </div>
+          </Link>;
+        })}
       </div>
     );
   }

@@ -73,6 +73,28 @@ function toAnimalItem(value: TextSearchRow): ShelterAnimalItem | null {
   };
 }
 
+const WHITE_QUERY_PATTERN = /(?:하얀|하양|흰색|흰|백색|화이트|white)/i;
+const PURE_WHITE_LABELS = new Set(['흰', '흰색', '하양', '하얀색', '백색', '화이트', 'white']);
+
+function normalizeColor(value: string | undefined): string {
+  return (value ?? '').toLowerCase().replace(/[\s()]/g, '');
+}
+
+function whiteColorPriority(item: ShelterAnimalItem): number {
+  const color = normalizeColor(item.colorCd);
+  if (PURE_WHITE_LABELS.has(color)) return 0;
+  if (['흰', '백색', '화이트', 'white'].some((label) => color.includes(label))) return 1;
+  return 2;
+}
+
+function rankResultsForQuery(query: string, items: ShelterAnimalItem[]): ShelterAnimalItem[] {
+  if (!WHITE_QUERY_PATTERN.test(query)) return items;
+  return items
+    .map((item, index) => ({ item, index, colorPriority: whiteColorPriority(item) }))
+    .sort((a, b) => a.colorPriority - b.colorPriority || a.index - b.index)
+    .map(({ item }) => item);
+}
+
 export async function searchShelterAnimalsByText(
   query: string,
   limit = 24,
@@ -99,5 +121,6 @@ export async function searchShelterAnimalsByText(
   const rows = Array.isArray(body)
     ? body
     : body?.results ?? body?.items ?? body?.matches ?? body?.data ?? [];
-  return rows.map(toAnimalItem).filter((item): item is ShelterAnimalItem => item !== null);
+  const items = rows.map(toAnimalItem).filter((item): item is ShelterAnimalItem => item !== null);
+  return rankResultsForQuery(query, items);
 }

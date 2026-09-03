@@ -3,7 +3,10 @@ import { getCommunityFeedPage } from '@/lib/server/community-posts';
 
 export async function GET(request: NextRequest) {
   try {
-    const page = await getCommunityFeedPage(request.nextUrl.searchParams.get('cursor'));
+    const page = await getCommunityFeedPage(request.nextUrl.searchParams.get('cursor'), {
+      search: request.nextUrl.searchParams.get('search'),
+      sort: request.nextUrl.searchParams.get('sort') === 'likes' ? 'likes' : 'latest',
+    });
     return NextResponse.json(page, {
       headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=120' },
     });

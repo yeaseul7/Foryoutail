@@ -276,7 +276,7 @@ export default function AnimalFilterHeader({
               alt=""
               width={42}
               height={28}
-              className="h-7 w-[42px] shrink-0 self-center object-contain"
+              className="hidden h-7 w-[42px] shrink-0 self-center object-contain sm:block"
             />
             <input
               type="text"

@@ -3,15 +3,20 @@ import { createSupabaseAdminClient } from '@/lib/server/supabase-admin';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export async function GET(_request: Request, { params }: RouteContext) {
+const COMMENTS_PAGE_SIZE = 10;
+
+export async function GET(request: Request, { params }: RouteContext) {
   const { id: postId } = await params;
+  const offset = Math.max(0, Number.parseInt(new URL(request.url).searchParams.get('cursor') ?? '0', 10) || 0);
   const supabase = await createSupabaseAdminClient();
-  const { data, error } = await supabase
+  const { data, error, count } = await supabase
     .from('comments')
-    .select('id, author_id, content, deleted_at, like_count, created_at')
+    .select('id, author_id, content, deleted_at, like_count, created_at', { count: 'exact' })
     .eq('post_id', postId)
     .is('parent_id', null)
-    .order('created_at', { ascending: true });
+    .is('deleted_at', null)
+    .order('created_at', { ascending: true })
+    .range(offset, offset + COMMENTS_PAGE_SIZE - 1);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
@@ -34,5 +39,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
       authorName: authors.get(comment.author_id)?.nickname ?? null,
       authorImageUrl: authors.get(comment.author_id)?.profile_img ?? null,
     })),
+    total: count ?? 0,
+    nextCursor: offset + comments.length < (count ?? 0) ? String(offset + COMMENTS_PAGE_SIZE) : null,
   });
 }

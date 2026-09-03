@@ -295,6 +295,7 @@ export async function queryShelterAnimals(
   items: ShelterAnimalItem[];
   pageNo: number;
   numOfRows: number;
+  totalCount: number;
   hasMore: boolean;
 }> {
   const pageNo = pageNum(params.pageNo, 1);
@@ -305,7 +306,7 @@ export async function queryShelterAnimals(
   const supabaseAdmin = await createSupabaseAdminClient();
   let query = supabaseAdmin
     .from('animals')
-    .select('*');
+    .select('*', { count: 'exact' });
 
   if (params.listQuick === 'noticeEnding') {
     query = query
@@ -366,7 +367,7 @@ export async function queryShelterAnimals(
     query = query.in('up_kind_nm', upKindNames);
   }
 
-  const { data, error } = await query;
+  const { data, error, count } = await query;
   if (error) {
     throw new Error(error.message);
   }
@@ -386,7 +387,8 @@ export async function queryShelterAnimals(
     items: filtered.slice(0, numOfRows),
     pageNo,
     numOfRows,
-    hasMore: filtered.length > numOfRows || queried.length > numOfRows,
+    totalCount: count ?? 0,
+    hasMore: pageNo * numOfRows < (count ?? 0),
   };
 }
 
@@ -438,15 +440,14 @@ export function buildShelterDataJsonFromQueryResult(result: {
   items: ShelterAnimalItem[];
   pageNo: number;
   numOfRows: number;
+  totalCount: number;
   hasMore: boolean;
 }): ReturnType<typeof buildAbandonmentPublicV2Json> {
   return buildAbandonmentPublicV2Json(
     result.items,
     result.pageNo,
     result.numOfRows,
-    result.hasMore
-      ? result.pageNo * result.numOfRows + 1
-      : (result.pageNo - 1) * result.numOfRows + result.items.length,
+    result.totalCount,
   );
 }
 

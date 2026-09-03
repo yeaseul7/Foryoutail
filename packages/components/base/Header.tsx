@@ -10,6 +10,7 @@ import Image from 'next/image';
 import NavLink from '../common/NavLink';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n/language';
+import { MdClose, MdMenu } from 'react-icons/md';
 
 interface HeaderProps {
   visibleHeaderButtons?: boolean;
@@ -19,6 +20,7 @@ const subscribeToHydration = () => () => {};
 
 export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const { language, setLanguage, isEnglish } = useLanguage();
   const { user, loading } = useAuth();
@@ -36,9 +38,18 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur">
       <div className="flex justify-between items-center px-4 mx-auto w-full max-w-7xl h-16 sm:px-6">
         <div className="flex items-center gap-4 md:gap-10">
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen((open) => !open)}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-2xl text-[#332d2a] transition hover:bg-primary-soft md:hidden"
+            aria-label={isEnglish ? 'Open menu' : '메뉴 열기'}
+            aria-expanded={isMobileMenuOpen}
+          >
+            {isMobileMenuOpen ? <MdClose aria-hidden /> : <MdMenu aria-hidden />}
+          </button>
           <Link
             href="/"
-            className="flex min-w-0 items-center transition-opacity hover:opacity-80"
+            className="hidden min-w-0 items-center transition-opacity hover:opacity-80 md:flex"
           >
             <Image
               src="/static/images/kkosunnae-header-logo.png"
@@ -128,6 +139,19 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
           </div>
         )}
       </div>
+      {isMobileMenuOpen && (
+        <>
+          <button type="button" className="fixed inset-0 top-16 z-40 cursor-default bg-black/10 md:hidden" onClick={() => setIsMobileMenuOpen(false)} aria-label={isEnglish ? 'Close menu' : '메뉴 닫기'} />
+          <nav className="absolute left-4 top-full z-50 w-44 overflow-hidden rounded-2xl border border-[#eadfd7] bg-white p-1.5 text-sm font-bold shadow-xl md:hidden" aria-label={isEnglish ? 'Main menu' : '주 메뉴'}>
+            <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className={`block rounded-xl px-4 py-3 transition ${pathname === '/' || /^\/\d+$/.test(pathname) ? 'bg-primary1 text-white' : 'text-[#332d2a] hover:bg-primary-soft'}`}>
+              {isEnglish ? 'Adopt' : '입양하기'}
+            </Link>
+            <Link href="/community" onClick={() => setIsMobileMenuOpen(false)} className={`mt-1 block rounded-xl px-4 py-3 transition ${pathname === '/community' || pathname.startsWith('/community/') ? 'bg-primary1 text-white' : 'text-[#332d2a] hover:bg-primary-soft'}`}>
+              {isEnglish ? 'Community' : '오순도순'}
+            </Link>
+          </nav>
+        </>
+      )}
       {isLoginModalOpen && (
         <LoginModal onClose={() => setIsLoginModalOpen(false)} />
       )}

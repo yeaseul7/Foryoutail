@@ -75,7 +75,7 @@ export default async function Shelter({
       <PageTemplate>
         <Suspense fallback={<ShelterPostsFallback />}>
           <ShelterPostsClient
-            initialData={{ items, hasMore: result.hasMore }}
+            initialData={{ items, hasMore: result.hasMore, totalCount: result.totalCount }}
             initialFilters={filters}
             initialListQuickFilter={listQuickFilter}
           />

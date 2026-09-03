@@ -17,6 +17,8 @@ import { trackEvent } from '@/lib/analytics';
 import { searchShelterAnimalsByText, TextSearchError } from '@/lib/client/textSearch';
 import {
   MdArrowDropDown,
+  MdChevronLeft,
+  MdChevronRight,
   MdClose,
   MdRefresh,
   MdTune,
@@ -29,7 +31,7 @@ interface ShelterPostsClientProps {
 }
 
 interface ShelterListCache {
-  version: 4;
+  version: 7;
   savedAt: number;
   query: string;
   items: ShelterAnimalItem[];
@@ -37,6 +39,8 @@ interface ShelterListCache {
   listQuickFilter: ListQuickFilterId | null;
   pageNo: number;
   hasMore: boolean;
+  totalCount: number;
+  pageSize: number;
   scrollY: number;
   imageSearchActive: boolean;
 }
@@ -57,11 +61,13 @@ function readShelterListCache(query: string): ShelterListCache | null {
     if (!raw) return null;
     const cache = JSON.parse(raw) as ShelterListCache;
     const valid =
-      cache?.version === 4 &&
+      cache?.version === 7 &&
       Date.now() - cache.savedAt <= SHELTER_LIST_CACHE_TTL_MS &&
       normalizeQueryString(cache.query) === normalizeQueryString(query) &&
       Array.isArray(cache.items) &&
       typeof cache.imageSearchActive === 'boolean' &&
+      typeof cache.totalCount === 'number' &&
+      cache.pageSize === (window.matchMedia('(max-width: 639px)').matches ? 10 : 50) &&
       cache.filters &&
       typeof cache.filters === 'object';
     if (!valid) {
@@ -189,6 +195,19 @@ function createFilterSearchParams(
   return params;
 }
 
+function paginationItems(currentPage: number, totalPages: number): Array<number | `ellipsis-${number}`> {
+  if (totalPages <= 4) return Array.from({ length: totalPages }, (_, index) => index + 1);
+  const pages = [...new Set([currentPage, currentPage + 1, totalPages - 1, totalPages]
+    .filter((page) => page >= 1 && page <= totalPages))].sort((a, b) => a - b);
+  const items: Array<number | `ellipsis-${number}`> = [];
+  if (pages[0] > 1) items.push(`ellipsis-${pages[0]}`);
+  pages.forEach((page, index) => {
+    if (index > 0 && page - pages[index - 1] > 1) items.push(`ellipsis-${page}`);
+    items.push(page);
+  });
+  return items;
+}
+
 const UP_KIND_LABEL: Record<string, string> = {
   '417000': '개',
   '422400': '고양이',
@@ -306,13 +325,15 @@ export default function ShelterPostsClient({
   const [loading, setLoading] = useState(false);
   const [pageNo, setPageNo] = useState(1);
   const [hasMore, setHasMore] = useState(initialData.hasMore);
+  const [totalCount, setTotalCount] = useState(initialData.totalCount);
+  const [pageSize, setPageSize] = useState(50);
+  const pageSizeRef = useRef(50);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   /** 기본 축종: 강아지(개) */
   const [filters, setFilters] = useState<AnimalFilterState>(initialFilters);
   const filtersRef = useRef<AnimalFilterState>(filters);
   const isLoadingMoreRef = useRef(false);
   const isFilterRequestInProgress = useRef(false);
-  const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
   const pageNoRef = useRef(pageNo);
   const hasMoreRef = useRef(hasMore);
   pageNoRef.current = pageNo;
@@ -362,8 +383,46 @@ export default function ShelterPostsClient({
     setListQuickFilter(cache.listQuickFilter);
     setPageNo(cache.pageNo);
     setHasMore(cache.hasMore);
+    setTotalCount(cache.totalCount);
+    pageSizeRef.current = cache.pageSize;
+    setPageSize(cache.pageSize);
     setRestoredScrollY(cache.scrollY);
   }, [searchParams]);
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 639px)');
+    const applyPageSize = () => {
+      const nextPageSize = media.matches ? 10 : 50;
+      if (pageSizeRef.current === nextPageSize) return;
+      pageSizeRef.current = nextPageSize;
+      setPageSize(nextPageSize);
+      sessionStorage.removeItem(SHELTER_LIST_CACHE_KEY);
+      if (imageSearchActiveRef.current) return;
+
+      isFilterRequestInProgress.current = true;
+      setPageNo(1);
+      setShelterAnimalData([]);
+      setLoading(true);
+      void (async () => {
+        try {
+          const result = await fetchShelterAnimalData(1, filtersRef.current, undefined, nextPageSize);
+          setShelterAnimalData(dedupeShelterAnimals(result.items));
+          setHasMore(result.hasMore);
+          setTotalCount(result.totalCount);
+        } catch (error) {
+          console.error('반응형 페이지 크기 적용 실패:', error);
+          setHasMore(false);
+        } finally {
+          setLoading(false);
+          isFilterRequestInProgress.current = false;
+        }
+      })();
+    };
+
+    applyPageSize();
+    media.addEventListener('change', applyPageSize);
+    return () => media.removeEventListener('change', applyPageSize);
+  }, []);
 
   useEffect(() => {
     listQuickFilterRef.current = listQuickFilter;
@@ -383,7 +442,7 @@ export default function ShelterPostsClient({
 
   const persistListCache = useCallback(() => {
     writeShelterListCache({
-      version: 4,
+      version: 7,
       savedAt: Date.now(),
       query: searchParams.toString(),
       items: shelterAnimalDataRef.current,
@@ -391,10 +450,12 @@ export default function ShelterPostsClient({
       listQuickFilter: listQuickFilterRef.current,
       pageNo: pageNoRef.current,
       hasMore: hasMoreRef.current,
+      totalCount,
+      pageSize: pageSizeRef.current,
       scrollY: scrollYRef.current,
       imageSearchActive: imageSearchActiveRef.current,
     });
-  }, [searchParams]);
+  }, [searchParams, totalCount]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -435,14 +496,16 @@ export default function ShelterPostsClient({
 
       try {
         const filterParams = currentFilters || filtersRef.current;
-        const result = await fetchShelterAnimalData(page, filterParams);
+        const result = await fetchShelterAnimalData(page, filterParams, undefined, pageSizeRef.current);
         if (isInitial) {
           setShelterAnimalData(dedupeShelterAnimals(result.items));
           setHasMore(result.hasMore);
+          setTotalCount(result.totalCount);
         } else {
           setShelterAnimalData((prev) => {
             const newData = dedupeShelterAnimals([...prev, ...result.items]);
             setHasMore(result.hasMore);
+            setTotalCount(result.totalCount);
             return newData;
           });
         }
@@ -463,42 +526,6 @@ export default function ShelterPostsClient({
   );
 
   const filterTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const handleLoadMoreListQuick = useCallback(async () => {
-    const mode = listQuickFilterRef.current;
-    if (!mode) return;
-    if (!hasMoreRef.current || isLoadingMoreRef.current || isFilterRequestInProgress.current) return;
-    isLoadingMoreRef.current = true;
-    setIsLoadingMore(true);
-    try {
-      const seen = new Set(
-        shelterAnimalDataRef.current
-          .map((x) => x.desertionNo?.trim())
-          .filter((x): x is string => Boolean(x)),
-      );
-      const snap: AnimalFilterState = { ...filtersRef.current };
-      const yearFull = new Date().getFullYear();
-      const { picked, nextPage, exhausted } = await gatherListQuickMatches(
-        snap,
-        mode,
-        listQuickNextApiPageRef.current,
-        seen,
-        yearFull,
-        7,
-      );
-      listQuickNextApiPageRef.current = nextPage;
-      setShelterAnimalData((prev) =>
-        dedupeShelterAnimals([...prev, ...picked]),
-      );
-      setHasMore(!exhausted);
-    } catch (e) {
-      console.error('빠른 필터 추가 로드 실패:', e);
-      setHasMore(false);
-    } finally {
-      isLoadingMoreRef.current = false;
-      setIsLoadingMore(false);
-    }
-  }, []);
 
   const handleFilterChange = useCallback((
     newFilters: AnimalFilterState,
@@ -563,15 +590,17 @@ export default function ShelterPostsClient({
             seen,
             yearFull,
             7,
+            pageSizeRef.current,
           );
           listQuickNextApiPageRef.current = nextPage;
           setShelterAnimalData(dedupeShelterAnimals(picked));
           setHasMore(!exhausted);
         } else {
-          const result = await fetchShelterAnimalData(1, snap);
+          const result = await fetchShelterAnimalData(1, snap, undefined, pageSizeRef.current);
           const items = Array.isArray(result.items) ? result.items : [];
           setShelterAnimalData(items);
           setHasMore(result.hasMore ?? false);
+          setTotalCount(result.totalCount);
         }
       } catch (e) {
         console.error('유기견 보호소 데이터 조회 중 오류 발생:', e);
@@ -660,10 +689,11 @@ export default function ShelterPostsClient({
       setLoading(true);
       void (async () => {
         try {
-          const result = await fetchShelterAnimalData(1, base);
+          const result = await fetchShelterAnimalData(1, base, undefined, pageSizeRef.current);
           const items = Array.isArray(result.items) ? result.items : [];
           setShelterAnimalData(items);
           setHasMore(result.hasMore ?? false);
+          setTotalCount(result.totalCount);
         } catch (e) {
           console.error('유기견 보호소 데이터 조회 중 오류 발생:', e);
           setShelterAnimalData([]);
@@ -694,6 +724,7 @@ export default function ShelterPostsClient({
           seen,
           yearFull,
           7,
+          pageSizeRef.current,
         );
         listQuickNextApiPageRef.current = nextPage;
         setShelterAnimalData(picked);
@@ -868,35 +899,46 @@ export default function ShelterPostsClient({
     void handleFetchShelterAnimalData(1, true, filtersRef.current);
   }, [handleFetchShelterAnimalData]);
 
-  const handleLoadMorePage = useCallback(() => {
-    if (!hasMoreRef.current || isLoadingMoreRef.current || isFilterRequestInProgress.current) return;
-    if (listQuickFilterRef.current) {
-      void handleLoadMoreListQuick();
-      return;
+  const handlePageChange = useCallback(async (nextPage: number) => {
+    if (nextPage < 1 || nextPage === pageNoRef.current || loading || isFilterRequestInProgress.current) return;
+    isFilterRequestInProgress.current = true;
+    setLoading(true);
+    setShelterAnimalData([]);
+    try {
+      const mode = listQuickFilterRef.current;
+      if (mode) {
+        const { picked, nextPage: followingPage, exhausted } = await gatherListQuickMatches(
+          filtersRef.current,
+          mode,
+          nextPage,
+          new Set<string>(),
+          new Date().getFullYear(),
+          7,
+          pageSizeRef.current,
+        );
+        listQuickNextApiPageRef.current = followingPage;
+        setShelterAnimalData(dedupeShelterAnimals(picked));
+        setHasMore(!exhausted);
+      } else {
+        const result = await fetchShelterAnimalData(nextPage, filtersRef.current, undefined, pageSizeRef.current);
+        setShelterAnimalData(dedupeShelterAnimals(result.items));
+        setHasMore(result.hasMore);
+        setTotalCount(result.totalCount);
+      }
+      setPageNo(nextPage);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (error) {
+      console.error('페이지 이동 중 공고 조회 실패:', error);
+      setHasMore(false);
+    } finally {
+      setLoading(false);
+      isFilterRequestInProgress.current = false;
     }
-    const next = pageNoRef.current + 1;
-    setPageNo(next);
-    handleFetchShelterAnimalData(next, false, filtersRef.current);
-  }, [handleFetchShelterAnimalData, handleLoadMoreListQuick]);
-
-  /** 전체 페이지 스크롤: 하단 감지 시 다음 24건 배치 자동 로드 */
-  useEffect(() => {
-    const node = loadMoreSentinelRef.current;
-    if (!node || !hasMore) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          handleLoadMorePage();
-        }
-      },
-      { root: null, rootMargin: '280px', threshold: 0 },
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [hasMore, shelterAnimalData.length, loading, handleLoadMorePage]);
+  }, [loading]);
 
   const filterSummaryRows = useMemo(() => buildFilterSummaryRows(filters), [filters]);
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const visiblePaginationItems = paginationItems(pageNo, totalPages);
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-7xl pb-4 sm:pb-5">
@@ -1113,32 +1155,26 @@ export default function ShelterPostsClient({
                         </div>
                       ))}
                     </div>
-                    {hasMore ? (
-                      <div
-                        ref={loadMoreSentinelRef}
-                        className="pointer-events-none h-14 w-full shrink-0"
-                        aria-hidden
-                      />
-                    ) : null}
                   </>
                 ) : !loading && hasMore ? (
                   <div className="flex flex-col items-center gap-3 py-10 text-center text-sm text-gray-600 sm:py-14">
                     <p className="max-w-md leading-relaxed">
-                      {isEnglish ? 'No matching listings in this batch. Scroll to search the next 24 listings.' : '방금 불러온 구간에는 조건에 맞는 공고가 없어요. 스크롤하면 다음 구간(24건)을 불러와 이어서 찾아볼게요.'}
+                      {isEnglish ? 'No matching listings were found on this page.' : '현재 페이지에는 조건에 맞는 공고가 없습니다.'}
                     </p>
-                    <div
-                      ref={loadMoreSentinelRef}
-                      className="pointer-events-none h-14 w-full shrink-0"
-                      aria-hidden
-                    />
                   </div>
                 ) : null}
               </div>
-              {isLoadingMore && (
-                <div className="flex justify-center py-4 text-sm text-gray-500 sm:py-5">
-                  {isEnglish ? 'Loading more...' : '더 불러오는 중...'}
+              {!imageSearchActive && !loading && totalPages > 1 && <nav className="py-8" aria-label={isEnglish ? 'Adoption listing pages' : '공고 페이지'}>
+                <div className="flex items-center justify-center gap-3 sm:hidden">
+                  <button type="button" disabled={pageNo <= 1} onClick={() => void handlePageChange(pageNo - 1)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#eadfd7] bg-white text-xl text-[#5f5752] transition hover:border-primary1/60 hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-40" aria-label={isEnglish ? 'Previous page' : '이전 페이지'}><MdChevronLeft aria-hidden /></button>
+                  <button type="button" disabled={pageNo >= totalPages} onClick={() => void handlePageChange(pageNo + 1)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#eadfd7] bg-white text-xl text-[#5f5752] transition hover:border-primary1/60 hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-40" aria-label={isEnglish ? 'Next page' : '다음 페이지'}><MdChevronRight aria-hidden /></button>
                 </div>
-              )}
+                <div className="hidden items-center justify-center gap-1.5 sm:flex">
+                  <button type="button" disabled={pageNo <= 1} onClick={() => void handlePageChange(pageNo - 1)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#eadfd7] bg-white text-xl text-[#5f5752] transition hover:border-primary1/60 hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-40" aria-label={isEnglish ? 'Previous page' : '이전 페이지'}><MdChevronLeft aria-hidden /></button>
+                  {visiblePaginationItems.map((item) => typeof item === 'number' ? <span key={item} aria-current={item === pageNo ? 'page' : undefined} className={`flex h-10 min-w-8 items-center justify-center px-1 text-sm font-bold ${item === pageNo ? 'text-primary1' : 'text-[#817873]'}`}>{item}</span> : <span key={item} className="flex h-10 min-w-5 items-center justify-center text-[#9a918b]" aria-hidden>…</span>)}
+                  <button type="button" disabled={pageNo >= totalPages} onClick={() => void handlePageChange(pageNo + 1)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#eadfd7] bg-white text-xl text-[#5f5752] transition hover:border-primary1/60 hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-40" aria-label={isEnglish ? 'Next page' : '다음 페이지'}><MdChevronRight aria-hidden /></button>
+                </div>
+              </nav>}
             </>
           )}
         </div>

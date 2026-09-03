@@ -160,10 +160,11 @@ function applyQuickFilterBySpecialMark(
 export interface FetchShelterAnimalDataResult {
   items: ShelterAnimalItem[];
   hasMore: boolean;
+  totalCount: number;
 }
 
 /** 공공 API·프록시 한 번에 가져오는 행 수 (검색·특징 필터는 이후 클라이언트에서 적용) */
-export const SHELTER_API_PAGE_SIZE = 24;
+export const SHELTER_API_PAGE_SIZE = 50;
 
 function parseShelterItemsFromResponse(shelterAnimalResponse: {
   response?: {
@@ -235,10 +236,11 @@ async function fetchShelterAnimalDataFromApi(
   page: number,
   filters: AnimalFilterState,
   listQuick?: 'noticeEnding',
+  pageSize = SHELTER_API_PAGE_SIZE,
 ): Promise<FetchShelterAnimalDataResult> {
   const params = new URLSearchParams();
   params.append('pageNo', page.toString());
-  params.append('numOfRows', String(SHELTER_API_PAGE_SIZE));
+  params.append('numOfRows', String(pageSize));
 
   if (filters.sexCd) params.append('sex_cd', filters.sexCd);
   if (filters.state) params.append('state', filters.state);
@@ -261,20 +263,24 @@ async function fetchShelterAnimalDataFromApi(
     typeof parseShelterItemsFromResponse
   >[0];
   const itemsArray = parseShelterItemsFromResponse(shelterAnimalResponse);
-  const hasMore = itemsArray.length === SHELTER_API_PAGE_SIZE;
+  const totalCount = shelterAnimalResponse.response?.body?.totalCount ?? itemsArray.length;
+  const responsePage = shelterAnimalResponse.response?.body?.pageNo ?? page;
+  const hasMore = responsePage * pageSize < totalCount;
 
-  return { items: itemsArray, hasMore };
+  return { items: itemsArray, hasMore, totalCount };
 }
 
 export async function fetchShelterAnimalData(
   page: number,
   filters: AnimalFilterState,
   listQuick?: 'noticeEnding',
+  pageSize = SHELTER_API_PAGE_SIZE,
 ): Promise<FetchShelterAnimalDataResult> {
-  const raw = await fetchShelterAnimalDataFromApi(page, filters, listQuick);
+  const raw = await fetchShelterAnimalDataFromApi(page, filters, listQuick, pageSize);
   return {
     items: applyShelterClientFilters(raw.items, filters),
     hasMore: raw.hasMore,
+    totalCount: raw.totalCount,
   };
 }
 
@@ -297,5 +303,6 @@ export async function fetchShelterAnimalDataNoticeProtectMerged(
   return {
     items: listable,
     hasMore: noticeRes.hasMore || protectRes.hasMore,
+    totalCount: noticeRes.totalCount + protectRes.totalCount,
   };
 }
