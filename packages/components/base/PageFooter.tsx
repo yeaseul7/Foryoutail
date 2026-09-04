@@ -11,6 +11,7 @@ const FOOTER_LINKS = {
   ],
   서비스: [
     { label: '회원가입', href: '/register' },
+    { label: '건의함', href: '/feedback' },
   ],
   정책: [
     { label: '개인정보처리방침', href: '/privacy' },
@@ -23,7 +24,7 @@ export default function PageFooter() {
   const footerLinks = isEnglish
     ? {
         Explore: [{ label: 'Adoption listings', href: '/' }, { label: 'Community', href: '/community' }],
-        Service: [{ label: 'Sign up', href: '/register' }],
+        Service: [{ label: 'Sign up', href: '/register' }, { label: 'Feedback', href: '/feedback' }],
         Policies: [{ label: 'Privacy Policy', href: '/privacy' }, { label: 'Terms of Service', href: '/terms' }],
       }
     : FOOTER_LINKS;

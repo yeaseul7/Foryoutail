@@ -98,6 +98,10 @@ function rankResultsForQuery(query: string, items: ShelterAnimalItem[]): Shelter
 export async function searchShelterAnimalsByText(
   query: string,
   limit = 24,
+  filters?: {
+    upKindCd?: '417000' | '422400';
+    region?: string;
+  },
 ): Promise<ShelterAnimalItem[]> {
   const token = await getSupabaseAccessToken();
   const headers: HeadersInit = { 'Content-Type': 'application/json' };
@@ -106,7 +110,12 @@ export async function searchShelterAnimalsByText(
   const response = await fetch(TEXT_SEARCH_URL, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ query: query.trim(), limit }),
+    body: JSON.stringify({
+      query: query.trim(),
+      limit,
+      ...(filters?.upKindCd ? { upKindCd: filters.upKindCd } : {}),
+      ...(filters?.region ? { region: filters.region } : {}),
+    }),
   });
   const body = (await response.json().catch(() => null)) as
     | { results?: TextSearchRow[]; items?: TextSearchRow[]; matches?: TextSearchRow[]; data?: TextSearchRow[]; error?: string; message?: string }

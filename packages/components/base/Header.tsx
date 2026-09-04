@@ -89,6 +89,19 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
                 {isEnglish ? 'Community' : '오순도순'}
               </span>
             </NavLink>
+            <NavLink
+              to="/feedback"
+              activeClassName="active"
+              isActive={() => pathname === '/feedback'}
+              className={`!border-b-0 !p-0 text-sm lg:text-base transition-colors ${pathname === '/feedback'
+                ? '!text-primary1 font-semibold'
+                : '!text-[#817873] hover:!text-primary1'
+                }`}
+            >
+              <span className="inline-flex items-center gap-1.5">
+                {isEnglish ? 'Feedback' : '건의함'}
+              </span>
+            </NavLink>
           </div>
         </div>
         {visibleHeaderButtons && (
@@ -148,6 +161,9 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
             </Link>
             <Link href="/community" onClick={() => setIsMobileMenuOpen(false)} className={`mt-1 block rounded-xl px-4 py-3 transition ${pathname === '/community' || pathname.startsWith('/community/') ? 'bg-primary1 text-white' : 'text-[#332d2a] hover:bg-primary-soft'}`}>
               {isEnglish ? 'Community' : '오순도순'}
+            </Link>
+            <Link href="/feedback" onClick={() => setIsMobileMenuOpen(false)} className={`mt-1 block rounded-xl px-4 py-3 transition ${pathname === '/feedback' ? 'bg-primary1 text-white' : 'text-[#332d2a] hover:bg-primary-soft'}`}>
+              {isEnglish ? 'Feedback' : '건의함'}
             </Link>
           </nav>
         </>

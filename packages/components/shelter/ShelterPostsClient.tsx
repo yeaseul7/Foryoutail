@@ -112,6 +112,21 @@ function dedupeShelterAnimals(
   return [...map.values()];
 }
 
+function filterAiAnimals(items: ShelterAnimalItem[], filters: AnimalFilterState, mode: 'text' | 'image'): ShelterAnimalItem[] {
+  const regionName = filters.orgNm?.trim() ||
+    sidoLocation.items.find((item) => item.SIDO_CD === filters.upr_cd)?.SIDO_NAME || '';
+
+  return items.filter((animal) => {
+    if (mode === 'text' && filters.upKindCd && animal.upKindCd !== filters.upKindCd) return false;
+    if (mode === 'image' && filters.sexCd && animal.sexCd !== filters.sexCd) return false;
+    if (regionName) {
+      const location = `${animal.orgNm ?? ''} ${animal.careAddr ?? ''}`;
+      if (!location.includes(regionName)) return false;
+    }
+    return true;
+  });
+}
+
 function similarMatchToShelterAnimal(match: SimilarMatch): ShelterAnimalItem | null {
   const metadata = (match.metadata ?? {}) as Partial<ShelterAnimalItem> & { imageUrl?: unknown };
   const desertionNo = typeof metadata.desertionNo === 'string' && metadata.desertionNo.trim()
@@ -350,6 +365,9 @@ export default function ShelterPostsClient({
   const [sortOpen, setSortOpen] = useState(false);
   const [imageSearchActive, setImageSearchActive] = useState(false);
   const imageSearchActiveRef = useRef(false);
+  const [aiSearchMode, setAiSearchMode] = useState<'text' | 'image' | null>(null);
+  const aiSearchModeRef = useRef<'text' | 'image' | null>(null);
+  const aiSearchResultsRef = useRef<ShelterAnimalItem[]>([]);
   const [textSearchLoading, setTextSearchLoading] = useState(false);
   const [textSearchError, setTextSearchError] = useState<string | null>(null);
 
@@ -376,7 +394,13 @@ export default function ShelterPostsClient({
     pageNoRef.current = cache.pageNo;
     hasMoreRef.current = cache.hasMore;
     imageSearchActiveRef.current = cache.imageSearchActive;
+    aiSearchResultsRef.current = cache.imageSearchActive ? cache.items : [];
     setImageSearchActive(cache.imageSearchActive);
+    const restoredAiMode = cache.imageSearchActive
+      ? (cache.filters.searchQuery ? 'text' : 'image')
+      : null;
+    aiSearchModeRef.current = restoredAiMode;
+    setAiSearchMode(restoredAiMode);
     scrollYRef.current = cache.scrollY;
     setShelterAnimalData(cache.items);
     setFilters(cache.filters);
@@ -744,11 +768,10 @@ export default function ShelterPostsClient({
     const sidoCd = filtersRef.current.upr_cd ??
       sidoLocation.items.find((item) => item.SIDO_NAME === filtersRef.current.orgNm)?.SIDO_CD ??
       null;
-    const upKindCd = filtersRef.current.upKindCd;
     setLoading(true);
     const matches = await searchWithFile(file, {
       sidoCd,
-      petType: upKindCd === '417000' || upKindCd === '422400' ? upKindCd : '',
+      petType: '',
     });
     setLoading(false);
     if (!matches) return false;
@@ -756,11 +779,14 @@ export default function ShelterPostsClient({
     const animals = matches
       .map(similarMatchToShelterAnimal)
       .filter((animal): animal is ShelterAnimalItem => animal !== null);
+    aiSearchResultsRef.current = dedupeShelterAnimals(animals);
     imageSearchActiveRef.current = true;
     setImageSearchActive(true);
+    aiSearchModeRef.current = 'image';
+    setAiSearchMode('image');
     listQuickFilterRef.current = null;
     setListQuickFilter(null);
-    setShelterAnimalData(dedupeShelterAnimals(animals));
+    setShelterAnimalData(filterAiAnimals(aiSearchResultsRef.current, filtersRef.current, 'image'));
     setPageNo(1);
     setHasMore(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -775,15 +801,27 @@ export default function ShelterPostsClient({
     setTextSearchError(null);
     setLoading(true);
     try {
-      const animals = await searchShelterAnimalsByText(normalizedQuery, 24);
+      const currentFilters = filtersRef.current;
+      const region = currentFilters.orgNm?.trim() ||
+        sidoLocation.items.find((item) => item.SIDO_CD === currentFilters.upr_cd)?.SIDO_NAME;
+      const upKindCd = currentFilters.upKindCd === '417000' || currentFilters.upKindCd === '422400'
+        ? currentFilters.upKindCd
+        : undefined;
+      const animals = await searchShelterAnimalsByText(normalizedQuery, 24, {
+        upKindCd,
+        region: region || undefined,
+      });
       const nextFilters = { ...filtersRef.current, searchQuery: normalizedQuery };
       filtersRef.current = nextFilters;
       setFilters(nextFilters);
       imageSearchActiveRef.current = true;
       setImageSearchActive(true);
+      aiSearchModeRef.current = 'text';
+      setAiSearchMode('text');
       listQuickFilterRef.current = null;
       setListQuickFilter(null);
-      setShelterAnimalData(dedupeShelterAnimals(animals));
+      aiSearchResultsRef.current = dedupeShelterAnimals(animals);
+      setShelterAnimalData(filterAiAnimals(aiSearchResultsRef.current, nextFilters, 'text'));
       setPageNo(1);
       setHasMore(false);
       trackEvent('search_animal_text', {
@@ -807,8 +845,26 @@ export default function ShelterPostsClient({
     }
   }, [isEnglish, textSearchLoading]);
 
+  const handleAiFilterChange = useCallback((newFilters: AnimalFilterState) => {
+    const mode = aiSearchModeRef.current ?? 'text';
+    const nextFilters = {
+      ...filtersRef.current,
+      ...(mode === 'text' ? { upKindCd: newFilters.upKindCd } : { sexCd: newFilters.sexCd }),
+      upr_cd: newFilters.upr_cd,
+      orgNm: newFilters.orgNm,
+    };
+    filtersRef.current = nextFilters;
+    setFilters(nextFilters);
+    setShelterAnimalData(filterAiAnimals(aiSearchResultsRef.current, nextFilters, mode));
+    setPageNo(1);
+    setHasMore(false);
+  }, []);
+
   const handleResetImageSearch = useCallback(async () => {
     imageSearchActiveRef.current = false;
+    aiSearchModeRef.current = null;
+    setAiSearchMode(null);
+    aiSearchResultsRef.current = [];
     setImageSearchActive(false);
     setFilterModalOpen(false);
     const nextFilters = { ...filtersRef.current, searchQuery: '' };
@@ -984,14 +1040,26 @@ export default function ShelterPostsClient({
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                 <div className={`relative shrink-0 ${filterModalOpen ? 'z-[210]' : ''}`}>
                   {imageSearchActive ? (
-                    <button
-                      type="button"
-                      onClick={() => void handleResetImageSearch()}
-                      className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-white px-3 text-sm font-medium text-[#332d2a] shadow-[0_3px_12px_rgba(51,45,42,0.12)] transition-colors hover:bg-primary-soft hover:shadow-[0_4px_14px_rgba(51,45,42,0.16)]"
-                    >
-                      <MdRefresh className="h-4 w-4" aria-hidden />
-                      <span>{isEnglish ? 'Reset results' : '결과 초기화'}</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void handleResetImageSearch()}
+                        className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-white px-3 text-sm font-medium text-[#332d2a] shadow-[0_3px_12px_rgba(51,45,42,0.12)] transition-colors hover:bg-primary-soft"
+                      >
+                        <MdRefresh className="h-4 w-4" aria-hidden />
+                        <span>{isEnglish ? 'Reset results' : '결과 초기화'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFilterModalOpen((open) => !open)}
+                        className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-white px-3 text-sm font-medium text-[#332d2a] shadow-[0_3px_12px_rgba(51,45,42,0.12)] transition-colors hover:bg-primary-soft"
+                        aria-haspopup="dialog"
+                        aria-expanded={filterModalOpen}
+                      >
+                        <MdTune className="h-4 w-4" aria-hidden />
+                        <span>{isEnglish ? 'Filters' : '필터'}</span>
+                      </button>
+                    </div>
                   ) : (
                     <button
                       type="button"
@@ -1004,7 +1072,7 @@ export default function ShelterPostsClient({
                       <span>{isEnglish ? 'Filters' : '필터'}</span>
                     </button>
                   )}
-                  {!imageSearchActive && filterModalOpen && (
+                  {filterModalOpen && (
                     <>
                       <button
                         type="button"
@@ -1019,7 +1087,9 @@ export default function ShelterPostsClient({
                       >
                         <div className="flex items-center justify-between gap-4">
                           <h2 id="shelter-filter-title" className="text-base font-bold text-[#332d2a]">
-                            {isEnglish ? 'Filter adoption listings' : '입양 공고 필터'}
+                            {imageSearchActive
+                              ? (isEnglish ? 'Filter AI results' : 'AI 결과 필터')
+                              : (isEnglish ? 'Filter adoption listings' : '입양 공고 필터')}
                           </h2>
                           <button
                             type="button"
@@ -1033,12 +1103,13 @@ export default function ShelterPostsClient({
                         <div className="mt-4">
                           <AnimalFilterHeader
                             filters={filters}
-                            onFilterChange={handleFilterChange}
+                            onFilterChange={imageSearchActive ? handleAiFilterChange : handleFilterChange}
                             onImageSearch={handleImageSearch}
                             onTextSearch={handleTextSearch}
                             textSearchLoading={textSearchLoading}
                             showSearch={false}
                             panelFilters
+                            aiFilterMode={imageSearchActive ? (aiSearchMode ?? 'text') : undefined}
                           />
                         </div>
                         <div className="mt-4 flex justify-end">
@@ -1127,7 +1198,7 @@ export default function ShelterPostsClient({
               <div className="mx-auto w-full min-w-0 ">
                 {loading && shelterAnimalData.length === 0 ? (
                   <div
-                    className="grid grid-cols-1 justify-items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5"
+                    className="grid grid-cols-2 justify-items-stretch gap-2 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5"
                     role="list"
                     aria-busy="true"
                     aria-label={isEnglish ? 'Loading adoption listings' : '입양 공고 목록 불러오는 중'}
@@ -1141,7 +1212,7 @@ export default function ShelterPostsClient({
                 ) : shelterAnimalData.length > 0 ? (
                   <>
                     <div
-                      className="grid grid-cols-1 justify-items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5"
+                      className="grid grid-cols-2 justify-items-stretch gap-2 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5"
                       role="list"
                       aria-label={isEnglish ? 'Adoption listings' : '입양 공고 목록'}
                     >

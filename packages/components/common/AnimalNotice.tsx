@@ -12,7 +12,7 @@ export default function ShelterOperationInfoComponent({ shelterInfo, animalData 
         return <div className="text-center text-gray-500">{t('입양 문의 정보를 찾을 수 없습니다.', 'Adoption contact information is unavailable.')}</div>;
     }
     return (
-        <div className="flex flex-col gap-4 rounded-[14px] border border-primary1/20 bg-primary-soft p-6">
+        <div className="flex flex-col gap-4 rounded-[14px] border border-primary1/20 bg-primary-soft p-4 sm:p-6">
             <div className="flex items-center gap-2">
                 <FaPaw className="w-5 h-5 text-primary1" />
                 <h3 className="text-lg font-bold text-gray-900">{t('입양 문의', 'Adoption inquiry')}</h3>
@@ -24,7 +24,6 @@ export default function ShelterOperationInfoComponent({ shelterInfo, animalData 
             {shelterInfo && (
                 <div className="flex flex-col gap-3 mt-2">
                     <div className="bg-white rounded-lg p-4 border border-gray-200">
-                        <h4 className="text-sm font-semibold text-gray-900 mb-1">{t('운영 시간', 'Hours')}</h4>
                         {isEnglish && (
                             <p className="mb-3 text-xs text-gray-500">
                                 All times are in Korea Standard Time (KST, UTC+9).
