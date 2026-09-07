@@ -3,9 +3,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { type ChangeEvent, type FormEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, useCallback, useEffect, useRef, useState } from 'react';
-import { FaChevronRight, FaHeart, FaImage, FaRegComment, FaRegHeart, FaShare, FaXmark } from 'react-icons/fa6';
+import { FaChevronRight, FaHeart, FaImage, FaMagnifyingGlass, FaRegComment, FaRegHeart, FaShare, FaXmark } from 'react-icons/fa6';
 import { useLanguage } from '@/lib/i18n/language';
-import type { CommunityFeedPage, CommunityFeedPost } from '@/lib/server/community-posts';
+import type { CommunityFeedPage, CommunityFeedPost, CommunitySort } from '@/lib/server/community-posts';
 import { useAuth } from '@/lib/supabase/auth';
 import { loadSupabaseBrowserConfig, supabase } from '@/lib/supabase/client';
 import { formatCommunityPostDate } from '@/packages/utils/communityDate';
@@ -588,16 +588,26 @@ export default function CommunityPageContent({ initialPage }: { initialPage: Com
   const [cursor, setCursor] = useState(initialPage.nextCursor);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<CommunitySort>('latest');
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const initialFilterRender = useRef(true);
+
+  const fetchPage = useCallback(async (nextCursor: string | null) => {
+    const params = new URLSearchParams({ sort });
+    if (nextCursor) params.set('cursor', nextCursor);
+    if (search.trim()) params.set('search', search.trim());
+    const response = await fetch(`/api/community/posts?${params.toString()}`);
+    if (!response.ok) throw new Error('Failed to load posts');
+    return response.json() as Promise<CommunityFeedPage>;
+  }, [search, sort]);
 
   const loadMore = useCallback(async () => {
     if (!cursor || loading) return;
     setLoading(true);
     setFailed(false);
     try {
-      const response = await fetch(`/api/community/posts?cursor=${encodeURIComponent(cursor)}`);
-      if (!response.ok) throw new Error('Failed to load posts');
-      const page = await response.json() as CommunityFeedPage;
+      const page = await fetchPage(cursor);
       setPosts((current) => {
         const known = new Set(current.map((post) => post.id));
         return [...current, ...page.posts.filter((post) => !known.has(post.id))];
@@ -608,7 +618,23 @@ export default function CommunityPageContent({ initialPage }: { initialPage: Com
     } finally {
       setLoading(false);
     }
-  }, [cursor, loading]);
+  }, [cursor, fetchPage, loading]);
+
+  useEffect(() => {
+    if (initialFilterRender.current) {
+      initialFilterRender.current = false;
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setLoading(true);
+      setFailed(false);
+      void fetchPage(null)
+        .then((page) => { setPosts(page.posts); setCursor(page.nextCursor); })
+        .catch(() => setFailed(true))
+        .finally(() => setLoading(false));
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [fetchPage]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -622,8 +648,24 @@ export default function CommunityPageContent({ initialPage }: { initialPage: Com
   }, [cursor, loadMore]);
 
   return (
-    <section className="mx-auto flex w-full max-w-3xl flex-col py-7 sm:py-10">
-      <CommunityComposer onCreated={(post) => setPosts((current) => [post, ...current])} />
+    <section className="mx-auto flex w-full max-w-3xl flex-col pb-7 pt-2 sm:py-10">
+      <div className="mb-3 md:hidden">
+        <label className="flex min-h-11 items-center gap-2 rounded-full border border-[#eadfd7] bg-white px-4 shadow-[0_3px_12px_rgba(51,45,42,0.05)] focus-within:border-primary1">
+          <FaMagnifyingGlass className="shrink-0 text-sm text-[#9a918b]" aria-hidden />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} maxLength={40} placeholder={isEnglish ? 'Search by name' : '이름 검색'} className="min-w-0 flex-1 bg-transparent text-sm text-[#332d2a] outline-none placeholder:text-[#9a918b]" />
+        </label>
+      </div>
+      <div className="mb-3 hidden items-center justify-end gap-2 md:flex">
+        <label className="flex min-h-10 w-64 items-center gap-2 rounded-full border border-[#eadfd7] bg-white px-4 focus-within:border-primary1">
+          <FaMagnifyingGlass className="shrink-0 text-sm text-[#9a918b]" aria-hidden />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} maxLength={40} placeholder={isEnglish ? 'Search by name' : '이름 검색'} className="min-w-0 flex-1 bg-transparent text-sm text-[#332d2a] outline-none placeholder:text-[#9a918b]" />
+        </label>
+        <select value={sort} onChange={(event) => setSort(event.target.value as CommunitySort)} aria-label={isEnglish ? 'Sort posts' : '게시글 정렬'} className="min-h-10 rounded-full border border-[#eadfd7] bg-white px-4 text-sm font-bold text-[#5f5752] outline-none focus:border-primary1">
+          <option value="latest">{isEnglish ? 'Latest' : '최신순'}</option>
+          <option value="likes">{isEnglish ? 'Most liked' : '좋아요 많은 순'}</option>
+        </select>
+      </div>
+      <CommunityComposer onCreated={(post) => { if (!search.trim() && sort === 'latest') setPosts((current) => [post, ...current]); }} />
 
       {posts.length > 0 ? (
         <div className="flex flex-col gap-2 sm:gap-3">

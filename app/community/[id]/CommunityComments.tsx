@@ -31,22 +31,29 @@ export default function CommunityComments({ postId }: { postId: string }) {
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState('');
+  const [total, setTotal] = useState(0);
+  const [cursor, setCursor] = useState<string | null>(null);
   const [likedCommentIds, setLikedCommentIds] = useState<Set<string>>(new Set());
   const [pendingLikeIds, setPendingLikeIds] = useState<Set<string>>(new Set());
   const userName = user?.displayName || user?.email?.split('@')[0] || t('사용자', 'User');
 
-  const loadComments = useCallback(async () => {
-    const response = await fetch(`/api/community/posts/${encodeURIComponent(postId)}/comments`, { cache: 'no-store' });
-    const body = await response.json() as { comments?: CommentItem[]; error?: string };
+  const loadComments = useCallback(async (nextCursor: string | null = null, append = false) => {
+    const query = nextCursor ? `?cursor=${encodeURIComponent(nextCursor)}` : '';
+    const response = await fetch(`/api/community/posts/${encodeURIComponent(postId)}/comments${query}`, { cache: 'no-store' });
+    const body = await response.json() as { comments?: CommentItem[]; total?: number; nextCursor?: string | null; error?: string };
     if (!response.ok) throw new Error(body.error || '댓글 조회 실패');
     const nextComments = body.comments ?? [];
-    setComments(nextComments);
+    setComments((current) => append ? [...current, ...nextComments] : nextComments);
+    setTotal(body.total ?? 0);
+    setCursor(body.nextCursor ?? null);
     if (!user || !nextComments.length || !(await loadSupabaseBrowserConfig())) {
-      setLikedCommentIds(new Set());
+      if (!append) setLikedCommentIds(new Set());
       return;
     }
     const { data } = await supabase.from('comment_likes').select('comment_id').eq('user_id', user.uid).in('comment_id', nextComments.map((comment) => comment.id));
-    setLikedCommentIds(new Set((data ?? []).map((like) => like.comment_id)));
+    setLikedCommentIds((current) => append
+      ? new Set([...current, ...(data ?? []).map((like) => like.comment_id)])
+      : new Set((data ?? []).map((like) => like.comment_id)));
   }, [postId, user]);
 
   useEffect(() => {
@@ -116,7 +123,7 @@ export default function CommunityComments({ postId }: { postId: string }) {
 
   return (
     <section id="comments" className="mx-5 border-t border-[#eee7e2] py-6 sm:mx-7">
-      <h2 className="text-base font-extrabold text-[#332d2a]">{t(`댓글 ${comments.filter((comment) => !comment.deleted_at).length}`, `${comments.filter((comment) => !comment.deleted_at).length} comments`)}</h2>
+      <h2 className="text-base font-extrabold text-[#332d2a]">{t(`댓글 ${total}`, `${total} comments`)}</h2>
       <form onSubmit={submitComment} className="mt-4 flex items-center gap-3">
         <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-soft text-xs font-extrabold text-primary1">
           {user?.photoURL ? <Image src={user.photoURL} alt="" fill sizes="40px" className="object-cover" /> : userName.slice(0, 1).toUpperCase()}
@@ -135,8 +142,8 @@ export default function CommunityComments({ postId }: { postId: string }) {
       </form>
       {message && <p className="ml-[52px] mt-2 text-xs font-semibold text-alert">{message}</p>}
       <div className="mt-5 flex flex-col gap-5">
-        {loading && <p className="text-sm text-[#817873]">{t('댓글을 불러오는 중...', 'Loading comments...')}</p>}
-        {!loading && comments.map((comment) => {
+        {loading && comments.length === 0 && <p className="text-sm text-[#817873]">{t('댓글을 불러오는 중...', 'Loading comments...')}</p>}
+        {comments.map((comment) => {
           const authorName = comment.authorName || t('탈퇴한 사용자', 'Former member');
           return <article key={comment.id} className="flex gap-3">
             <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-soft text-xs font-bold text-primary1">
@@ -149,6 +156,7 @@ export default function CommunityComments({ postId }: { postId: string }) {
             </div>
           </article>;
         })}
+        {cursor && <button type="button" disabled={loading} onClick={() => { setLoading(true); void loadComments(cursor, true).catch((error) => { console.error('댓글 추가 조회 실패:', error); setMessage(t('댓글을 더 불러오지 못했습니다.', 'Could not load more comments.')); }).finally(() => setLoading(false)); }} className="mx-auto rounded-full border border-[#eadfd7] bg-white px-5 py-2 text-sm font-bold text-[#5f5752] hover:bg-[#f5f2ef] disabled:opacity-50">{loading ? t('불러오는 중...', 'Loading...') : t('댓글 더보기', 'Load more comments')}</button>}
       </div>
     </section>
   );

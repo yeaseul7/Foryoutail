@@ -27,7 +27,7 @@ export const metadata: Metadata = generateDefaultMetadata(
 function ShelterPostsFallback() {
   return (
     <div
-      className="mx-auto grid w-full min-w-0 max-w-7xl grid-cols-1 justify-items-stretch gap-4 px-0 py-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5"
+      className="mx-auto grid w-full min-w-0 max-w-7xl grid-cols-2 justify-items-stretch gap-2 px-0 py-6 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5"
       aria-hidden
     >
       {Array.from({ length: 8 }).map((_, i) => (
@@ -58,6 +58,7 @@ export default async function Shelter({
     upr_cd: filters.upr_cd ?? undefined,
     orgNm: filters.orgNm ?? undefined,
     searchQuery: filters.searchQuery || undefined,
+    sort: filters.sortOrder,
   });
   let items = applyShelterClientFilters(result.items, filters);
   if (listQuickFilter) {
@@ -74,7 +75,7 @@ export default async function Shelter({
       <PageTemplate>
         <Suspense fallback={<ShelterPostsFallback />}>
           <ShelterPostsClient
-            initialData={{ items, hasMore: result.hasMore }}
+            initialData={{ items, hasMore: result.hasMore, totalCount: result.totalCount }}
             initialFilters={filters}
             initialListQuickFilter={listQuickFilter}
           />

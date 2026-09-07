@@ -3,7 +3,14 @@ import 'server-only';
 import sanitizeHtml from 'sanitize-html';
 import { createSupabaseAdminClient } from '@/lib/server/supabase-admin';
 
-export const COMMUNITY_PAGE_SIZE = 4;
+export const COMMUNITY_PAGE_SIZE = 5;
+
+export type CommunitySort = 'latest' | 'likes';
+
+interface CommunityFeedOptions {
+  search?: string | null;
+  sort?: CommunitySort;
+}
 
 interface CommunityPostRow {
   id: string;
@@ -94,24 +101,45 @@ function plainText(value: string): string {
     .slice(0, 500);
 }
 
-export async function getCommunityFeedPage(cursor?: string | null): Promise<CommunityFeedPage> {
+export async function getCommunityFeedPage(
+  cursor?: string | null,
+  options: CommunityFeedOptions = {},
+): Promise<CommunityFeedPage> {
   const supabase = await createSupabaseAdminClient();
+  const offset = Math.max(0, Number.parseInt(cursor ?? '0', 10) || 0);
+  const search = options.search?.trim().slice(0, 40) ?? '';
+  let matchingAuthorIds: string[] | null = null;
+
+  if (search) {
+    const { data: matchingAuthors, error: authorSearchError } = await supabase
+      .from('users')
+      .select('id')
+      .ilike('nickname', `%${search}%`)
+      .limit(100);
+    if (authorSearchError) throw new Error(authorSearchError.message);
+    matchingAuthorIds = (matchingAuthors ?? []).map((author) => author.id);
+    if (!matchingAuthorIds.length) return { posts: [], nextCursor: null };
+  }
+
   let query = supabase
     .from('posts')
     .select('id, slug, author_id, title, topic, content, content_format, main_image_url, likes_count, comment_count, share_count, created_at')
-    .order('created_at', { ascending: false })
-    .limit(COMMUNITY_PAGE_SIZE + 1);
-
-  if (cursor) query = query.lt('created_at', cursor);
+    .range(offset, offset + COMMUNITY_PAGE_SIZE);
+  if (matchingAuthorIds) query = query.in('author_id', matchingAuthorIds);
+  query = options.sort === 'likes'
+    ? query.order('likes_count', { ascending: false }).order('created_at', { ascending: false })
+    : query.order('created_at', { ascending: false });
 
   let { data, error } = await query;
   if (error?.code === '42703' && error.message.includes('topic')) {
     let legacyQuery = supabase
       .from('posts')
       .select('id, slug, author_id, title, content, content_format, main_image_url, likes_count, comment_count, share_count, created_at')
-      .order('created_at', { ascending: false })
-      .limit(COMMUNITY_PAGE_SIZE + 1);
-    if (cursor) legacyQuery = legacyQuery.lt('created_at', cursor);
+      .range(offset, offset + COMMUNITY_PAGE_SIZE);
+    if (matchingAuthorIds) legacyQuery = legacyQuery.in('author_id', matchingAuthorIds);
+    legacyQuery = options.sort === 'likes'
+      ? legacyQuery.order('likes_count', { ascending: false }).order('created_at', { ascending: false })
+      : legacyQuery.order('created_at', { ascending: false });
     const legacyResult = await legacyQuery;
     data = legacyResult.data?.map((row) => ({ ...row, topic: null })) ?? null;
     error = legacyResult.error;
@@ -150,7 +178,7 @@ export async function getCommunityFeedPage(cursor?: string | null): Promise<Comm
         createdAt: row.created_at,
       };
     }),
-    nextCursor: rows.length > COMMUNITY_PAGE_SIZE ? pageRows.at(-1)?.created_at ?? null : null,
+    nextCursor: rows.length > COMMUNITY_PAGE_SIZE ? String(offset + COMMUNITY_PAGE_SIZE) : null,
   };
 }
 

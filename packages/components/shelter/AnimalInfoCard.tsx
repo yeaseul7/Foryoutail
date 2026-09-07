@@ -38,7 +38,7 @@ export default function AnimalInfoCard({
     ? `https://map.naver.com/p/search/${encodeURIComponent(shelterAddress)}`
     : null;
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-6 lg:p-8 flex flex-col gap-6">
+    <div className="flex flex-col gap-6 rounded-2xl bg-white px-4 py-6 shadow-sm sm:px-6 lg:p-8">
       <div className="flex items-start justify-between">
         <div className="flex flex-col gap-2">
           <h3 className="text-xl lg:text-2xl font-bold text-gray-900">
@@ -54,8 +54,8 @@ export default function AnimalInfoCard({
         <AnimalActions animal={{ ...animalData, desertionNo }} />
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
-        <div className="flex min-h-[70px] flex-col items-center justify-center gap-0.5 rounded-xl border border-[#eadfd7] bg-[#faf7f4] p-3 lg:col-span-2">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-6">
+        <div className="flex min-h-[48px] flex-col items-center justify-center rounded-lg border border-[#eadfd7] bg-[#faf7f4] px-2 py-1.5 sm:min-h-[56px] sm:rounded-xl sm:p-2 lg:col-span-2">
           <span className="text-xs font-semibold text-gray-500">{t('나이', 'Age')}</span>
           <span className="text-[10px] font-bold text-gray-900 text-center break-words whitespace-normal">
             {isEnglish && animalData.birthYear
@@ -63,17 +63,17 @@ export default function AnimalInfoCard({
               : animalData?.age || t('미상', 'Unknown')}
           </span>
         </div>
-        <div className="flex min-h-[70px] flex-col items-center justify-center gap-0.5 rounded-xl border border-[#eadfd7] bg-[#faf7f4] p-3">
+        <div className="flex min-h-[48px] flex-col items-center justify-center rounded-lg border border-[#eadfd7] bg-[#faf7f4] px-2 py-1.5 sm:min-h-[56px] sm:rounded-xl sm:p-2">
           <span className="text-xs font-semibold text-gray-500">{t('성별', 'Sex')}</span>
           <span className="text-[10px] font-bold text-gray-900 text-center">{genderText}</span>
         </div>
-        <div className="flex min-h-[70px] flex-col items-center justify-center gap-0.5 rounded-xl border border-[#eadfd7] bg-[#faf7f4] p-3">
+        <div className="flex min-h-[48px] flex-col items-center justify-center rounded-lg border border-[#eadfd7] bg-[#faf7f4] px-2 py-1.5 sm:min-h-[56px] sm:rounded-xl sm:p-2">
           <span className="text-xs font-semibold text-gray-500">{t('체중', 'Weight')}</span>
           <span className="text-[10px] font-bold text-gray-900 text-center">
             {animalWeightLabel(animalData?.weight, animalData?.weightKg, isEnglish) || t('미상', 'Unknown')}
           </span>
         </div>
-        <div className="flex min-h-[70px] flex-col items-center justify-center gap-0.5 rounded-xl border border-[#eadfd7] bg-[#faf7f4] p-3 lg:col-span-2">
+        <div className="flex min-h-[48px] flex-col items-center justify-center rounded-lg border border-[#eadfd7] bg-[#faf7f4] px-2 py-1.5 sm:min-h-[56px] sm:rounded-xl sm:p-2 lg:col-span-2">
           <span className="text-xs font-semibold text-gray-500">{t('품종', 'Breed')}</span>
           <span className="text-[10px] font-bold text-gray-900 text-center break-words whitespace-normal w-full min-w-0">
             {breedText}

@@ -28,6 +28,7 @@ export interface ShelterDataQueryParams {
   searchQuery?: string;
   orgNm?: string;
   listQuick?: 'noticeEnding';
+  sort?: 'notice' | 'rescue';
 }
 
 const UP_KIND_CODE_TO_NAME: Record<string, string[]> = {
@@ -215,7 +216,13 @@ function matchesSearchQuery(item: ShelterAnimalItem, q: string): boolean {
 
 function sortShelterItemsByRecencyDesc(a: ShelterAnimalItem, b: ShelterAnimalItem): number {
   const toNum = (it: ShelterAnimalItem) =>
-    parseInt(String(it.noticeSdt || it.happenDt || '0').replace(/\D/g, ''), 10) || 0;
+    parseInt(String(it.noticeSdt || '0').replace(/\D/g, ''), 10) || 0;
+  return toNum(b) - toNum(a);
+}
+
+function sortShelterItemsByRescueDateDesc(a: ShelterAnimalItem, b: ShelterAnimalItem): number {
+  const toNum = (item: ShelterAnimalItem) =>
+    parseInt(String(item.happenDt || '0').replace(/\D/g, ''), 10) || 0;
   return toNum(b) - toNum(a);
 }
 
@@ -288,6 +295,7 @@ export async function queryShelterAnimals(
   items: ShelterAnimalItem[];
   pageNo: number;
   numOfRows: number;
+  totalCount: number;
   hasMore: boolean;
 }> {
   const pageNo = pageNum(params.pageNo, 1);
@@ -298,7 +306,7 @@ export async function queryShelterAnimals(
   const supabaseAdmin = await createSupabaseAdminClient();
   let query = supabaseAdmin
     .from('animals')
-    .select('*');
+    .select('*', { count: 'exact' });
 
   if (params.listQuick === 'noticeEnding') {
     query = query
@@ -307,7 +315,9 @@ export async function queryShelterAnimals(
       .order('notice_end_date', { ascending: true, nullsFirst: false })
       .order('notice_start_date', { ascending: false, nullsFirst: false });
   } else {
-    query = query.order('notice_start_date', { ascending: false, nullsFirst: false });
+    query = params.sort === 'rescue'
+      ? query.order('happened_date', { ascending: false, nullsFirst: false })
+      : query.order('notice_start_date', { ascending: false, nullsFirst: false });
   }
 
   query = query.range(from, Math.min(to, from + 999));
@@ -357,7 +367,7 @@ export async function queryShelterAnimals(
     query = query.in('up_kind_nm', upKindNames);
   }
 
-  const { data, error } = await query;
+  const { data, error, count } = await query;
   if (error) {
     throw new Error(error.message);
   }
@@ -366,7 +376,7 @@ export async function queryShelterAnimals(
     supabaseRowToShelterAnimal(row as ShelterAnimalRow),
   );
   if (params.listQuick !== 'noticeEnding') {
-    queried.sort(sortShelterItemsByRecencyDesc);
+    queried.sort(params.sort === 'rescue' ? sortShelterItemsByRescueDateDesc : sortShelterItemsByRecencyDesc);
   }
 
   const filtered = filterShelterAnimalsFromParams(queried, params).filter((item) =>
@@ -377,7 +387,8 @@ export async function queryShelterAnimals(
     items: filtered.slice(0, numOfRows),
     pageNo,
     numOfRows,
-    hasMore: filtered.length > numOfRows || queried.length > numOfRows,
+    totalCount: count ?? 0,
+    hasMore: pageNo * numOfRows < (count ?? 0),
   };
 }
 
@@ -429,15 +440,14 @@ export function buildShelterDataJsonFromQueryResult(result: {
   items: ShelterAnimalItem[];
   pageNo: number;
   numOfRows: number;
+  totalCount: number;
   hasMore: boolean;
 }): ReturnType<typeof buildAbandonmentPublicV2Json> {
   return buildAbandonmentPublicV2Json(
     result.items,
     result.pageNo,
     result.numOfRows,
-    result.hasMore
-      ? result.pageNo * result.numOfRows + 1
-      : (result.pageNo - 1) * result.numOfRows + result.items.length,
+    result.totalCount,
   );
 }
 

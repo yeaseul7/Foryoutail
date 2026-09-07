@@ -15,7 +15,7 @@ export default function PageTemplate({
         <Header visibleHeaderButtons={visibleHeaderButtons} />
       </div>
       <div className="flex-1 min-h-0 w-full bg-lightBlue overflow-hidden">
-        <div className="mx-auto flex h-full w-full min-w-0 max-w-7xl flex-col px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-full w-full min-w-0 max-w-7xl flex-col px-2 sm:px-6 lg:px-8">
           {children}
         </div>
       </div>

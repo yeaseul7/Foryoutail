@@ -97,8 +97,8 @@ export default function ShelterDetailPageContent({
       />
       <main className="flex min-h-screen w-full flex-col items-center justify-between bg-white">
         <PageTemplate>
-          <article className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
-            <div className="grid w-full grid-cols-1 gap-6 lg:grid-cols-2">
+          <article className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-0 pb-5 pt-2 sm:gap-6 sm:px-6 sm:py-8 lg:px-8">
+            <div className="grid w-full grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
               <AnimalImgCard
                 animalData={animalData}
                 animalImgList={images}

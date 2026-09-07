@@ -8,7 +8,7 @@ import {
 import Image from 'next/image';
 import { RiResetLeftFill } from 'react-icons/ri';
 import { getSidoDisplayName } from '@/packages/utils/locationUtils';
-import type { QuickFilterKey } from '@/lib/client/shelter';
+import type { QuickFilterKey, ShelterSortOrder } from '@/lib/client/shelter';
 import { sidoLocation } from '@/static/data/sidoLocation';
 import { useLanguage } from '@/lib/i18n/language';
 import ImageSearchButton from './ImageSearchButton';
@@ -49,9 +49,9 @@ const animalTypeOptions = [
 
 /** AnimalFilterHeader 전용 — 검색(더 높게) / 필터 pill(더 낮게) */
 const searchBarWrapClass =
-  'mx-auto flex min-h-[54px] w-full max-w-2xl min-w-0 items-center rounded-full border border-primary1/40 bg-white px-3 transition hover:border-primary1/65 focus-within:border-primary1 focus-within:ring-2 focus-within:ring-primary1/15 sm:px-5';
+  'mx-auto flex min-h-[54px] w-full max-w-2xl min-w-0 items-center gap-2 rounded-full border border-primary1/40 bg-white px-3 transition hover:border-primary1/65 focus-within:border-primary1 focus-within:ring-2 focus-within:ring-primary1/15 sm:px-5';
 const searchInputClass =
-  'h-12 min-w-0 flex-1 bg-transparent py-2 text-base text-[#332d2a] outline-none placeholder:text-[#a69d98]';
+  'h-12 min-w-0 flex-1 bg-transparent py-2 text-sm text-[#332d2a] outline-none placeholder:text-[#a69d98] sm:text-base';
 
 const filterRowClass =
   'mx-auto flex w-full max-w-3xl min-w-0 flex-col justify-center gap-2 sm:flex-row sm:flex-wrap sm:items-stretch';
@@ -80,6 +80,7 @@ function filterDropdownOptionStateClass(selected: boolean): string {
 }
 
 export interface AnimalFilterState {
+  sortOrder: ShelterSortOrder;
   sexCd: string | null;
   state: string | null;
   upKindCd: string | null;
@@ -103,6 +104,7 @@ interface AnimalFilterHeaderProps {
   showFilters?: boolean;
   compactFilters?: boolean;
   panelFilters?: boolean;
+  aiFilterMode?: 'text' | 'image';
 }
 
 export default function AnimalFilterHeader({
@@ -116,6 +118,7 @@ export default function AnimalFilterHeader({
   showFilters = true,
   compactFilters = false,
   panelFilters = false,
+  aiFilterMode,
 }: AnimalFilterHeaderProps) {
   const { isEnglish } = useLanguage();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -275,18 +278,23 @@ export default function AnimalFilterHeader({
               alt=""
               width={42}
               height={28}
-              className="h-7 w-[42px] shrink-0 self-center object-contain"
+              className="hidden h-7 w-[42px] shrink-0 self-center object-contain sm:block"
             />
+            <div className="relative grid h-8 w-[76px] shrink-0 grid-cols-2 rounded-full bg-[#f1eeeb] p-0.5 text-[9px] font-bold sm:hidden" role="group" aria-label={isEnglish ? 'Search mode' : '검색 모드'}>
+              <span className={`pointer-events-none absolute bottom-0.5 top-0.5 w-9 rounded-full bg-white shadow-sm transition-transform duration-200 ${searchMode === 'ai' ? 'translate-x-[38px]' : 'translate-x-0.5'}`} aria-hidden />
+              <button type="button" onClick={() => setSearchMode('general')} aria-pressed={searchMode === 'general'} className={`relative z-10 rounded-full transition ${searchMode === 'general' ? 'text-[#332d2a]' : 'text-[#9a918b]'}`}>{isEnglish ? 'Basic' : '일반'}</button>
+              <button type="button" onClick={() => setSearchMode('ai')} aria-pressed={searchMode === 'ai'} className={`relative z-10 rounded-full transition ${searchMode === 'ai' ? 'text-primary1' : 'text-[#9a918b]'} ${textSearchLoading && searchMode === 'ai' ? 'animate-pulse' : ''}`}>AI</button>
+            </div>
             <input
               type="text"
               value={textQuery}
               onChange={(event) => setTextQuery(event.target.value)}
               placeholder={searchMode === 'ai'
-                ? (isEnglish ? 'Describe the animal you want to find' : '찾고 싶은 아이를 자연어로 입력해보세요')
+                ? (isEnglish ? 'Search with AI' : 'AI로 검색해보세요')
                 : (isEnglish ? 'Search breed, shelter, or features' : '품종, 보호소, 특징을 검색해보세요')}
               className={searchInputClass}
             />
-            <div className="relative grid h-8 w-[88px] shrink-0 grid-cols-2 rounded-full bg-[#f1eeeb] p-0.5 text-[10px] font-bold" role="group" aria-label={isEnglish ? 'Search mode' : '검색 모드'}>
+            <div className="relative hidden h-8 w-[88px] shrink-0 grid-cols-2 rounded-full bg-[#f1eeeb] p-0.5 text-[10px] font-bold sm:grid" role="group" aria-label={isEnglish ? 'Search mode' : '검색 모드'}>
               <span className={`pointer-events-none absolute bottom-0.5 top-0.5 w-[42px] rounded-full bg-white shadow-sm transition-transform duration-200 ${searchMode === 'ai' ? 'translate-x-[44px]' : 'translate-x-0.5'}`} aria-hidden />
               <button type="button" onClick={() => setSearchMode('general')} aria-pressed={searchMode === 'general'} className={`relative z-10 rounded-full transition ${searchMode === 'general' ? 'text-[#332d2a]' : 'text-[#9a918b]'}`}>{isEnglish ? 'Basic' : '일반'}</button>
               <button type="button" onClick={() => setSearchMode('ai')} aria-pressed={searchMode === 'ai'} className={`relative z-10 rounded-full transition ${searchMode === 'ai' ? 'text-primary1' : 'text-[#9a918b]'} ${textSearchLoading && searchMode === 'ai' ? 'animate-pulse' : ''}`}>AI</button>
@@ -298,6 +306,7 @@ export default function AnimalFilterHeader({
           {showSearch && quickFilters}
 
           {showFilters && <div className={panelFilters ? 'grid w-full grid-cols-1 gap-2 sm:grid-cols-2 sm:[&>[data-filter-dropdown-root]]:!w-full' : compactFilters ? 'flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto' : filterRowClass}>
+            {aiFilterMode !== 'image' && <>
             {/* 축종 */}
             <div className={`${filterDropdownRootClass} ${openDropdown === 'upKindCd' ? 'z-[120]' : 'z-0'}`} data-filter-dropdown-root>
               <button
@@ -331,7 +340,9 @@ export default function AnimalFilterHeader({
                 </ul>
               )}
             </div>
+            </>}
 
+            {aiFilterMode !== 'text' && <>
             {/* 성별 */}
             <div className={`${filterDropdownRootClass} ${openDropdown === 'sexCd' ? 'z-[120]' : 'z-0'}`} data-filter-dropdown-root>
               <button
@@ -363,6 +374,7 @@ export default function AnimalFilterHeader({
                 </ul>
               )}
             </div>
+            </>}
 
             {/* 지역 (시도) */}
             {hasSidoList && (
@@ -416,6 +428,7 @@ export default function AnimalFilterHeader({
               </div>
             )}
 
+            {!aiFilterMode && <>
             {/* 접수일: 한 컨트롤에서 from~to (팝오버) — 가로 2비율 */}
             <div className={`${filterDateFieldWrapClass} ${dateRangeOpen ? 'z-[120]' : 'z-0'}`} data-filter-dropdown-root>
               <button
@@ -477,7 +490,7 @@ export default function AnimalFilterHeader({
               <button
                 type="button"
                 onClick={() => {
-                  const resetFilters = { sexCd: null, state: null, upKindCd: '417000', neuterYn: null, quickFilter: null, searchQuery: '', bgnde: null, endde: null, upr_cd: null, orgNm: null };
+                  const resetFilters = { sortOrder: filters.sortOrder, sexCd: null, state: null, upKindCd: '417000', neuterYn: null, quickFilter: null, searchQuery: '', bgnde: null, endde: null, upr_cd: null, orgNm: null };
                   onFilterChange(resetFilters);
                   setStartDate('');
                   setEndDate('');
@@ -489,6 +502,7 @@ export default function AnimalFilterHeader({
                 {isEnglish ? 'Reset filters' : '필터 초기화'}
               </button>
             )}
+            </>}
           </div>}
         </div>
       </div>

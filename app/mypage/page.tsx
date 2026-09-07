@@ -256,7 +256,7 @@ export default function MyPage() {
               </div>
             </Link>)}
           </div>)}
-          {tab === 'likes' && <LikedAnimalList userId={user.uid} />}
+          {tab === 'likes' && <LikedAnimalList userId={user.uid} compact />}
         </section>
       </PageTemplate>
       <PageFooter />
