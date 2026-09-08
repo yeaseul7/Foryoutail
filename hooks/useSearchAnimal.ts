@@ -14,7 +14,7 @@ const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 const SEARCH_CACHE_KEY = 'kkosunnae_search_animal_cache';
 const AI_SEARCH_URL =
   process.env.NODE_ENV === 'development'
-    ? 'http://localhost:8081/api/search/animals'
+    ? 'http://localhost:8080/api/search/animals'
     : 'https://kkosunnae-backend-258374777454.asia-northeast3.run.app/api/search/animals';
 const DEFAULT_TOP_K = 24;
 const FILTERED_TOP_K = 50;

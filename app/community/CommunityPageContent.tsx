@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { type ChangeEvent, type FormEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { FaChevronRight, FaHeart, FaImage, FaMagnifyingGlass, FaRegComment, FaRegHeart, FaShare, FaXmark } from 'react-icons/fa6';
+import { MdArrowDropDown, MdCheck } from 'react-icons/md';
 import { useLanguage } from '@/lib/i18n/language';
 import type { CommunityFeedPage, CommunityFeedPost, CommunitySort } from '@/lib/server/community-posts';
 import { useAuth } from '@/lib/supabase/auth';
@@ -590,6 +591,7 @@ export default function CommunityPageContent({ initialPage }: { initialPage: Com
   const [failed, setFailed] = useState(false);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<CommunitySort>('latest');
+  const [sortOpen, setSortOpen] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const initialFilterRender = useRef(true);
 
@@ -649,23 +651,43 @@ export default function CommunityPageContent({ initialPage }: { initialPage: Com
 
   return (
     <section className="mx-auto flex w-full max-w-3xl flex-col pb-7 pt-2 sm:py-10">
-      <div className="mb-3 md:hidden">
-        <label className="flex min-h-11 items-center gap-2 rounded-full border border-[#eadfd7] bg-white px-4 shadow-[0_3px_12px_rgba(51,45,42,0.05)] focus-within:border-primary1">
+      <div className="mb-3 w-full">
+        <label className="flex min-h-[54px] w-full items-center gap-3 rounded-full border border-[#eadfd7] bg-white px-5 transition focus-within:border-primary1 focus-within:ring-2 focus-within:ring-primary1/15">
           <FaMagnifyingGlass className="shrink-0 text-sm text-[#9a918b]" aria-hidden />
           <input value={search} onChange={(event) => setSearch(event.target.value)} maxLength={40} placeholder={isEnglish ? 'Search by name' : '이름 검색'} className="min-w-0 flex-1 bg-transparent text-sm text-[#332d2a] outline-none placeholder:text-[#9a918b]" />
         </label>
-      </div>
-      <div className="mb-3 hidden items-center justify-end gap-2 md:flex">
-        <label className="flex min-h-10 w-64 items-center gap-2 rounded-full border border-[#eadfd7] bg-white px-4 focus-within:border-primary1">
-          <FaMagnifyingGlass className="shrink-0 text-sm text-[#9a918b]" aria-hidden />
-          <input value={search} onChange={(event) => setSearch(event.target.value)} maxLength={40} placeholder={isEnglish ? 'Search by name' : '이름 검색'} className="min-w-0 flex-1 bg-transparent text-sm text-[#332d2a] outline-none placeholder:text-[#9a918b]" />
-        </label>
-        <select value={sort} onChange={(event) => setSort(event.target.value as CommunitySort)} aria-label={isEnglish ? 'Sort posts' : '게시글 정렬'} className="min-h-10 rounded-full border border-[#eadfd7] bg-white px-4 text-sm font-bold text-[#5f5752] outline-none focus:border-primary1">
-          <option value="latest">{isEnglish ? 'Latest' : '최신순'}</option>
-          <option value="likes">{isEnglish ? 'Most liked' : '좋아요 많은 순'}</option>
-        </select>
       </div>
       <CommunityComposer onCreated={(post) => { if (!search.trim() && sort === 'latest') setPosts((current) => [post, ...current]); }} />
+
+      <div className="mb-2 mt-3 flex w-full justify-start sm:mb-3">
+        <div className={`relative shrink-0 ${sortOpen ? 'z-[210]' : ''}`}>
+          <button
+            type="button"
+            onClick={() => setSortOpen((open) => !open)}
+            aria-haspopup="listbox"
+            aria-expanded={sortOpen}
+            className="inline-flex h-10 min-w-[132px] items-center justify-between gap-1.5 rounded-xl border border-[#dedede] bg-white px-2.5 text-sm font-bold text-[#332d2a] shadow-sm transition-all hover:border-primary1/50 hover:bg-[#faf8f7] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary1/25"
+          >
+            <span>{sort === 'likes' ? (isEnglish ? 'Most liked' : '좋아요 많은 순') : (isEnglish ? 'Latest' : '최신순')}</span>
+            <MdArrowDropDown className={`h-4 w-4 shrink-0 transition-transform ${sortOpen ? 'rotate-180' : ''}`} aria-hidden />
+          </button>
+          {sortOpen && <>
+            <button type="button" className="fixed inset-0 z-0 cursor-default" onClick={() => setSortOpen(false)} aria-label={isEnglish ? 'Close sort menu' : '정렬 메뉴 닫기'} />
+            <div role="listbox" aria-label={isEnglish ? 'Sort posts' : '게시글 정렬'} className="absolute left-0 top-full z-10 mt-2 w-full min-w-[160px] overflow-hidden rounded-xl border border-[#dedede] bg-white shadow-[0_8px_24px_rgba(51,45,42,0.14)] divide-y divide-[#ece8e5]">
+              {(['latest', 'likes'] as const).map((option) => {
+                const selected = sort === option;
+                const label = option === 'latest' ? (isEnglish ? 'Latest' : '최신순') : (isEnglish ? 'Most liked' : '좋아요 많은 순');
+                return <button key={option} type="button" role="option" aria-selected={selected} onClick={() => { setSort(option); setSortOpen(false); }} className={`flex min-h-10 w-full cursor-pointer items-center gap-3 px-4 py-2 text-left text-sm transition-colors ${selected ? 'bg-primary-soft/60 font-semibold text-primary1' : 'bg-white text-[#332d2a] hover:bg-[#faf8f7]'}`}>
+                  <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${selected ? 'border-primary1 bg-primary1 text-white' : 'border-[#cfcac7] bg-white'}`}>
+                    {selected && <MdCheck className="h-3.5 w-3.5" aria-hidden />}
+                  </span>
+                  {label}
+                </button>;
+              })}
+            </div>
+          </>}
+        </div>
+      </div>
 
       {posts.length > 0 ? (
         <div className="flex flex-col gap-2 sm:gap-3">

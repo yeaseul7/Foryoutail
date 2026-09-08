@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import PageTemplate from '@/packages/components/base/PageTemplate';
 import PageFooter from '@/packages/components/base/PageFooter';
-import ShelterPostsClient from '@/packages/components/shelter/ShelterPostsClient';
+import AdoptionSearchView from '@/packages/components/shelter/AdoptionSearchView';
 import AbandonedCardSkeleton from '@/packages/components/skeleton/AbandonedCardSkeleton';
 import { generateDefaultMetadata, getBaseUrl } from '@/packages/utils/metadata';
 import { applyShelterClientFilters, SHELTER_API_PAGE_SIZE } from '@/lib/client/shelter';
@@ -14,7 +14,7 @@ export const revalidate = 600;
 
 export const metadata: Metadata = generateDefaultMetadata(
   '전국 유기동물 입양 공고',
-  '전국 유기견·유기묘 입양 공고를 지역과 상태별로 확인하고, 가족을 기다리는 아이들을 꼬순내에서 찾아보세요.',
+  '전국 유기견·유기묘 입양 공고를 지역과 상태별로 확인하고, 가족을 기다리는 아이들을 findme에서 찾아보세요.',
   getBaseUrl().replace(/\/$/, ''),
   {
     defaultImagePath: '/static/images/shelter-og.png',
@@ -27,7 +27,7 @@ export const metadata: Metadata = generateDefaultMetadata(
 function ShelterPostsFallback() {
   return (
     <div
-      className="mx-auto grid w-full min-w-0 max-w-7xl grid-cols-2 justify-items-stretch gap-2 px-0 py-6 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5"
+      className="mx-auto grid w-full min-w-0 max-w-7xl grid-cols-2 justify-items-stretch gap-2 px-0 py-6 sm:gap-4 lg:grid-cols-4"
       aria-hidden
     >
       {Array.from({ length: 8 }).map((_, i) => (
@@ -74,7 +74,7 @@ export default async function Shelter({
     <main className="page-container-full">
       <PageTemplate>
         <Suspense fallback={<ShelterPostsFallback />}>
-          <ShelterPostsClient
+          <AdoptionSearchView
             initialData={{ items, hasMore: result.hasMore, totalCount: result.totalCount }}
             initialFilters={filters}
             initialListQuickFilter={listQuickFilter}

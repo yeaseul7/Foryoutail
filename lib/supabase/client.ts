@@ -57,11 +57,19 @@ export function loadSupabaseBrowserConfig(): Promise<boolean> {
 }
 
 export async function getSupabaseAccessToken(): Promise<string | null> {
-  if (!hasSupabaseConfig) return null;
+  const configured = hasSupabaseConfig || await loadSupabaseBrowserConfig();
+  if (!configured) return null;
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  return session?.access_token ?? null;
+  if (!session?.access_token) return null;
+
+  const { data: verified, error: verificationError } = await supabase.auth.getUser(session.access_token);
+  if (!verificationError && verified.user) return session.access_token;
+
+  const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+  if (refreshError || !refreshed.session?.access_token) return null;
+  return refreshed.session.access_token;
 }
 
 export function assertValidSupabaseBrowserKey() {

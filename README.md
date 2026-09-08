@@ -75,8 +75,8 @@ npm run dev
 AI 검색과 이미지 업로드는 개발 환경에서 아래 백엔드를 호출합니다.
 
 ```text
-http://localhost:8081/api/search/animals
-http://localhost:8081/api/images/upload
+http://localhost:8080/api/search/animals
+http://localhost:8080/api/images/upload
 ```
 
 백엔드를 실행하지 않아도 일반 페이지 개발은 가능하지만 AI 검색은 동작하지 않습니다.

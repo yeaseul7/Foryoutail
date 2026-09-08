@@ -23,26 +23,44 @@ async function getRequester(request: Request) {
 
 export async function GET(request: Request) {
   const requester = await getRequester(request);
-  let query = requester.supabase
+  const query = requester.supabase
     .from('feedback')
     .select('id, user_id, category, content, contact_email, status, is_public, created_at')
     .order('created_at', { ascending: false })
     .limit(100);
 
-  if (!requester.isAdmin) {
-    query = requester.user
-      ? query.or(`is_public.eq.true,user_id.eq.${requester.user.id}`)
-      : query.eq('is_public', true);
-  }
-
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: '건의 목록을 불러오지 못했습니다.' }, { status: 500 });
   const items = (data ?? []).map((item) => ({
     ...item,
-    contact_email: requester.isAdmin || item.user_id === requester.user?.id ? item.contact_email : null,
-    user_id: requester.isAdmin || item.user_id === requester.user?.id ? item.user_id : null,
+    is_owner: Boolean(requester.user && item.user_id === requester.user.id),
+    content: requester.isAdmin || item.is_public || item.user_id === requester.user?.id ? item.content : '',
+    contact_email: requester.isAdmin ? item.contact_email : null,
+    user_id: requester.isAdmin ? item.user_id : null,
   }));
   return NextResponse.json({ items });
+}
+
+export async function DELETE(request: Request) {
+  const requester = await getRequester(request);
+  if (!requester.user) {
+    return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
+  }
+  const body = await request.json().catch(() => null) as { id?: unknown } | null;
+  if (!body || typeof body.id !== 'string') {
+    return NextResponse.json({ error: '잘못된 요청입니다.' }, { status: 400 });
+  }
+
+  const { data, error } = await requester.supabase
+    .from('feedback')
+    .delete()
+    .eq('id', body.id)
+    .eq('user_id', requester.user.id)
+    .select('id')
+    .maybeSingle();
+  if (error) return NextResponse.json({ error: '문의를 삭제하지 못했습니다.' }, { status: 500 });
+  if (!data) return NextResponse.json({ error: '삭제할 수 있는 문의가 없습니다.' }, { status: 404 });
+  return NextResponse.json({ ok: true });
 }
 
 export async function PATCH(request: Request) {
@@ -101,8 +119,8 @@ export async function POST(request: Request) {
       ? await supabase.auth.getUser(accessToken)
       : { data: { user: null } };
 
-    if (!isPublic && !authData.user) {
-      return NextResponse.json({ error: '비공개 문의는 로그인 후 등록할 수 있습니다.' }, { status: 401 });
+    if (!authData.user) {
+      return NextResponse.json({ error: '문의는 로그인 후 등록할 수 있습니다.' }, { status: 401 });
     }
 
     const { error } = await supabase.from('feedback').insert({

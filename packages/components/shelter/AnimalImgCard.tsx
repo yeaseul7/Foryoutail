@@ -9,6 +9,7 @@ import {
 import CardImage from '@/packages/components/common/CardImage';
 import { useLanguage } from '@/lib/i18n/language';
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
+import Image from 'next/image';
 
 interface AnimalImgCardProps {
   animalData: ShelterAnimalItem;
@@ -20,7 +21,13 @@ export default function AnimalImgCard({
 }: AnimalImgCardProps) {
   const { t } = useLanguage();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const mainImage = animalImgList[selectedImageIndex] || '/static/images/defaultDog.png';
+  const species = `${animalData.upKindCd || ''} ${animalData.upKindNm || ''}`.toLowerCase();
+  const defaultImage = species.includes('422400') || species.includes('고양이') || species.includes('cat')
+    ? '/static/images/defaultCat.png'
+    : species.includes('429900') || species.includes('기타') || species.includes('other')
+      ? '/static/images/defaultOtherAnimals.png'
+      : '/static/images/defaultDog.png';
+  const mainImage = animalImgList[selectedImageIndex] || defaultImage;
   const normalizedMainImage = normalizeAnimalImageUrl(mainImage);
   const hasMultipleImages = animalImgList.length > 1;
 
@@ -33,6 +40,7 @@ export default function AnimalImgCard({
           className="object-cover"
           sizes="(max-width: 1024px) 100vw, 50vw"
           unoptimized={shouldBypassNextImageOptimization(normalizedMainImage)}
+          fallbackSrc={defaultImage}
           priority
         />
         {hasMultipleImages && (
@@ -60,6 +68,23 @@ export default function AnimalImgCard({
             </span>
           </>
         )}
+      </div>
+      <div className="flex items-center gap-3">
+        <Image
+          src="/static/images/findme-thank-you.png"
+          alt=""
+          width={56}
+          height={56}
+          className="h-12 w-12 shrink-0 object-contain sm:h-14 sm:w-14"
+        />
+        <div className="relative flex min-h-12 flex-1 items-center rounded-lg bg-primary-soft px-3 py-2 before:absolute before:-left-2 before:top-1/2 before:-translate-y-1/2 before:border-y-[7px] before:border-r-[9px] before:border-y-transparent before:border-r-primary-soft sm:min-h-14 sm:px-4">
+          <p className="whitespace-pre-line text-[11px] font-bold leading-4 text-primary1 sm:text-xs sm:leading-5">
+            {t(
+              'Find me와 함께 인연을 찾아주셔서 감사합니다.\n작은 관심이 큰 힘이 됩니다',
+              'Thank you for finding a connection with Find me.\nYour care makes a meaningful difference.',
+            )}
+          </p>
+        </div>
       </div>
     </div>
   );

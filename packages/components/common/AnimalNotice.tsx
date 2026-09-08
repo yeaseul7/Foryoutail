@@ -6,7 +6,19 @@ import { FaPaw } from "react-icons/fa";
 import { useLanguage } from '@/lib/i18n/language';
 import { closedDayLabel } from '@/lib/i18n/animal-labels';
 
-export default function ShelterOperationInfoComponent({ shelterInfo, animalData }: { shelterInfo: ShelterInfoItem | null, animalData: ShelterAnimalItem | null }) {
+function PhoneNumber({ value }: { value: string }) {
+    const phone = value.trim();
+    const dialNumber = phone.replace(/[^\d+]/g, '');
+    const callable = !phone.includes('*') && dialNumber.length >= 3;
+    if (!callable) return <span className="text-sm text-gray-900">{phone}</span>;
+    return (
+        <a href={`tel:${dialNumber}`} className="text-sm font-semibold text-primary1 underline decoration-primary1/30 underline-offset-2 hover:decoration-primary1">
+            {phone}
+        </a>
+    );
+}
+
+export default function ShelterOperationInfoComponent({ shelterInfo, animalData }: { shelterInfo: ShelterInfoItem | null, animalData: ShelterAnimalItem | null, protectedAnimalCount?: number }) {
     const { isEnglish, t } = useLanguage();
     if (!shelterInfo) {
         return <div className="text-center text-gray-500">{t('입양 문의 정보를 찾을 수 없습니다.', 'Adoption contact information is unavailable.')}</div>;
@@ -74,20 +86,20 @@ export default function ShelterOperationInfoComponent({ shelterInfo, animalData 
 
                     </div>
 
-                    {(shelterInfo.careTel) && (
+                    {(shelterInfo.careTel || animalData?.careTel) && (
                         <div className="bg-white rounded-lg p-4 border border-gray-200">
                             <div className="flex flex-col gap-2">
                                 {shelterInfo.careTel && (
                                     <div className="flex items-center gap-2">
                                         <span className="text-sm font-semibold text-gray-600">{t('전화번호 1:', 'Phone 1:')}</span>
-                                        <span className="text-sm text-gray-900">{shelterInfo.careTel}</span>
+                                        <PhoneNumber value={shelterInfo.careTel} />
                                     </div>
                                 )}
                                 {animalData && (
                                     animalData?.careTel && animalData.careTel !== shelterInfo.careTel && (
                                         <div className="flex items-center gap-2">
                                             <span className="text-sm font-semibold text-gray-600">{t('전화번호 2:', 'Phone 2:')}</span>
-                                            <span className="text-sm text-gray-900">{animalData.careTel}</span>
+                                            <PhoneNumber value={animalData.careTel} />
                                         </div>
                                     ))}
                             </div>

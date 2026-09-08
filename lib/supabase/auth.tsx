@@ -106,17 +106,28 @@ async function syncSupabasePublicUser({
   profile_img,
   accessToken,
 }: SyncPublicUserParams): Promise<void> {
-  const response = await fetch('/api/supabase/users/sync', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({
-      nickname,
-      profile_img,
-    }),
-  });
+  const requestSync = (token: string) => fetch('/api/supabase/users/sync', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        nickname,
+        profile_img,
+      }),
+    });
+
+  let response = await requestSync(accessToken);
+  if (response.status === 401) {
+    const { data, error } = await supabase.auth.refreshSession();
+    const refreshedToken = data.session?.access_token;
+    if (error || !refreshedToken) {
+      await supabase.auth.signOut({ scope: 'local' });
+    } else {
+      response = await requestSync(refreshedToken);
+    }
+  }
 
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as
@@ -171,7 +182,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      const mappedUser = mapSupabaseUser(session?.user ?? null);
+      let verifiedSession = session;
+      if (session) {
+        const { data: verified, error: verificationError } = await supabase.auth.getUser();
+        if (verificationError || !verified.user) {
+          const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+          verifiedSession = refreshError ? null : refreshed.session;
+          if (!verifiedSession) await supabase.auth.signOut({ scope: 'local' });
+        }
+      }
+      const mappedUser = mapSupabaseUser(verifiedSession?.user ?? null);
 
       if (active) {
         setUser(mappedUser);
@@ -182,7 +202,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         void syncSupabasePublicUser({
           nickname: mappedUser.displayName,
           profile_img: mappedUser.photoURL,
-          accessToken: session!.access_token,
+          accessToken: verifiedSession!.access_token,
         }).catch((error) => {
           console.error('Supabase public.users 초기 동기화 실패:', error);
         });

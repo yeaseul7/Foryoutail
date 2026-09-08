@@ -17,6 +17,18 @@ export class TextSearchError extends Error {
   }
 }
 
+export interface TextSearchUsage {
+  limit: number;
+  used: number;
+  remaining: number;
+  authenticated: boolean;
+}
+
+export interface TextSearchResult {
+  items: ShelterAnimalItem[];
+  usage: TextSearchUsage | null;
+}
+
 function toAnimalItem(value: TextSearchRow): ShelterAnimalItem | null {
   const row = value.animal
     ? { ...value.animal, similarity: value.similarity, score: value.score }
@@ -102,7 +114,7 @@ export async function searchShelterAnimalsByText(
     upKindCd?: '417000' | '422400';
     region?: string;
   },
-): Promise<ShelterAnimalItem[]> {
+): Promise<TextSearchResult> {
   const token = await getSupabaseAccessToken();
   const headers: HeadersInit = { 'Content-Type': 'application/json' };
   if (token) headers.Authorization = `Bearer ${token}`;
@@ -118,7 +130,7 @@ export async function searchShelterAnimalsByText(
     }),
   });
   const body = (await response.json().catch(() => null)) as
-    | { results?: TextSearchRow[]; items?: TextSearchRow[]; matches?: TextSearchRow[]; data?: TextSearchRow[]; error?: string; message?: string }
+    | { results?: TextSearchRow[]; items?: TextSearchRow[]; matches?: TextSearchRow[]; data?: TextSearchRow[]; error?: string; message?: string; usage?: { limit?: number; used?: number; authenticated?: boolean } }
     | TextSearchRow[]
     | null;
 
@@ -131,5 +143,14 @@ export async function searchShelterAnimalsByText(
     ? body
     : body?.results ?? body?.items ?? body?.matches ?? body?.data ?? [];
   const items = rows.map(toAnimalItem).filter((item): item is ShelterAnimalItem => item !== null);
-  return rankResultsForQuery(query, items);
+  const rawUsage = Array.isArray(body) ? null : body?.usage;
+  const usage = typeof rawUsage?.limit === 'number' && typeof rawUsage.used === 'number'
+    ? {
+      limit: rawUsage.limit,
+      used: rawUsage.used,
+      remaining: Math.max(0, rawUsage.limit - rawUsage.used),
+      authenticated: Boolean(rawUsage.authenticated),
+    }
+    : null;
+  return { items: rankResultsForQuery(query, items), usage };
 }

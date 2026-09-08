@@ -1,6 +1,8 @@
 import { MetadataRoute } from 'next';
 import { getCachedAllShelterAnimals } from '@/lib/server/cached-shelter';
 import { isShelterAnimalListable } from '@/lib/client/shelter';
+import { getCachedShelterRefs } from '@/lib/server/cached-shelter-info';
+import { createShelterSlug } from '@/lib/shelter/shelterSlug';
 
 const baseUrl =
   process.env.NEXT_PUBLIC_BASE_URL ||
@@ -63,5 +65,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
 
-  return [...staticPages, ...detailPages];
+  const shelters = await getCachedShelterRefs().catch(() => []);
+  const shelterPages: MetadataRoute.Sitemap = shelters.map((shelter) => ({
+    url: `${baseUrl}/shelters/${encodeURIComponent(createShelterSlug(shelter.careNm, shelter.careRegNo))}`,
+    changeFrequency: 'weekly' as const,
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...detailPages, ...shelterPages];
 }
