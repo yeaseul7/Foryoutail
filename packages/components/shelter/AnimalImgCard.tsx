@@ -80,8 +80,8 @@ export default function AnimalImgCard({
         <div className="relative flex min-h-12 flex-1 items-center rounded-lg bg-primary-soft px-3 py-2 before:absolute before:-left-2 before:top-1/2 before:-translate-y-1/2 before:border-y-[7px] before:border-r-[9px] before:border-y-transparent before:border-r-primary-soft sm:min-h-14 sm:px-4">
           <p className="whitespace-pre-line text-[11px] font-bold leading-4 text-primary1 sm:text-xs sm:leading-5">
             {t(
-              'Find me와 함께 인연을 찾아주셔서 감사합니다.\n작은 관심이 큰 힘이 됩니다',
-              'Thank you for finding a connection with Find me.\nYour care makes a meaningful difference.',
+              'matchichi와 함께 인연을 찾아주셔서 감사합니다.\n작은 관심이 큰 힘이 됩니다',
+              'Thank you for finding a connection with matchichi.\nYour care makes a meaningful difference.',
             )}
           </p>
         </div>

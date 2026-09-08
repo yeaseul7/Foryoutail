@@ -4,7 +4,7 @@ import { generateDefaultMetadata } from '@/packages/utils/metadata';
 
 export const metadata: Metadata = generateDefaultMetadata(
   '서비스 이용약관',
-  'findme 서비스 이용 조건, 회원의 권리와 의무 및 책임 범위를 안내합니다.',
+  'matchichi 서비스 이용 조건, 회원의 권리와 의무 및 책임 범위를 안내합니다.',
   'https://www.kkosunnae.com/terms',
   {
     includeCanonical: true,
@@ -15,13 +15,13 @@ const sections = [
   {
     title: '1. 목적',
     body: [
-      '본 약관은 findme가 제공하는 유기동물 입양 공고와 AI 검색 등 관련 서비스의 이용 조건과 절차, 회사와 이용자의 권리·의무 및 책임 사항을 정하는 것을 목적으로 합니다.',
+      '본 약관은 matchichi가 제공하는 유기동물 입양 공고와 AI 검색 등 관련 서비스의 이용 조건과 절차, 회사와 이용자의 권리·의무 및 책임 사항을 정하는 것을 목적으로 합니다.',
     ],
   },
   {
     title: '2. 서비스 내용',
     body: [
-      'findme는 유기동물 공고 조회, 위치 기반 추천, AI 유사 동물 검색, 회원 프로필과 동물 찜 기능 등을 제공합니다.',
+      'matchichi는 유기동물 공고 조회, 위치 기반 추천, AI 유사 동물 검색, 회원 프로필과 동물 찜 기능 등을 제공합니다.',
       '서비스의 일부는 외부 데이터, 제3자 인증 서비스, 지도 서비스, 분석 및 광고 도구와 연동될 수 있습니다.',
     ],
   },
@@ -44,27 +44,27 @@ const sections = [
   {
     title: '5. 서비스 제공의 변경 및 중단',
     body: [
-      'findme는 운영상 또는 기술상 필요에 따라 서비스의 전부 또는 일부를 변경하거나 중단할 수 있습니다.',
+      'matchichi는 운영상 또는 기술상 필요에 따라 서비스의 전부 또는 일부를 변경하거나 중단할 수 있습니다.',
       '점검, 장애, 외부 API 또는 인프라 문제 등으로 일시적 서비스 제한이 발생할 수 있으며, 가능한 범위에서 사전 또는 사후 고지합니다.',
     ],
   },
   {
     title: '6. 지식재산권',
     body: [
-      'findme 서비스, 디자인, 상호, 로고 및 운영자가 작성한 콘텐츠에 대한 권리는 관련 법령이 허용하는 범위에서 findme 또는 정당한 권리자에게 귀속됩니다.',
+      'matchichi 서비스, 디자인, 상호, 로고 및 운영자가 작성한 콘텐츠에 대한 권리는 관련 법령이 허용하는 범위에서 matchichi 또는 정당한 권리자에게 귀속됩니다.',
     ],
   },
   {
     title: '7. 책임의 제한',
     body: [
-      'findme는 천재지변, 통신 장애, 제3자 서비스 장애, 이용자 귀책 사유로 발생한 손해에 대해 책임을 지지 않습니다.',
-      'findme는 이용자 또는 보호소가 게시한 정보의 정확성, 완전성, 최신성을 보증하지 않으며, 입양이나 거래 판단은 이용자 본인의 책임으로 이루어져야 합니다.',
+      'matchichi는 천재지변, 통신 장애, 제3자 서비스 장애, 이용자 귀책 사유로 발생한 손해에 대해 책임을 지지 않습니다.',
+      'matchichi는 이용자 또는 보호소가 게시한 정보의 정확성, 완전성, 최신성을 보증하지 않으며, 입양이나 거래 판단은 이용자 본인의 책임으로 이루어져야 합니다.',
     ],
   },
   {
     title: '8. 이용 제한 및 해지',
     body: [
-      '이용자가 본 약관을 위반하거나 서비스 운영을 방해하는 경우, findme는 경고, 계정 일시 정지, 영구 이용 제한 등의 조치를 할 수 있습니다.',
+      '이용자가 본 약관을 위반하거나 서비스 운영을 방해하는 경우, matchichi는 경고, 계정 일시 정지, 영구 이용 제한 등의 조치를 할 수 있습니다.',
       '이용자는 언제든지 서비스 이용을 중단하고 탈퇴를 요청할 수 있으며, 탈퇴 처리 후에도 법령 또는 운영상 필요한 정보는 일정 기간 보관될 수 있습니다.',
     ],
   },
@@ -81,14 +81,14 @@ const sections = [
 }[];
 
 const englishSections = [
-  { title: '1. Purpose', body: ['These Terms define the conditions and procedures for using findme’s shelter-animal listings, AI search, and related services, as well as the rights and responsibilities of findme and its users.'] },
-  { title: '2. Services', body: ['findme provides shelter-animal listings, location-based recommendations, AI similarity search, member profiles, and saved-animal features.', 'Some features may connect to external data providers, authentication services, maps, analytics, or advertising tools.'] },
+  { title: '1. Purpose', body: ['These Terms define the conditions and procedures for using matchichi’s shelter-animal listings, AI search, and related services, as well as the rights and responsibilities of matchichi and its users.'] },
+  { title: '2. Services', body: ['matchichi provides shelter-animal listings, location-based recommendations, AI similarity search, member profiles, and saved-animal features.', 'Some features may connect to external data providers, authentication services, maps, analytics, or advertising tools.'] },
   { title: '3. Registration and account management', body: ['Members may register by email or social sign-in and must provide accurate, current information.', 'Members are responsible for protecting their account and authentication credentials and may not transfer or lend them to another person.', 'Some features may require completion of an additional profile after registration.'] },
   { title: '4. User responsibilities', body: ['Users must comply with applicable laws, these Terms, operating policies, and notices.', 'Users may not submit false information, impersonate others, distribute unlawful promotions, publish obscene, hateful, or discriminatory content, infringe copyright, or defame shelters or other users.', 'Abnormal automated access, service disruption, and unauthorized data collection are prohibited.'] },
-  { title: '5. Changes and interruptions', body: ['findme may change or discontinue all or part of the service for operational or technical reasons.', 'Maintenance, outages, external API failures, or infrastructure issues may temporarily limit the service. Notice will be provided where reasonably possible.'] },
-  { title: '6. Intellectual property', body: ['Rights in the findme service, design, name, logo, and operator-created content belong to findme or their lawful owners to the extent permitted by law.'] },
-  { title: '7. Limitation of liability', body: ['findme is not liable for losses caused by natural disasters, communication failures, third-party service failures, or circumstances attributable to a user.', 'findme does not guarantee the accuracy, completeness, or timeliness of information posted by users or shelters. Adoption and transaction decisions remain the user’s responsibility.'] },
-  { title: '8. Restrictions and termination', body: ['If a user violates these Terms or disrupts the service, findme may issue a warning, temporarily suspend the account, or permanently restrict access.', 'Users may stop using the service and request account deletion at any time. Information required by law or for legitimate operations may be retained for a limited period.'] },
+  { title: '5. Changes and interruptions', body: ['matchichi may change or discontinue all or part of the service for operational or technical reasons.', 'Maintenance, outages, external API failures, or infrastructure issues may temporarily limit the service. Notice will be provided where reasonably possible.'] },
+  { title: '6. Intellectual property', body: ['Rights in the matchichi service, design, name, logo, and operator-created content belong to matchichi or their lawful owners to the extent permitted by law.'] },
+  { title: '7. Limitation of liability', body: ['matchichi is not liable for losses caused by natural disasters, communication failures, third-party service failures, or circumstances attributable to a user.', 'matchichi does not guarantee the accuracy, completeness, or timeliness of information posted by users or shelters. Adoption and transaction decisions remain the user’s responsibility.'] },
+  { title: '8. Restrictions and termination', body: ['If a user violates these Terms or disrupts the service, matchichi may issue a warning, temporarily suspend the account, or permanently restrict access.', 'Users may stop using the service and request account deletion at any time. Information required by law or for legitimate operations may be retained for a limited period.'] },
   { title: '9. Governing law and contact', body: ['These Terms are governed by the laws of the Republic of Korea.', 'Questions about the service may be sent to `kkosunnaekr1@gmail.com`.'] },
 ];
 
@@ -97,12 +97,12 @@ export default function TermsPage() {
     <LegalDocumentPage
       badge="Terms of Service"
       title="서비스 이용약관"
-      description="findme 서비스 이용 시 적용되는 기본 규칙과 권리·의무, 책임 범위를 안내합니다."
+      description="matchichi 서비스 이용 시 적용되는 기본 규칙과 권리·의무, 책임 범위를 안내합니다."
       effectiveDate="2026년 4월 27일"
       sections={sections}
       english={{
         title: 'Terms of Service',
-        description: 'These are the basic rules, rights, responsibilities, and limitations that apply when using findme.',
+        description: 'These are the basic rules, rights, responsibilities, and limitations that apply when using matchichi.',
         effectiveDate: 'April 27, 2026',
         sections: englishSections,
       }}

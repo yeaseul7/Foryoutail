@@ -14,15 +14,15 @@ interface ShelterDetailLayoutProps {
 function getFallbackMetadata(url: string): Metadata {
   return buildMetadata({
     title: '유기동물 공고 상세',
-    description: '유기동물 공고 상세 정보와 보호소 정보를 findme에서 확인해보세요.',
+    description: '유기동물 공고 상세 정보와 보호소 정보를 matchichi에서 확인해보세요.',
     url,
-    imageAlt: 'findme 유기동물 공고 상세',
+    imageAlt: 'matchichi 유기동물 공고 상세',
     type: 'article',
   });
 }
 
 function buildAnimalDescription(kind: string, orgNm: string, processState: string): string {
-  return `${orgNm}에서 ${processState} 상태인 ${kind} 공고를 findme에서 확인하고, 보호소 정보와 입양 관련 내용을 함께 살펴보세요.`;
+  return `${orgNm}에서 ${processState} 상태인 ${kind} 공고를 matchichi에서 확인하고, 보호소 정보와 입양 관련 내용을 함께 살펴보세요.`;
 }
 
 function processStateLabel(value: string | undefined): string {

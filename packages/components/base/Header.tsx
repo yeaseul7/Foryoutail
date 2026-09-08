@@ -52,12 +52,12 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
             className="hidden min-w-0 items-center transition-opacity hover:opacity-80 md:flex"
           >
             <Image
-              src="/static/images/findme-logo.png"
-              alt="findme"
-              width={150}
-              height={32}
+              src="/static/images/matchichi-logo.png"
+              alt="matchichi"
+              width={217}
+              height={72}
               priority
-              className="h-8 w-auto max-w-[144px] object-contain sm:h-9 sm:max-w-none md:h-10"
+              className="-my-3 h-16 w-auto object-contain md:-my-4 md:h-[72px]"
             />
           </Link>
 

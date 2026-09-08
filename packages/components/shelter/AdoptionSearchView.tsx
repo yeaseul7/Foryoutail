@@ -10,13 +10,16 @@ export default function AdoptionSearchView(props: ShelterPostsClientProps) {
   const [mode, setMode] = useState<'listings' | 'shelters'>('listings');
 
   useEffect(() => {
-    if (sessionStorage.getItem('findme:adoption-search-mode') === 'shelters') {
+    const savedMode = sessionStorage.getItem('matchichi:adoption-search-mode')
+      ?? sessionStorage.getItem('findme:adoption-search-mode');
+    if (savedMode === 'shelters') {
       queueMicrotask(() => setMode('shelters'));
     }
+    sessionStorage.removeItem('findme:adoption-search-mode');
   }, []);
 
   const changeMode = (nextMode: 'listings' | 'shelters') => {
-    sessionStorage.setItem('findme:adoption-search-mode', nextMode);
+    sessionStorage.setItem('matchichi:adoption-search-mode', nextMode);
     setMode(nextMode);
   };
 

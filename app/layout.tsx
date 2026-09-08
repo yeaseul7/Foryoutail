@@ -16,20 +16,20 @@ const pretendard = localFont({
 });
 
 const siteUrl = getBaseUrl().replace(/\/$/, '');
-const siteTitle = 'findme | 전국 유기동물 입양 공고·보호소 찾기';
+const siteTitle = 'matchichi | 전국 유기동물 입양 공고·보호소 찾기';
 const siteDescription = '전국 유기견·유기묘와 기타 유기동물의 최신 입양 공고를 지역, 기간, 상태별로 검색하고 가까운 동물보호소 정보를 확인하세요.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  applicationName: 'findme',
+  applicationName: 'matchichi',
   title: {
-    template: '%s | findme',
+    template: '%s | matchichi',
     default: siteTitle,
   },
   description: siteDescription,
-  authors: [{ name: 'findme', url: siteUrl }],
-  creator: 'findme',
-  publisher: 'findme',
+  authors: [{ name: 'matchichi', url: siteUrl }],
+  creator: 'matchichi',
+  publisher: 'matchichi',
   category: '반려동물 입양',
   classification: '유기동물 입양 정보 서비스',
   referrer: 'origin-when-cross-origin',
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   keywords: [
-    'findme',
+    'matchichi',
     '유기동물 입양',
     '유기견 입양',
     '유기묘 입양',
@@ -64,15 +64,15 @@ export const metadata: Metadata = {
     title: siteTitle,
     description: siteDescription,
     url: siteUrl,
-    siteName: 'findme',
+    siteName: 'matchichi',
     locale: 'ko_KR',
     type: 'website',
     images: [
       {
-        url: `${siteUrl}/static/images/findme-logo.png`,
-        width: 2172,
-        height: 724,
-        alt: 'findme - 유기동물 입양 공고와 AI 검색',
+        url: `${siteUrl}/static/images/matchichi-social.png`,
+        width: 1731,
+        height: 909,
+        alt: 'matchichi - 유기동물 입양 공고와 AI 검색',
       },
     ],
   },
@@ -80,7 +80,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: siteTitle,
     description: siteDescription,
-    images: [`${siteUrl}/static/images/findme-logo.png`],
+    images: [`${siteUrl}/static/images/matchichi-social.png`],
   },
   robots: {
     index: true,
@@ -116,17 +116,17 @@ export default function RootLayout({
                 {
                   '@type': 'Organization',
                   '@id': `${siteUrl}/#organization`,
-                  name: 'findme',
+                  name: 'matchichi',
                   url: siteUrl,
-                  logo: `${siteUrl}/static/images/findme-app-icon.png`,
+                  logo: `${siteUrl}/static/images/matchichi-logo.png`,
                   sameAs: ['https://www.instagram.com/earlys_day/'],
                 },
                 {
                   '@type': 'WebSite',
                   '@id': `${siteUrl}/#website`,
                   url: siteUrl,
-                  name: 'findme',
-                  alternateName: ['파인드미', '전국 유기동물 입양 공고'],
+                  name: 'matchichi',
+                  alternateName: ['마치치', '전국 유기동물 입양 공고'],
                   description: siteDescription,
                   inLanguage: ['ko-KR', 'en'],
                   publisher: { '@id': `${siteUrl}/#organization` },
@@ -142,7 +142,7 @@ export default function RootLayout({
                 {
                   '@type': 'WebApplication',
                   '@id': `${siteUrl}/#application`,
-                  name: 'findme',
+                  name: 'matchichi',
                   url: siteUrl,
                   applicationCategory: 'LifestyleApplication',
                   operatingSystem: 'Web',

@@ -54,7 +54,7 @@ export default function FeedbackForm() {
       <section className="mx-auto flex w-full max-w-xl flex-col items-center gap-3 rounded-2xl bg-white px-5 py-12 text-center shadow-sm sm:px-8">
         <MdCheckCircle className="h-10 w-10 text-primary1" aria-hidden />
         <h1 className="text-xl font-bold text-[#332d2a]">{t('건의가 접수되었습니다', 'Feedback received')}</h1>
-        <p className="text-sm text-[#817873]">{t('더 나은 findme를 만드는 데 참고하겠습니다.', 'We will use it to improve findme.')}</p>
+        <p className="text-sm text-[#817873]">{t('더 나은 matchichi를 만드는 데 참고하겠습니다.', 'We will use it to improve matchichi.')}</p>
         <button type="button" onClick={() => setSubmitted(false)} className="mt-2 rounded-xl border border-primary1/30 px-4 py-2 text-sm font-semibold text-primary1 hover:bg-primary-soft">
           {t('추가로 건의하기', 'Send another')}
         </button>

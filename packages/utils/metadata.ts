@@ -45,7 +45,7 @@ export function getBaseUrl(): string {
 export function normalizeImageUrl(
   imageUrl: string | null | undefined,
   baseUrl: string,
-  defaultImagePath: string = '/static/images/defaultDog.png',
+  defaultImagePath: string = '/static/images/matchichi-social.png',
 ): string {
   if (!imageUrl) {
     return `${baseUrl}${defaultImagePath}`;
@@ -92,9 +92,9 @@ export function generateMetadata(options: GenerateMetadataOptions): Metadata {
     imageUrl,
     url,
     type = 'website',
-    siteName = 'findme',
+    siteName = 'matchichi',
     locale = 'ko_KR',
-    defaultImagePath = '/static/images/defaultDog.png',
+    defaultImagePath = '/static/images/matchichi-social.png',
     includeCanonical = true, // 기본값을 true로 추천 (SEO 중복 방지)
     includeTwitterCreator = false,
     imageAlt,
@@ -104,13 +104,13 @@ export function generateMetadata(options: GenerateMetadataOptions): Metadata {
 
   const baseUrl = getBaseUrl();
   const normalizedImageUrl = normalizeImageUrl(imageUrl, baseUrl, defaultImagePath);
-  const imageAltText = imageAlt || `${title} - findme`;
+  const imageAltText = imageAlt || `${title} - matchichi`;
 
   // 160자 제한으로 설명문 최적화
   const truncatedDescription = extractText(description)?.substring(0, 160) || '';
 
   return {
-    // 루트 layout의 title template과 중복으로 `| findme`가 붙지 않도록 한다.
+    // 루트 layout의 title template과 중복으로 서비스명이 붙지 않도록 한다.
     title: { absolute: `${title} | ${siteName}` },
     description: truncatedDescription,
     metadataBase: new URL(baseUrl),
@@ -162,7 +162,7 @@ export function generateDefaultMetadata(
 ): Metadata {
   const {
     type = 'website',
-    defaultImagePath = '/static/images/defaultDog.png',
+    defaultImagePath = '/static/images/matchichi-social.png',
     includeCanonical = true,
     includeTwitterCreator = false,
     imageWidth = 1200,
@@ -177,7 +177,7 @@ export function generateDefaultMetadata(
     defaultImagePath,
     includeCanonical,
     includeTwitterCreator,
-    imageAlt: 'findme',
+    imageAlt: 'matchichi',
     imageWidth,
     imageHeight,
   });

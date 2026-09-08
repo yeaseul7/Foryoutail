@@ -12,15 +12,17 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const name = shelter?.careNm || '동물보호소';
   const address = shelter?.careAddr || shelter?.jibunAddr || '';
   const description = address
-    ? `${name}의 주소, 운영시간, 연락처와 현재 입양 가능한 동물 공고를 findme에서 확인해보세요.`
-    : `${name}의 운영정보와 현재 입양 가능한 동물 공고를 findme에서 확인해보세요.`;
+    ? `${name}의 주소, 운영시간, 연락처와 현재 입양 가능한 동물 공고를 matchichi에서 확인해보세요.`
+    : `${name}의 운영정보와 현재 입양 가능한 동물 공고를 matchichi에서 확인해보세요.`;
   const url = `${getBaseUrl().replace(/\/$/, '')}/shelters/${encodeURIComponent(createShelterSlug(shelter?.careNm, careRegNo))}`;
 
   return buildMetadata({
     title: `${name} 보호소 정보`,
     description,
     url,
-    defaultImagePath: '/static/images/shelter-og.png',
+    defaultImagePath: '/static/images/matchichi-social.png',
+    imageWidth: 1731,
+    imageHeight: 909,
     imageAlt: `${name} 보호소 정보`,
     type: 'website',
   });

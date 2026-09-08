@@ -26,8 +26,8 @@ const DEFAULT_LOCATION = { lat: 37.4, lng: 127.08 };
 function shortSidoName(name: string): string {
   return name.replace(/(특별자치도|특별자치시|특별시|광역시)$/, '');
 }
-const SHELTER_DIRECTORY_CACHE_KEY = 'findme:shelter-directory-state';
-const SHELTER_DIRECTORY_RETURN_KEY = 'findme:returning-from-shelter-detail';
+const SHELTER_DIRECTORY_CACHE_KEY = 'matchichi:shelter-directory-state';
+const SHELTER_DIRECTORY_RETURN_KEY = 'matchichi:returning-from-shelter-detail';
 
 interface ShelterDirectoryCache {
   query: string;
@@ -138,7 +138,7 @@ export default function ShelterDirectory() {
     };
     sessionStorage.setItem(SHELTER_DIRECTORY_CACHE_KEY, JSON.stringify(cache));
     sessionStorage.setItem(SHELTER_DIRECTORY_RETURN_KEY, '1');
-    sessionStorage.setItem('findme:adoption-search-mode', 'shelters');
+    sessionStorage.setItem('matchichi:adoption-search-mode', 'shelters');
   };
 
   const submit = (event: FormEvent) => {
