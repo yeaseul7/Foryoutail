@@ -35,7 +35,7 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur">
+    <header className="sticky top-0 z-50 w-full border-b border-[#eadfd7] bg-white/95 shadow-[0_3px_12px_rgba(51,45,42,0.08)] backdrop-blur">
       <div className="flex justify-between items-center px-4 mx-auto w-full max-w-7xl h-16 sm:px-6">
         <div className="flex items-center gap-4 md:gap-10">
           <button
@@ -52,12 +52,12 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
             className="hidden min-w-0 items-center transition-opacity hover:opacity-80 md:flex"
           >
             <Image
-              src="/static/images/kkosunnae-header-logo.png"
-              alt="꼬순내"
-              width={150}
-              height={32}
+              src="/static/images/matchichi-logo.png"
+              alt="matchichi"
+              width={217}
+              height={72}
               priority
-              className="h-6 w-auto max-w-[112px] object-contain sm:h-7 sm:max-w-none md:h-8"
+              className="-my-3 h-16 w-auto object-contain md:-my-4 md:h-[72px]"
             />
           </Link>
 
@@ -67,8 +67,8 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
               to="/"
               activeClassName="active"
               isActive={() => pathname === '/' || /^\/\d+$/.test(pathname)}
-              className={`!border-b-0 !p-0 text-sm lg:text-base transition-colors ${pathname === '/' || /^\/\d+$/.test(pathname)
-                ? '!text-primary1 font-semibold'
+              className={`!border-b-0 !p-0 text-xs font-bold lg:text-sm transition-colors ${pathname === '/' || /^\/\d+$/.test(pathname)
+                ? '!text-primary1'
                 : '!text-[#817873] hover:!text-primary1'
                 }`}
             >
@@ -80,8 +80,8 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
               to="/community"
               activeClassName="active"
               isActive={() => pathname === '/community' || pathname.startsWith('/community/')}
-              className={`!border-b-0 !p-0 text-sm lg:text-base transition-colors ${pathname === '/community' || pathname.startsWith('/community/')
-                ? '!text-primary1 font-semibold'
+              className={`!border-b-0 !p-0 text-xs font-bold lg:text-sm transition-colors ${pathname === '/community' || pathname.startsWith('/community/')
+                ? '!text-primary1'
                 : '!text-[#817873] hover:!text-primary1'
                 }`}
             >
@@ -93,8 +93,8 @@ export default function Header({ visibleHeaderButtons = true }: HeaderProps) {
               to="/feedback"
               activeClassName="active"
               isActive={() => pathname === '/feedback'}
-              className={`!border-b-0 !p-0 text-sm lg:text-base transition-colors ${pathname === '/feedback'
-                ? '!text-primary1 font-semibold'
+              className={`!border-b-0 !p-0 text-xs font-bold lg:text-sm transition-colors ${pathname === '/feedback'
+                ? '!text-primary1'
                 : '!text-[#817873] hover:!text-primary1'
                 }`}
             >

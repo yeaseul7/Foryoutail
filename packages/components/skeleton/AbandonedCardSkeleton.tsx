@@ -1,7 +1,7 @@
 export default function AbandonedCardSkeleton() {
   return (
     <article className="flex h-full w-full max-w-full animate-pulse flex-col overflow-hidden rounded-xl border-2 border-[#bfd7e8] bg-white shadow-sm">
-      <div className="relative aspect-square w-full overflow-hidden bg-gray-200">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-200">
         <div className="h-full w-full bg-gray-300" />
       </div>
 

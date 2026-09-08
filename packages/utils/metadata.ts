@@ -29,21 +29,23 @@ export function extractFirstImage(html: string | undefined): string | null {
  */
 export function getBaseUrl(): string {
   if (process.env.NEXT_PUBLIC_BASE_URL) {
-    return process.env.NEXT_PUBLIC_BASE_URL;
+    return process.env.NEXT_PUBLIC_BASE_URL.replace(/\/$/, '');
   }
 
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
 
-  return 'http://localhost:3003';
+  return process.env.NODE_ENV === 'production'
+    ? 'https://www.kkosunnae.com'
+    : 'http://localhost:3003';
 }
 
 
 export function normalizeImageUrl(
   imageUrl: string | null | undefined,
   baseUrl: string,
-  defaultImagePath: string = '/static/images/defaultDog.png',
+  defaultImagePath: string = '/static/images/matchichi-social.png',
 ): string {
   if (!imageUrl) {
     return `${baseUrl}${defaultImagePath}`;
@@ -90,9 +92,9 @@ export function generateMetadata(options: GenerateMetadataOptions): Metadata {
     imageUrl,
     url,
     type = 'website',
-    siteName = '꼬순내',
+    siteName = 'matchichi',
     locale = 'ko_KR',
-    defaultImagePath = '/static/images/defaultDog.png',
+    defaultImagePath = '/static/images/matchichi-social.png',
     includeCanonical = true, // 기본값을 true로 추천 (SEO 중복 방지)
     includeTwitterCreator = false,
     imageAlt,
@@ -102,13 +104,14 @@ export function generateMetadata(options: GenerateMetadataOptions): Metadata {
 
   const baseUrl = getBaseUrl();
   const normalizedImageUrl = normalizeImageUrl(imageUrl, baseUrl, defaultImagePath);
-  const imageAltText = imageAlt || `${title} - 꼬순내`;
+  const imageAltText = imageAlt || `${title} - matchichi`;
 
   // 160자 제한으로 설명문 최적화
   const truncatedDescription = extractText(description)?.substring(0, 160) || '';
 
   return {
-    title: `${title} | ${siteName}`,
+    // 루트 layout의 title template과 중복으로 서비스명이 붙지 않도록 한다.
+    title: { absolute: `${title} | ${siteName}` },
     description: truncatedDescription,
     metadataBase: new URL(baseUrl),
     alternates: includeCanonical ? { canonical: url } : undefined,
@@ -159,8 +162,8 @@ export function generateDefaultMetadata(
 ): Metadata {
   const {
     type = 'website',
-    defaultImagePath = '/static/images/defaultDog.png',
-    includeCanonical = false,
+    defaultImagePath = '/static/images/matchichi-social.png',
+    includeCanonical = true,
     includeTwitterCreator = false,
     imageWidth = 1200,
     imageHeight = 630,
@@ -174,7 +177,7 @@ export function generateDefaultMetadata(
     defaultImagePath,
     includeCanonical,
     includeTwitterCreator,
-    imageAlt: '꼬순내',
+    imageAlt: 'matchichi',
     imageWidth,
     imageHeight,
   });

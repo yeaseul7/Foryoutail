@@ -3,7 +3,7 @@
 :root {
   --color-primary: #f45f4a;
   --color-primary-soft-value: #fff0ec;
-  --color-background-value: #f7f7f5;
+  --color-background-value: #ffffff;
   --color-surface: #ffffff;
   --color-text: #332d2a;
   --color-text-muted: #817873;
@@ -25,7 +25,7 @@
   --font-mono: var(--font-system-mono);
 
   /* Theme colors from tailwind.config.js */
-  --color-page1: #F8F9FA;
+  --color-page1: #FFFFFF;
   --color-page2: #FFFFFF;
   --color-element1: #FFFFFF;
   --color-element2: #F8F9FA;

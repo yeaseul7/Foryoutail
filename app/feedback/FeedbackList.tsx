@@ -1,10 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { MdChevronLeft, MdChevronRight, MdLockOutline, MdSearch } from 'react-icons/md';
+import { MdChevronLeft, MdChevronRight, MdDeleteOutline, MdLockOutline, MdSearch } from 'react-icons/md';
 import { useAuth } from '@/lib/supabase/auth';
 import { useLanguage } from '@/lib/i18n/language';
-import { loadSupabaseBrowserConfig, supabase } from '@/lib/supabase/client';
+import { getSupabaseAccessToken } from '@/lib/supabase/client';
 
 interface FeedbackItem {
   id: string;
@@ -12,6 +12,7 @@ interface FeedbackItem {
   content: string;
   status: 'received' | 'reviewing' | 'completed';
   is_public: boolean;
+  is_owner: boolean;
   created_at: string;
 }
 
@@ -25,19 +26,13 @@ export default function FeedbackList() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<'all' | FeedbackItem['category']>('all');
   const [page, setPage] = useState(1);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const loadItems = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      let token: string | undefined;
-      try {
-        await loadSupabaseBrowserConfig();
-        const { data } = await supabase.auth.getSession();
-        token = data.session?.access_token;
-      } catch {
-        // 공개 문의 목록은 로그인 설정 없이도 조회한다.
-      }
+      const token = await getSupabaseAccessToken().catch(() => null);
       const response = await fetch('/api/feedback', {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
@@ -92,6 +87,30 @@ export default function FeedbackList() {
     setExpandedId(null);
   }, [category, search]);
 
+  const deleteItem = async (item: FeedbackItem) => {
+    if (!item.is_owner || deletingId) return;
+    if (!window.confirm(t('이 문의를 삭제할까요? 삭제 후 복구할 수 없습니다.', 'Delete this inquiry? This cannot be undone.'))) return;
+    setDeletingId(item.id);
+    setError('');
+    try {
+      const token = await getSupabaseAccessToken();
+      if (!token) throw new Error(t('로그인이 필요합니다.', 'Sign in required.'));
+      const response = await fetch('/api/feedback', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ id: item.id }),
+      });
+      const body = await response.json().catch(() => null) as { error?: string } | null;
+      if (!response.ok) throw new Error(body?.error || t('문의를 삭제하지 못했습니다.', 'Could not delete the inquiry.'));
+      setItems((current) => current.filter((currentItem) => currentItem.id !== item.id));
+      setExpandedId((current) => current === item.id ? null : current);
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : t('문의를 삭제하지 못했습니다.', 'Could not delete the inquiry.'));
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <section className="mx-auto w-full max-w-4xl bg-white px-4 py-5 sm:px-7 sm:py-7">
       <label className="flex h-12 items-center gap-2 border-b border-[#ddd7d2] text-[#817873] focus-within:border-primary1">
@@ -123,25 +142,37 @@ export default function FeedbackList() {
           ) : (
             <ul className="divide-y divide-[#eee7e2]">
               {pageItems.map((item) => {
-                const expanded = expandedId === item.id;
+                const isPrivate = !item.is_public;
+                const isPrivateToViewer = isPrivate && !item.is_owner;
+                const expanded = !isPrivateToViewer && expandedId === item.id;
                 const date = new Intl.DateTimeFormat(isEnglish ? 'en-US' : 'ko-KR', { month: '2-digit', day: '2-digit', year: '2-digit' }).format(new Date(item.created_at));
                 return (
                   <li key={item.id}>
-                    <button type="button" onClick={() => setExpandedId(expanded ? null : item.id)} className="grid w-full grid-cols-[1fr_auto] items-center gap-3 px-2 py-4 text-left hover:bg-[#fffaf7] sm:grid-cols-[1fr_6rem_5rem] sm:px-3">
+                    <div className="flex w-full items-stretch">
+                    <button type="button" disabled={isPrivateToViewer} onClick={() => setExpandedId(expanded ? null : item.id)} className="grid min-w-0 flex-1 grid-cols-[1fr_auto] items-center gap-3 px-2 py-4 text-left enabled:hover:bg-[#fffaf7] disabled:cursor-default sm:grid-cols-[1fr_6rem_5rem] sm:px-3">
                       <span className="flex min-w-0 items-center gap-2 text-sm text-[#4f4844]">
                         <span className="shrink-0 text-[11px] font-bold text-primary1">Q</span>
-                        {!item.is_public && <MdLockOutline className="h-3.5 w-3.5 shrink-0 text-[#817873]" aria-label={t('비공개', 'Private')} />}
-                        <span className="truncate">{item.content}</span>
+                        {isPrivate && <MdLockOutline className="h-3.5 w-3.5 shrink-0 text-[#817873]" aria-label={t('비공개', 'Private')} />}
+                        <span className={`truncate ${isPrivateToViewer ? 'text-[#9a918b]' : ''}`}>{isPrivateToViewer ? t('비공개 문의입니다.', 'This inquiry is private.') : item.content}</span>
                       </span>
                       <span className="rounded-full bg-[#f4f1ef] px-2 py-1 text-[11px] font-semibold text-[#817873] sm:bg-transparent sm:p-0 sm:text-xs">{statusLabel(item.status)}</span>
                       <span className="hidden text-xs text-[#9a918b] sm:block">{date}</span>
                     </button>
+                    </div>
                     {expanded && (
                       <div className="bg-[#fffaf7] px-5 py-5 sm:px-8">
                         <div className="mb-3 flex items-center gap-2 text-xs text-[#9a918b] sm:hidden">
                           <span>{categoryLabel(item.category)}</span><span>·</span><span>{date}</span>
                         </div>
                         <p className="whitespace-pre-wrap break-words text-sm leading-7 text-[#4f4844]">{item.content}</p>
+                        {item.is_owner && (
+                          <div className="mt-4 flex justify-end">
+                            <button type="button" onClick={() => void deleteItem(item)} disabled={deletingId === item.id} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-[#9a918b] transition hover:bg-red-50 hover:text-red-500 disabled:opacity-40">
+                              <MdDeleteOutline className="h-3.5 w-3.5" aria-hidden />
+                              {t('삭제', 'Delete')}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </li>

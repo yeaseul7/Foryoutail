@@ -15,7 +15,7 @@ export default function AnimalActions({ animal }: { animal: ShelterAnimalItem })
     const url = `${window.location.origin}/${desertionNo}`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: t('꼬순내 입양 공고', 'Kkosunnae adoption listing'), url });
+        await navigator.share({ title: t('matchichi 입양 공고', 'matchichi adoption listing'), url });
         trackEvent('share_animal', { animal_id: animal.id, method: 'native' });
       } catch {
         // 공유 취소는 성공 이벤트로 기록하지 않는다.

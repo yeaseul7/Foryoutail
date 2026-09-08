@@ -2,7 +2,7 @@ import { getSupabaseAccessToken } from '@/lib/supabase/client';
 
 const IMAGE_UPLOAD_URL =
   process.env.NODE_ENV === 'development'
-    ? 'http://localhost:8081/api/images/upload'
+    ? 'http://localhost:8080/api/images/upload'
     : 'https://kkosunnae-backend-258374777454.asia-northeast3.run.app/api/images/upload';
 
 export async function uploadCardImages(

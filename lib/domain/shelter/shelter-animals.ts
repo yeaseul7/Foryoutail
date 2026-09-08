@@ -40,6 +40,7 @@ const UP_KIND_CODE_TO_NAME: Record<string, string[]> = {
 function normalizeUpKindCode(upKindNm: string | null | undefined): string | undefined {
   const raw = (upKindNm || '').trim().toLowerCase();
   if (!raw) return undefined;
+  if (raw in UP_KIND_CODE_TO_NAME) return raw;
 
   const hit = Object.entries(UP_KIND_CODE_TO_NAME).find(([, names]) =>
     names.some((name) => raw.includes(name.toLowerCase())),
@@ -66,7 +67,7 @@ export function supabaseRowToShelterAnimal(row: ShelterAnimalRow): ShelterAnimal
     kindNm: row.kind_nm?.trim() || undefined,
     kindFullNm: row.kind_full_nm?.trim() || undefined,
     upKindNm: row.up_kind_nm?.trim() || undefined,
-    upKindCd: row.up_kind_cd?.trim() || normalizeUpKindCode(row.up_kind_nm),
+    upKindCd: normalizeUpKindCode(row.up_kind_cd) || normalizeUpKindCode(row.up_kind_nm),
     colorCd: row.color_cd?.trim() || undefined,
     age: row.age?.trim() || undefined,
     weight: row.weight?.trim() || undefined,
@@ -364,7 +365,11 @@ export async function queryShelterAnimals(
 
   const upKindNames = upKindNamesFromCode(params.upkind);
   if (upKindNames && upKindNames.length > 0) {
-    query = query.in('up_kind_nm', upKindNames);
+    const upKindCode = params.upkind!.trim();
+    const fallbackNames = upKindNames
+      .map((name) => `up_kind_nm.ilike.%${name}%`)
+      .join(',');
+    query = query.or(`up_kind_cd.eq.${upKindCode},${fallbackNames}`);
   }
 
   const { data, error, count } = await query;

@@ -37,18 +37,27 @@ export default function AnimalInfoCard({
   const naverDirectionsUrl = shelterAddress
     ? `https://map.naver.com/p/search/${encodeURIComponent(shelterAddress)}`
     : null;
+  const species = `${animalData.upKindCd || ''} ${animalData.upKindNm || ''}`.toLowerCase();
+  const speciesIcon = species.includes('422400') || species.includes('고양이') || species.includes('cat')
+    ? '/static/images/findme-detail-cat.png'
+    : species.includes('429900') || species.includes('기타') || species.includes('other')
+      ? '/static/images/findme-detail-other.png'
+      : '/static/images/findme-detail-dog.png';
   return (
     <div className="flex flex-col gap-6 rounded-2xl bg-white px-4 py-6 shadow-sm sm:px-6 lg:p-8">
       <div className="flex items-start justify-between">
-        <div className="flex flex-col gap-2">
-          <h3 className="text-xl lg:text-2xl font-bold text-gray-900">
-            {breedText || t('이름 없음', 'Unnamed animal')}
-          </h3>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-sm font-semibold text-gray-600">
-              {statusText}
-            </span>
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+          <Image src={speciesIcon} alt="" width={64} height={64} className="h-12 w-12 shrink-0 object-contain sm:h-16 sm:w-16" />
+          <div className="flex min-w-0 flex-col gap-2">
+            <h3 className="truncate text-xl font-bold text-gray-900 lg:text-2xl">
+              {breedText || t('이름 없음', 'Unnamed animal')}
+            </h3>
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-green-500"></div>
+              <span className="text-sm font-semibold text-gray-600">
+                {statusText}
+              </span>
+            </div>
           </div>
         </div>
         <AnimalActions animal={{ ...animalData, desertionNo }} />

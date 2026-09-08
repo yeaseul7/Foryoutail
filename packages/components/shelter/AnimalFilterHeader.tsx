@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import {
   MdArrowDropDown,
+  MdCheck,
   MdSearch,
 } from 'react-icons/md';
 import Image from 'next/image';
@@ -49,7 +50,7 @@ const animalTypeOptions = [
 
 /** AnimalFilterHeader 전용 — 검색(더 높게) / 필터 pill(더 낮게) */
 const searchBarWrapClass =
-  'mx-auto flex min-h-[54px] w-full max-w-2xl min-w-0 items-center gap-2 rounded-full border border-primary1/40 bg-white px-3 transition hover:border-primary1/65 focus-within:border-primary1 focus-within:ring-2 focus-within:ring-primary1/15 sm:px-5';
+  'flex min-h-[54px] w-full max-w-2xl min-w-0 items-center gap-2 rounded-full border border-primary1/40 bg-white px-3 transition hover:border-primary1/65 focus-within:border-primary1 focus-within:ring-2 focus-within:ring-primary1/15 sm:px-5';
 const searchInputClass =
   'h-12 min-w-0 flex-1 bg-transparent py-2 text-sm text-[#332d2a] outline-none placeholder:text-[#a69d98] sm:text-base';
 
@@ -60,18 +61,19 @@ const filterPillButtonClass =
 const filterPillLeadClass = 'flex items-center gap-1.5 min-w-0 sm:gap-2';
 const filterChevronClass = 'h-4 w-4 shrink-0 transition-transform';
 const filterDropdownRootClass = 'relative w-full min-w-0 sm:w-32';
-const filterDateFieldWrapClass = 'relative w-full min-w-0 sm:w-72';
+// 모바일에서는 필터 행 전체를 날짜 팝오버의 위치 기준으로 사용해 화면 밖으로
+// 밀려나지 않게 하고, 데스크톱에서는 날짜 버튼을 기준으로 배치한다.
+const filterDateFieldWrapClass = 'static w-full min-w-0 sm:relative sm:w-72';
 const filterDropdownMenuBaseClass =
-  'absolute right-0 top-full z-10 mt-1 min-w-[88px] w-full rounded-2xl border border-gray-200/90 bg-white px-1.5 py-1.5 shadow-xl';
+  'absolute left-0 top-full z-10 mt-2 min-w-[150px] w-full overflow-hidden rounded-xl border border-[#dedede] bg-white p-0 shadow-[0_8px_24px_rgba(51,45,42,0.14)] divide-y divide-[#ece8e5]';
 const filterDropdownMenuScrollableClass = `${filterDropdownMenuBaseClass} max-h-[min(60vh,22rem)] overflow-y-auto`;
 const filterDropdownOptionClass =
-  'cursor-pointer rounded-xl px-3 py-2.5 text-sm transition-colors';
-const filterDropdownOptionSelectedClass = 'bg-primary1 text-white';
-const filterDropdownOptionIdleClass = 'hover:bg-gray-100';
+  'flex min-h-10 cursor-pointer items-center gap-3 px-4 py-2 text-sm transition-colors';
+const filterDropdownOptionSelectedClass = 'bg-primary-soft/60 font-semibold text-primary1';
+const filterDropdownOptionIdleClass = 'bg-white text-[#332d2a] hover:bg-[#faf8f7]';
 const datePopoverInputClass =
   'w-full min-h-[44px] rounded-xl border border-gray-300 bg-gray-100 px-3 text-sm text-gray-900 focus:border-primary1 focus:outline-none focus:ring-2 focus:ring-primary1/25 [color-scheme:light]';
-const datePopoverLabelClass = 'text-xs font-semibold text-gray-600 mb-1.5';
-const datePopoverLabelEndClass = 'text-xs font-semibold text-gray-600 mt-3 mb-1.5';
+const datePopoverLabelClass = 'mb-1.5 block text-xs font-semibold text-gray-600';
 const filterResetButtonClass =
   'w-full shrink-0 min-h-9 sm:w-auto sm:flex-none px-2.5 py-1 text-xs font-medium text-gray-700 border border-slate-200 bg-white flex items-center justify-center gap-1.5 hover:bg-gray-50 rounded-lg transition-colors';
 
@@ -105,6 +107,8 @@ interface AnimalFilterHeaderProps {
   compactFilters?: boolean;
   panelFilters?: boolean;
   aiFilterMode?: 'text' | 'image';
+  textSearchRemaining?: number | null;
+  imageSearchRemaining?: number | null;
 }
 
 export default function AnimalFilterHeader({
@@ -119,13 +123,15 @@ export default function AnimalFilterHeader({
   compactFilters = false,
   panelFilters = false,
   aiFilterMode,
+  textSearchRemaining,
+  imageSearchRemaining,
 }: AnimalFilterHeaderProps) {
   const { isEnglish } = useLanguage();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
   const [sidoList, setSidoList] = useState<SidoItem[]>([]);
   const [textQuery, setTextQuery] = useState(filters.searchQuery);
-  const [searchMode, setSearchMode] = useState<'general' | 'ai'>('ai');
+  const [searchMode, setSearchMode] = useState<'general' | 'ai'>('general');
 
   useEffect(() => {
     queueMicrotask(() => setTextQuery(filters.searchQuery));
@@ -234,11 +240,34 @@ export default function AnimalFilterHeader({
   };
 
   const commitDateRange = useCallback(() => {
+    if (startDate && endDate && startDate > endDate) return;
     const bgnde = formatDateToYYYYMMDD(startDate);
     const endde = formatDateToYYYYMMDD(endDate);
     onFilterChange({ ...filters, bgnde, endde });
     setDateRangeOpen(false);
   }, [filters, startDate, endDate, onFilterChange]);
+
+  const applyRecentDateRange = useCallback((days: number) => {
+    const end = new Date();
+    const start = new Date(end);
+    start.setDate(end.getDate() - (days - 1));
+    const toLocalDate = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    const nextStartDate = toLocalDate(start);
+    const nextEndDate = toLocalDate(end);
+    setStartDate(nextStartDate);
+    setEndDate(nextEndDate);
+    onFilterChange({
+      ...filters,
+      bgnde: formatDateToYYYYMMDD(nextStartDate),
+      endde: formatDateToYYYYMMDD(nextEndDate),
+    });
+    setDateRangeOpen(false);
+  }, [filters, onFilterChange]);
 
   const clearDateRangeInPopover = useCallback(() => {
     setStartDate('');
@@ -267,21 +296,74 @@ export default function AnimalFilterHeader({
   };
 
   const hasSidoList = sidoList.length > 0;
+  const invalidDateRange = Boolean(startDate && endDate && startDate > endDate);
 
   return (
     <div className="w-full">
       <div className="w-full max-w-7xl mx-auto">
-        <div className={`flex flex-col gap-2 ${compactFilters ? 'py-0' : 'py-2'}`}>
-          {showSearch && <form className={searchBarWrapClass} onSubmit={submitTextSearch}>
-            <Image
-              src="/static/images/search-kk-mark.png"
-              alt=""
-              width={42}
-              height={28}
-              className="hidden h-7 w-[42px] shrink-0 self-center object-contain sm:block"
-            />
-            <div className="relative grid h-8 w-[76px] shrink-0 grid-cols-2 rounded-full bg-[#f1eeeb] p-0.5 text-[9px] font-bold sm:hidden" role="group" aria-label={isEnglish ? 'Search mode' : '검색 모드'}>
-              <span className={`pointer-events-none absolute bottom-0.5 top-0.5 w-9 rounded-full bg-white shadow-sm transition-transform duration-200 ${searchMode === 'ai' ? 'translate-x-[38px]' : 'translate-x-0.5'}`} aria-hidden />
+        <div className="flex flex-col gap-2">
+          {showSearch && <div className="mx-auto flex w-full max-w-2xl min-w-0 flex-col items-stretch gap-4">
+            <div className="relative flex h-16 w-full items-end justify-center sm:h-20">
+              <Image
+                src="/static/images/findme-search-dog.png"
+                alt=""
+                width={80}
+                height={80}
+                className="pointer-events-none absolute bottom-0 left-0 h-14 w-14 object-contain sm:h-20 sm:w-20"
+              />
+            <div
+              className="grid h-14 w-full max-w-[230px] grid-cols-3 gap-2 self-center text-[9px] font-bold sm:text-[10px]"
+              role="radiogroup"
+              aria-label={isEnglish ? 'Animal type' : '축종'}
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={!filters.upKindCd || filters.upKindCd === '417000'}
+                aria-label={isEnglish ? 'Dogs' : '강아지'}
+                title={isEnglish ? 'Dogs' : '강아지'}
+                onClick={() => handleFilterChange('upKindCd', '417000')}
+                className={`flex flex-col items-center justify-center gap-0.5 rounded-[14px] border bg-white transition-all active:translate-y-0.5 active:shadow-sm ${!filters.upKindCd || filters.upKindCd === '417000' ? 'border-primary1/60 text-primary1 shadow-[0_3px_0_rgba(255,90,72,0.28),0_6px_12px_rgba(51,45,42,0.10)]' : 'border-[#eadfd7] text-[#9a918b] shadow-[0_3px_0_#ddd3cd,0_6px_12px_rgba(51,45,42,0.08)]'}`}
+              >
+                <Image src="/static/images/findme-dog.png" alt="" width={32} height={32} className="h-7 w-7 object-contain sm:h-8 sm:w-8" />
+                <span>{isEnglish ? 'Dogs' : '강아지'}</span>
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={filters.upKindCd === '422400'}
+                aria-label={isEnglish ? 'Cats' : '고양이'}
+                title={isEnglish ? 'Cats' : '고양이'}
+                onClick={() => handleFilterChange('upKindCd', '422400')}
+                className={`flex flex-col items-center justify-center gap-0.5 rounded-[14px] border bg-white transition-all active:translate-y-0.5 active:shadow-sm ${filters.upKindCd === '422400' ? 'border-primary1/60 text-primary1 shadow-[0_3px_0_rgba(255,90,72,0.28),0_6px_12px_rgba(51,45,42,0.10)]' : 'border-[#eadfd7] text-[#9a918b] shadow-[0_3px_0_#ddd3cd,0_6px_12px_rgba(51,45,42,0.08)]'}`}
+              >
+                <Image src="/static/images/findme-cat.png" alt="" width={32} height={32} className="h-7 w-7 object-contain sm:h-8 sm:w-8" />
+                <span>{isEnglish ? 'Cats' : '고양이'}</span>
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={filters.upKindCd === '429900'}
+                aria-label={isEnglish ? 'Other animals' : '기타 축종'}
+                title={isEnglish ? 'Other animals' : '기타 축종'}
+                onClick={() => handleFilterChange('upKindCd', '429900')}
+                className={`flex flex-col items-center justify-center gap-0.5 rounded-[14px] border bg-white transition-all active:translate-y-0.5 active:shadow-sm ${filters.upKindCd === '429900' ? 'border-primary1/60 text-primary1 shadow-[0_3px_0_rgba(255,90,72,0.28),0_6px_12px_rgba(51,45,42,0.10)]' : 'border-[#eadfd7] text-[#9a918b] shadow-[0_3px_0_#ddd3cd,0_6px_12px_rgba(51,45,42,0.08)]'}`}
+              >
+                <Image src="/static/images/findme-other-animals.png" alt="" width={32} height={32} className="h-7 w-7 object-contain sm:h-8 sm:w-8" />
+                <span>{isEnglish ? 'Other' : '기타 축종'}</span>
+              </button>
+            </div>
+              <Image
+                src="/static/images/findme-search-cat.png"
+                alt=""
+                width={80}
+                height={80}
+                className="pointer-events-none absolute bottom-0 right-0 h-14 w-14 object-contain sm:h-20 sm:w-20"
+              />
+            </div>
+            <form className={`${searchBarWrapClass} flex-1`} onSubmit={submitTextSearch}>
+            <div className="relative grid h-8 w-[76px] shrink-0 grid-cols-2 rounded-full bg-[#f1eeeb] p-0.5 text-[9px] font-bold sm:w-[88px] sm:text-[10px]" role="group" aria-label={isEnglish ? 'Search mode' : '검색 모드'}>
+              <span className={`pointer-events-none absolute bottom-0.5 top-0.5 w-9 rounded-full bg-white shadow-sm transition-transform duration-200 sm:w-[42px] ${searchMode === 'ai' ? 'translate-x-[38px] sm:translate-x-[44px]' : 'translate-x-0.5'}`} aria-hidden />
               <button type="button" onClick={() => setSearchMode('general')} aria-pressed={searchMode === 'general'} className={`relative z-10 rounded-full transition ${searchMode === 'general' ? 'text-[#332d2a]' : 'text-[#9a918b]'}`}>{isEnglish ? 'Basic' : '일반'}</button>
               <button type="button" onClick={() => setSearchMode('ai')} aria-pressed={searchMode === 'ai'} className={`relative z-10 rounded-full transition ${searchMode === 'ai' ? 'text-primary1' : 'text-[#9a918b]'} ${textSearchLoading && searchMode === 'ai' ? 'animate-pulse' : ''}`}>AI</button>
             </div>
@@ -294,18 +376,21 @@ export default function AnimalFilterHeader({
                 : (isEnglish ? 'Search breed, shelter, or features' : '품종, 보호소, 특징을 검색해보세요')}
               className={searchInputClass}
             />
-            <div className="relative hidden h-8 w-[88px] shrink-0 grid-cols-2 rounded-full bg-[#f1eeeb] p-0.5 text-[10px] font-bold sm:grid" role="group" aria-label={isEnglish ? 'Search mode' : '검색 모드'}>
-              <span className={`pointer-events-none absolute bottom-0.5 top-0.5 w-[42px] rounded-full bg-white shadow-sm transition-transform duration-200 ${searchMode === 'ai' ? 'translate-x-[44px]' : 'translate-x-0.5'}`} aria-hidden />
-              <button type="button" onClick={() => setSearchMode('general')} aria-pressed={searchMode === 'general'} className={`relative z-10 rounded-full transition ${searchMode === 'general' ? 'text-[#332d2a]' : 'text-[#9a918b]'}`}>{isEnglish ? 'Basic' : '일반'}</button>
-              <button type="button" onClick={() => setSearchMode('ai')} aria-pressed={searchMode === 'ai'} className={`relative z-10 rounded-full transition ${searchMode === 'ai' ? 'text-primary1' : 'text-[#9a918b]'} ${textSearchLoading && searchMode === 'ai' ? 'animate-pulse' : ''}`}>AI</button>
-            </div>
             <button type="submit" disabled={!textQuery.trim() || textSearchLoading} className="ml-1.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-transparent text-primary1 transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-45" aria-label={isEnglish ? 'Search' : '검색'}><MdSearch className={`h-5 w-5 ${textSearchLoading ? 'animate-pulse' : ''}`} aria-hidden /></button>
             <ImageSearchButton onSearch={onImageSearch} />
-          </form>}
+            </form>
+            {searchMode === 'ai' && (
+              <p className="text-center text-[10px] font-medium text-[#9a918b] sm:text-xs">
+                {isEnglish
+                  ? `Text searches ${textSearchRemaining ?? '-'} left · Image searches ${imageSearchRemaining ?? '-'} left`
+                  : `텍스트 검색 ${textSearchRemaining ?? '-'}회 남음 · 사진 검색 ${imageSearchRemaining ?? '-'}회 남음`}
+              </p>
+            )}
+          </div>}
 
           {showSearch && quickFilters}
 
-          {showFilters && <div className={panelFilters ? 'grid w-full grid-cols-1 gap-2 sm:grid-cols-2 sm:[&>[data-filter-dropdown-root]]:!w-full' : compactFilters ? 'flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto' : filterRowClass}>
+          {showFilters && <div className={`relative ${panelFilters ? 'grid w-full grid-cols-1 gap-2 sm:grid-cols-2 sm:[&>[data-filter-dropdown-root]]:!w-full' : compactFilters ? 'flex w-full min-w-0 flex-wrap items-center gap-y-2 [&>[data-filter-dropdown-root]]:-ml-px [&>[data-filter-dropdown-root]]:!w-1/4 sm:[&>[data-filter-dropdown-root]]:!w-auto [&>[data-filter-dropdown-root]:first-child]:ml-0 [&>[data-filter-dropdown-root]>button]:min-h-10 [&>[data-filter-dropdown-root]>button]:gap-0.5 [&>[data-filter-dropdown-root]>button]:rounded-none [&>[data-filter-dropdown-root]>button]:px-1 [&>[data-filter-dropdown-root]>button]:text-[11px] sm:[&>[data-filter-dropdown-root]>button]:gap-1.5 sm:[&>[data-filter-dropdown-root]>button]:px-3 sm:[&>[data-filter-dropdown-root]>button]:text-xs [&>[data-filter-dropdown-root]>button>svg]:h-3.5 [&>[data-filter-dropdown-root]>button>svg]:w-3.5 sm:[&>[data-filter-dropdown-root]>button>svg]:h-4 sm:[&>[data-filter-dropdown-root]>button>svg]:w-4 [&>[data-filter-dropdown-root]:first-child>button]:rounded-l-xl [&>[data-filter-dropdown-root]:last-of-type>button]:rounded-r-xl [&>button]:!ml-0 sm:[&>button]:!ml-2 [&>button]:!w-auto' : filterRowClass}`}>
             {aiFilterMode !== 'image' && <>
             {/* 축종 */}
             <div className={`${filterDropdownRootClass} ${openDropdown === 'upKindCd' ? 'z-[120]' : 'z-0'}`} data-filter-dropdown-root>
@@ -327,14 +412,19 @@ export default function AnimalFilterHeader({
               {openDropdown === 'upKindCd' && (
                 <ul className={filterDropdownMenuBaseClass} role="listbox" aria-label={isEnglish ? 'Animal type' : '축종 목록'}>
                   {animalTypeOptions.map((option) => (
-                    <li
-                      key={option.value}
-                      role="option"
-                      aria-selected={filters.upKindCd === option.value}
-                      className={filterDropdownOptionStateClass(filters.upKindCd === option.value)}
-                      onClick={() => handleFilterChange('upKindCd', option.value)}
-                    >
-                      {isEnglish ? option.englishLabel : option.label}
+                    <li key={option.value} role="none">
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={filters.upKindCd === option.value}
+                        className={`${filterDropdownOptionStateClass(filters.upKindCd === option.value)} w-full text-left`}
+                        onClick={() => handleFilterChange('upKindCd', option.value)}
+                      >
+                        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${filters.upKindCd === option.value ? 'border-primary1 bg-primary1 text-white' : 'border-[#cfcac7] bg-white'}`}>
+                          {filters.upKindCd === option.value && <MdCheck className="h-3.5 w-3.5" aria-hidden />}
+                        </span>
+                        {isEnglish ? option.englishLabel : option.label}
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -363,12 +453,17 @@ export default function AnimalFilterHeader({
               {openDropdown === 'sexCd' && (
                 <ul className={filterDropdownMenuBaseClass}>
                   {sexOptions.map((option) => (
-                    <li
-                      key={option.value || 'all'}
-                      className={filterDropdownOptionStateClass(filters.sexCd === option.value)}
-                      onClick={() => handleFilterChange('sexCd', option.value)}
-                    >
-                      {isEnglish ? ({ F: 'Female', M: 'Male', Q: 'Unknown' } as Record<string, string>)[option.value ?? ''] || 'All' : option.label}
+                    <li key={option.value || 'all'}>
+                      <button
+                        type="button"
+                        className={`${filterDropdownOptionStateClass(filters.sexCd === option.value)} w-full text-left`}
+                        onClick={() => handleFilterChange('sexCd', option.value)}
+                      >
+                        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${filters.sexCd === option.value ? 'border-primary1 bg-primary1 text-white' : 'border-[#cfcac7] bg-white'}`}>
+                          {filters.sexCd === option.value && <MdCheck className="h-3.5 w-3.5" aria-hidden />}
+                        </span>
+                        {isEnglish ? ({ F: 'Female', M: 'Male', Q: 'Unknown' } as Record<string, string>)[option.value ?? ''] || 'All' : option.label}
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -404,23 +499,34 @@ export default function AnimalFilterHeader({
                     role="listbox"
                     aria-label={isEnglish ? 'Region list' : '시도 목록'}
                   >
-                    <li
-                      role="option"
-                      aria-selected={!filters.upr_cd && !filters.orgNm}
-                      className={filterDropdownOptionStateClass(!filters.upr_cd && !filters.orgNm)}
-                      onClick={() => handleRegionFilterChange(null)}
-                    >
-                      {isEnglish ? 'All Korea' : '전국'}
+                    <li role="none">
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={!filters.upr_cd && !filters.orgNm}
+                        className={`${filterDropdownOptionStateClass(!filters.upr_cd && !filters.orgNm)} w-full text-left`}
+                        onClick={() => handleRegionFilterChange(null)}
+                      >
+                        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${!filters.upr_cd && !filters.orgNm ? 'border-primary1 bg-primary1 text-white' : 'border-[#cfcac7] bg-white'}`}>
+                          {!filters.upr_cd && !filters.orgNm && <MdCheck className="h-3.5 w-3.5" aria-hidden />}
+                        </span>
+                        {isEnglish ? 'All Korea' : '전국'}
+                      </button>
                     </li>
                     {sidoList.map((sido) => (
-                      <li
-                        key={sido.SIDO_CD}
-                        role="option"
-                        aria-selected={filters.orgNm === sido.SIDO_NAME || filters.upr_cd === sido.SIDO_CD}
-                        className={filterDropdownOptionStateClass(filters.orgNm === sido.SIDO_NAME || filters.upr_cd === sido.SIDO_CD)}
-                        onClick={() => handleRegionFilterChange(sido)}
-                      >
-                        {getSidoDisplayName(sido.SIDO_NAME, isEnglish)}
+                      <li key={sido.SIDO_CD} role="none">
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={filters.orgNm === sido.SIDO_NAME || filters.upr_cd === sido.SIDO_CD}
+                          className={`${filterDropdownOptionStateClass(filters.orgNm === sido.SIDO_NAME || filters.upr_cd === sido.SIDO_CD)} w-full text-left`}
+                          onClick={() => handleRegionFilterChange(sido)}
+                        >
+                          <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${filters.orgNm === sido.SIDO_NAME || filters.upr_cd === sido.SIDO_CD ? 'border-primary1 bg-primary1 text-white' : 'border-[#cfcac7] bg-white'}`}>
+                            {(filters.orgNm === sido.SIDO_NAME || filters.upr_cd === sido.SIDO_CD) && <MdCheck className="h-3.5 w-3.5" aria-hidden />}
+                          </span>
+                          {getSidoDisplayName(sido.SIDO_NAME, isEnglish)}
+                        </button>
                       </li>
                     ))}
                   </ul>
@@ -450,33 +556,40 @@ export default function AnimalFilterHeader({
                 />
               </button>
               {dateRangeOpen && (
-                <div className="absolute right-0 top-full z-[100] mt-1 w-[min(100vw-2rem,20rem)] rounded-2xl border border-gray-200/95 bg-white p-4 shadow-xl outline-none">
-                  <p className={datePopoverLabelClass}>{isEnglish ? 'Start date' : '시작일'}</p>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={handleStartDateChange}
-                    className={datePopoverInputClass}
-                  />
-                  <p className={datePopoverLabelEndClass}>{isEnglish ? 'End date' : '종료일'}</p>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={handleEndDateChange}
-                    className={datePopoverInputClass}
-                  />
-                  <div className="mt-4 flex flex-wrap gap-2">
+                <div className="absolute right-0 top-full z-[100] mt-1 w-[min(100vw-2rem,23rem)] rounded-2xl border border-gray-200/95 bg-white p-4 shadow-xl outline-none">
+                  <p className="text-sm font-bold text-[#332d2a]">{isEnglish ? 'Choose a date range' : '기간 선택'}</p>
+                  <p className="mt-1 text-xs text-[#817873]">{isEnglish ? 'Quickly select a recent period or enter dates.' : '최근 기간을 빠르게 선택하거나 날짜를 직접 입력하세요.'}</p>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    {[{ days: 1, ko: '오늘', en: 'Today' }, { days: 7, ko: '최근 7일', en: '7 days' }, { days: 30, ko: '최근 30일', en: '30 days' }].map((option) => (
+                      <button key={option.days} type="button" onClick={() => applyRecentDateRange(option.days)} className="min-h-9 rounded-xl border border-[#eadfd7] bg-white px-2 text-xs font-semibold text-[#5f5752] transition hover:border-primary1/60 hover:bg-primary-soft hover:text-primary1">
+                        {isEnglish ? option.en : option.ko}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <label>
+                      <span className={datePopoverLabelClass}>{isEnglish ? 'Start date' : '시작일'}</span>
+                      <input type="date" value={startDate} max={endDate || undefined} onChange={handleStartDateChange} className={datePopoverInputClass} />
+                    </label>
+                    <label>
+                      <span className={datePopoverLabelClass}>{isEnglish ? 'End date' : '종료일'}</span>
+                      <input type="date" value={endDate} min={startDate || undefined} onChange={handleEndDateChange} className={datePopoverInputClass} />
+                    </label>
+                  </div>
+                  {invalidDateRange && <p className="mt-2 text-xs font-medium text-red-600">{isEnglish ? 'The end date must be on or after the start date.' : '종료일은 시작일보다 빠를 수 없습니다.'}</p>}
+                  <div className="mt-4 flex items-center justify-between gap-2 border-t border-[#eee7e2] pt-3">
                     <button
                       type="button"
                       onClick={clearDateRangeInPopover}
-                      className="rounded-full border border-gray-300 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="min-h-10 rounded-xl px-3 text-sm font-medium text-[#817873] hover:bg-gray-100"
                     >
                       {isEnglish ? 'Clear' : '기간 지우기'}
                     </button>
                     <button
                       type="button"
                       onClick={commitDateRange}
-                      className="rounded-full bg-primary1 px-4 py-2 text-sm font-semibold text-white hover:opacity-95"
+                      disabled={invalidDateRange || (!startDate && !endDate)}
+                      className="min-h-10 rounded-xl bg-primary1 px-5 text-sm font-semibold text-white transition hover:bg-primary2 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       {isEnglish ? 'Apply' : '적용'}
                     </button>
@@ -486,7 +599,8 @@ export default function AnimalFilterHeader({
             </div>
 
             {/* 필터 초기화 */}
-            {(filters.sexCd !== null || filters.state !== null || (filters.upKindCd !== null && filters.upKindCd !== '417000') || filters.neuterYn !== null || filters.quickFilter !== null || filters.searchQuery || filters.bgnde || filters.endde || filters.upr_cd || filters.orgNm) && (
+            {(filters.sexCd !== null || filters.state !== null || (filters.upKindCd !== null && filters.upKindCd !== '417000') || filters.neuterYn !== null || filters.quickFilter !== null || filters.searchQuery || filters.bgnde || filters.endde || filters.upr_cd || filters.orgNm) && (<>
+              {compactFilters && <span className="h-0 basis-full sm:hidden" aria-hidden />}
               <button
                 type="button"
                 onClick={() => {
@@ -501,7 +615,7 @@ export default function AnimalFilterHeader({
                 <RiResetLeftFill className="w-4 h-4 shrink-0" />
                 {isEnglish ? 'Reset filters' : '필터 초기화'}
               </button>
-            )}
+            </>)}
             </>}
           </div>}
         </div>

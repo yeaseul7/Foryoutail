@@ -3,7 +3,7 @@
 import { FormEvent, useState } from 'react';
 import { MdCheckCircle, MdSend } from 'react-icons/md';
 import { useLanguage } from '@/lib/i18n/language';
-import { loadSupabaseBrowserConfig, supabase } from '@/lib/supabase/client';
+import { getSupabaseAccessToken } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 
 export default function FeedbackForm() {
@@ -11,7 +11,6 @@ export default function FeedbackForm() {
   const { user } = useAuth();
   const [category, setCategory] = useState('suggestion');
   const [content, setContent] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [website, setWebsite] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -20,15 +19,13 @@ export default function FeedbackForm() {
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (submitting || content.trim().length < 10) return;
+    if (!user || submitting || content.trim().length < 10) return;
     setSubmitting(true);
     setError('');
     try {
       let accessToken: string | undefined;
       try {
-        await loadSupabaseBrowserConfig();
-        const { data } = await supabase.auth.getSession();
-        accessToken = data.session?.access_token;
+        accessToken = await getSupabaseAccessToken() || undefined;
       } catch {
         // 비로그인 건의는 Supabase 브라우저 설정 없이도 API에서 접수한다.
       }
@@ -38,13 +35,12 @@ export default function FeedbackForm() {
           'Content-Type': 'application/json',
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         },
-        body: JSON.stringify({ category, content, contactEmail, isPublic, website }),
+        body: JSON.stringify({ category, content, isPublic, website }),
       });
       const result = await response.json().catch(() => null) as { error?: string } | null;
       if (!response.ok) throw new Error(result?.error || t('건의를 접수하지 못했습니다.', 'Could not submit feedback.'));
       setSubmitted(true);
       setContent('');
-      setContactEmail('');
       window.dispatchEvent(new Event('feedback-submitted'));
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : t('건의를 접수하지 못했습니다.', 'Could not submit feedback.'));
@@ -58,7 +54,7 @@ export default function FeedbackForm() {
       <section className="mx-auto flex w-full max-w-xl flex-col items-center gap-3 rounded-2xl bg-white px-5 py-12 text-center shadow-sm sm:px-8">
         <MdCheckCircle className="h-10 w-10 text-primary1" aria-hidden />
         <h1 className="text-xl font-bold text-[#332d2a]">{t('건의가 접수되었습니다', 'Feedback received')}</h1>
-        <p className="text-sm text-[#817873]">{t('더 나은 꼬순내를 만드는 데 참고하겠습니다.', 'We will use it to improve Kkosunnae.')}</p>
+        <p className="text-sm text-[#817873]">{t('더 나은 matchichi를 만드는 데 참고하겠습니다.', 'We will use it to improve matchichi.')}</p>
         <button type="button" onClick={() => setSubmitted(false)} className="mt-2 rounded-xl border border-primary1/30 px-4 py-2 text-sm font-semibold text-primary1 hover:bg-primary-soft">
           {t('추가로 건의하기', 'Send another')}
         </button>
@@ -97,7 +93,7 @@ export default function FeedbackForm() {
               {t('비공개', 'Private')}
             </button>
           </div>
-          {!user && <p className="mt-2 text-xs text-[#9a918b]">{t('비공개 문의는 로그인 후 작성할 수 있습니다.', 'Sign in to submit a private inquiry.')}</p>}
+          {!user && <p className="mt-2 text-xs font-medium text-primary1">{t('문의는 로그인 후 작성할 수 있습니다.', 'Sign in to submit an inquiry.')}</p>}
         </fieldset>
 
         <label className="flex flex-col gap-2 text-sm font-semibold text-[#332d2a]">
@@ -112,12 +108,14 @@ export default function FeedbackForm() {
             placeholder={t('10자 이상 자세히 적어주세요.', 'Please provide at least 10 characters.')}
             className="resize-y rounded-xl border border-[#e4dcd7] bg-[#fffdfb] px-4 py-3 font-normal leading-6 outline-none transition focus:border-primary1 focus:ring-2 focus:ring-primary1/15"
           />
-          <span className="text-right text-xs font-normal text-[#9a918b]">{content.length}/2000</span>
-        </label>
-
-        <label className="flex flex-col gap-2 text-sm font-semibold text-[#332d2a]">
-          {t('답변받을 이메일 (선택)', 'Reply email (optional)')}
-          <input type="email" value={contactEmail} onChange={(event) => setContactEmail(event.target.value)} maxLength={254} placeholder="example@email.com" className="rounded-xl border border-[#e4dcd7] bg-[#fffdfb] px-4 py-3 font-normal outline-none transition focus:border-primary1 focus:ring-2 focus:ring-primary1/15" />
+          <span className="flex items-center justify-between gap-3 text-xs font-normal">
+            <span className={content.trim().length >= 10 ? 'text-emerald-600' : 'text-[#9a918b]'}>
+              {content.trim().length >= 10
+                ? t('최소 글자 수를 충족했습니다.', 'Minimum length met.')
+                : t(`최소 10자 · ${10 - content.trim().length}자 더 입력해주세요.`, `Minimum 10 characters · ${10 - content.trim().length} more needed.`)}
+            </span>
+            <span className="shrink-0 text-[#9a918b]">{content.length}/2000</span>
+          </span>
         </label>
 
         <label className="hidden" aria-hidden>
@@ -126,7 +124,7 @@ export default function FeedbackForm() {
         </label>
 
         {error && <p role="alert" className="text-sm font-medium text-red-600">{error}</p>}
-        <button type="submit" disabled={submitting || content.trim().length < 10} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary1 px-5 text-sm font-bold text-white transition hover:bg-primary2 disabled:cursor-not-allowed disabled:opacity-50">
+        <button type="submit" disabled={!user || submitting || content.trim().length < 10} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary1 px-5 text-sm font-bold text-white transition hover:bg-primary2 disabled:cursor-not-allowed disabled:opacity-50">
           <MdSend className="h-4 w-4" aria-hidden />
           {submitting ? t('접수 중...', 'Submitting...') : t('건의 보내기', 'Submit feedback')}
         </button>

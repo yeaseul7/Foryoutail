@@ -15,8 +15,10 @@ import type { SimilarMatch } from '@/lib/search-animal/types';
 import { useLanguage } from '@/lib/i18n/language';
 import { trackEvent } from '@/lib/analytics';
 import { searchShelterAnimalsByText, TextSearchError } from '@/lib/client/textSearch';
+import { useAuth } from '@/lib/supabase/auth';
 import {
   MdArrowDropDown,
+  MdCheck,
   MdChevronLeft,
   MdChevronRight,
   MdClose,
@@ -24,7 +26,10 @@ import {
   MdTune,
 } from 'react-icons/md';
 
-interface ShelterPostsClientProps {
+const listingToolbarButtonClass =
+  'inline-flex h-10 items-center gap-1.5 rounded-xl border border-[#dedede] bg-white px-3 text-sm font-bold text-[#332d2a] shadow-sm transition-all hover:border-primary1/50 hover:bg-[#faf8f7] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary1/25';
+
+export interface ShelterPostsClientProps {
   initialData: FetchShelterAnimalDataResult;
   initialFilters: AnimalFilterState;
   initialListQuickFilter: ListQuickFilterId | null;
@@ -142,14 +147,6 @@ function similarMatchToShelterAnimal(match: SimilarMatch): ShelterAnimalItem | n
     popfile1: metadata.popfile1 || metadata.popfile || imageUrl,
   };
 }
-
-const LIST_QUICK_BUTTONS: {
-  id: ListQuickFilterId;
-  label: string;
-}[] = [
-  { id: 'noticeEnding', label: '마감 임박' },
-  { id: 'birthYear', label: '어린 동물' },
-];
 
 type FilterSummaryRow =
   | {
@@ -326,7 +323,9 @@ export default function ShelterPostsClient({
   initialFilters,
   initialListQuickFilter,
 }: ShelterPostsClientProps) {
-  const { searchWithFile, searchError: imageSearchError } = useSearchAnimal();
+  const { searchWithFile, searchError: imageSearchError, dailyAiUsed, dailyLimit } = useSearchAnimal();
+  const { user } = useAuth();
+  const userId = user?.uid;
   const { isEnglish } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
@@ -349,6 +348,7 @@ export default function ShelterPostsClient({
   const filtersRef = useRef<AnimalFilterState>(filters);
   const isLoadingMoreRef = useRef(false);
   const isFilterRequestInProgress = useRef(false);
+  const filterRequestIdRef = useRef(0);
   const pageNoRef = useRef(pageNo);
   const hasMoreRef = useRef(hasMore);
   pageNoRef.current = pageNo;
@@ -370,6 +370,11 @@ export default function ShelterPostsClient({
   const aiSearchResultsRef = useRef<ShelterAnimalItem[]>([]);
   const [textSearchLoading, setTextSearchLoading] = useState(false);
   const [textSearchError, setTextSearchError] = useState<string | null>(null);
+  const [textSearchRemaining, setTextSearchRemaining] = useState<number | null>(null);
+
+  useEffect(() => {
+    setTextSearchRemaining(userId ? 30 : 2);
+  }, [userId]);
 
   useEffect(() => {
     trackEvent('view_animal_list', {
@@ -560,24 +565,10 @@ export default function ShelterPostsClient({
     const prevFilters = filtersRef.current;
     const isSearchQueryChanged =
       prevFilters.searchQuery !== newFilters.searchQuery;
-    const isOtherFilterChanged =
-      prevFilters.sexCd !== newFilters.sexCd ||
-      prevFilters.state !== newFilters.state ||
-      prevFilters.upKindCd !== newFilters.upKindCd ||
-      prevFilters.neuterYn !== newFilters.neuterYn ||
-      prevFilters.quickFilter !== newFilters.quickFilter ||
-      prevFilters.bgnde !== newFilters.bgnde ||
-      prevFilters.endde !== newFilters.endde ||
-      prevFilters.upr_cd !== newFilters.upr_cd ||
-      prevFilters.orgNm !== newFilters.orgNm;
-    const isSortChanged = prevFilters.sortOrder !== newFilters.sortOrder;
-    if (!isSearchQueryChanged && !isOtherFilterChanged && !isSortChanged) {
-      return;
-    }
-
     const snap: AnimalFilterState = {
       ...newFilters,
     };
+    filtersRef.current = snap;
     setFilters(snap);
 
     if (filterTimeoutRef.current) {
@@ -586,7 +577,7 @@ export default function ShelterPostsClient({
     }
 
     const applyFilters = async () => {
-      if (isFilterRequestInProgress.current) return;
+      const requestId = ++filterRequestIdRef.current;
 
       if (syncUrl) {
         const nextQuery = createFilterSearchParams(snap, listQuickFilterRef.current).toString();
@@ -616,23 +607,28 @@ export default function ShelterPostsClient({
             7,
             pageSizeRef.current,
           );
+          if (requestId !== filterRequestIdRef.current) return;
           listQuickNextApiPageRef.current = nextPage;
           setShelterAnimalData(dedupeShelterAnimals(picked));
           setHasMore(!exhausted);
         } else {
           const result = await fetchShelterAnimalData(1, snap, undefined, pageSizeRef.current);
+          if (requestId !== filterRequestIdRef.current) return;
           const items = Array.isArray(result.items) ? result.items : [];
           setShelterAnimalData(items);
           setHasMore(result.hasMore ?? false);
           setTotalCount(result.totalCount);
         }
       } catch (e) {
+        if (requestId !== filterRequestIdRef.current) return;
         console.error('유기견 보호소 데이터 조회 중 오류 발생:', e);
         setShelterAnimalData([]);
         setHasMore(false);
       } finally {
-        setLoading(false);
-        isFilterRequestInProgress.current = false;
+        if (requestId === filterRequestIdRef.current) {
+          setLoading(false);
+          isFilterRequestInProgress.current = false;
+        }
       }
     };
 
@@ -807,10 +803,12 @@ export default function ShelterPostsClient({
       const upKindCd = currentFilters.upKindCd === '417000' || currentFilters.upKindCd === '422400'
         ? currentFilters.upKindCd
         : undefined;
-      const animals = await searchShelterAnimalsByText(normalizedQuery, 24, {
+      const textResult = await searchShelterAnimalsByText(normalizedQuery, 24, {
         upKindCd,
         region: region || undefined,
       });
+      const animals = textResult.items;
+      if (textResult.usage) setTextSearchRemaining(textResult.usage.remaining);
       const nextFilters = { ...filtersRef.current, searchQuery: normalizedQuery };
       filtersRef.current = nextFilters;
       setFilters(nextFilters);
@@ -1006,28 +1004,9 @@ export default function ShelterPostsClient({
             onImageSearch={handleImageSearch}
             onTextSearch={handleTextSearch}
             textSearchLoading={textSearchLoading}
+            textSearchRemaining={textSearchRemaining}
+            imageSearchRemaining={user ? Math.max(0, dailyLimit - (dailyAiUsed ?? 0)) : 0}
             showFilters={false}
-            quickFilters={(
-              <div className="mx-auto flex w-full max-w-2xl flex-wrap items-center justify-start gap-1.5" role="group" aria-label={isEnglish ? 'Quick filters' : '빠른 찾기'}>
-                {LIST_QUICK_BUTTONS.map(({ id, label }) => {
-                  const active = listQuickFilter === id;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      aria-pressed={active}
-                      onClick={() => handleListQuickChange(active ? null : id)}
-                      className={`inline-flex min-h-7 select-none items-center rounded-full border bg-transparent px-2.5 py-1.5 text-xs font-semibold leading-none tracking-tight transition active:scale-[0.98] ${active
-                        ? 'border-primary1 text-primary1'
-                        : 'border-[#cfc6c1] text-[#817873] hover:border-primary1/60 hover:text-[#332d2a]'
-                        }`}
-                    >
-                      <span>{isEnglish ? ({ noticeEnding: 'Ending soon', birthYear: 'Young animals' } as Record<string, string>)[id] : label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
           />
           {(imageSearchError || textSearchError) && (
             <p className="mx-auto w-full max-w-2xl text-center text-sm font-medium text-red-600">
@@ -1038,13 +1017,13 @@ export default function ShelterPostsClient({
           <div className="flex w-full flex-col gap-2 px-0 pb-1 pt-0 sm:pb-4 sm:pt-7">
             <div className="flex w-full flex-row items-start justify-between gap-2 sm:items-center">
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                <div className={`relative shrink-0 ${filterModalOpen ? 'z-[210]' : ''}`}>
+                <div className="relative shrink-0">
                   {imageSearchActive ? (
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => void handleResetImageSearch()}
-                        className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-white px-3 text-sm font-medium text-[#332d2a] shadow-[0_3px_12px_rgba(51,45,42,0.12)] transition-colors hover:bg-primary-soft"
+                        className={listingToolbarButtonClass}
                       >
                         <MdRefresh className="h-4 w-4" aria-hidden />
                         <span>{isEnglish ? 'Reset results' : '결과 초기화'}</span>
@@ -1052,8 +1031,7 @@ export default function ShelterPostsClient({
                       <button
                         type="button"
                         onClick={() => setFilterModalOpen((open) => !open)}
-                        className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-white px-3 text-sm font-medium text-[#332d2a] shadow-[0_3px_12px_rgba(51,45,42,0.12)] transition-colors hover:bg-primary-soft"
-                        aria-haspopup="dialog"
+                        className={listingToolbarButtonClass}
                         aria-expanded={filterModalOpen}
                       >
                         <MdTune className="h-4 w-4" aria-hidden />
@@ -1064,66 +1042,33 @@ export default function ShelterPostsClient({
                     <button
                       type="button"
                       onClick={() => setFilterModalOpen((open) => !open)}
-                      className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-white px-3 text-sm font-medium text-[#332d2a] shadow-[0_3px_12px_rgba(51,45,42,0.12)] transition-colors hover:bg-primary-soft hover:shadow-[0_4px_14px_rgba(51,45,42,0.16)]"
-                      aria-haspopup="dialog"
+                      className={listingToolbarButtonClass}
                       aria-expanded={filterModalOpen}
                     >
                       <MdTune className="h-4 w-4" aria-hidden />
                       <span>{isEnglish ? 'Filters' : '필터'}</span>
                     </button>
                   )}
-                  {filterModalOpen && (
-                    <>
-                      <button
-                        type="button"
-                        className="fixed inset-0 z-0 cursor-default"
-                        onClick={() => setFilterModalOpen(false)}
-                        aria-label={isEnglish ? 'Close filters' : '필터 닫기'}
-                      />
-                      <section
-                        role="dialog"
-                        aria-labelledby="shelter-filter-title"
-                        className="absolute left-0 top-full z-10 mt-2 w-[min(34rem,calc(100vw-2rem))] rounded-[20px] border border-[#eadfd7] bg-white p-4 shadow-[0_18px_50px_rgba(51,45,42,0.18)] sm:p-5"
-                      >
-                        <div className="flex items-center justify-between gap-4">
-                          <h2 id="shelter-filter-title" className="text-base font-bold text-[#332d2a]">
-                            {imageSearchActive
-                              ? (isEnglish ? 'Filter AI results' : 'AI 결과 필터')
-                              : (isEnglish ? 'Filter adoption listings' : '입양 공고 필터')}
-                          </h2>
-                          <button
-                            type="button"
-                            onClick={() => setFilterModalOpen(false)}
-                            className="rounded-full p-1.5 text-[#817873] hover:bg-primary-soft"
-                            aria-label={isEnglish ? 'Close filters' : '필터 닫기'}
-                          >
-                            <MdClose className="h-5 w-5" />
-                          </button>
-                        </div>
-                        <div className="mt-4">
-                          <AnimalFilterHeader
-                            filters={filters}
-                            onFilterChange={imageSearchActive ? handleAiFilterChange : handleFilterChange}
-                            onImageSearch={handleImageSearch}
-                            onTextSearch={handleTextSearch}
-                            textSearchLoading={textSearchLoading}
-                            showSearch={false}
-                            panelFilters
-                            aiFilterMode={imageSearchActive ? (aiSearchMode ?? 'text') : undefined}
-                          />
-                        </div>
-                        <div className="mt-4 flex justify-end">
-                          <button
-                            type="button"
-                            onClick={() => setFilterModalOpen(false)}
-                            className="rounded-[14px] bg-primary1 px-5 py-2 text-sm font-bold text-white hover:bg-primary2"
-                          >
-                            {isEnglish ? 'Done' : '완료'}
-                          </button>
-                        </div>
-                      </section>
-                    </>
-                  )}
+                </div>
+                <div
+                  aria-hidden={!filterModalOpen}
+                  className={`relative basis-full transition-[max-height,max-width,opacity,transform] duration-300 ease-in-out md:basis-auto ${filterModalOpen
+                    ? 'z-[210] max-h-40 translate-y-0 overflow-visible opacity-100 md:max-h-none md:max-w-[48rem] md:translate-x-0 md:translate-y-0'
+                    : 'pointer-events-none max-h-0 -translate-y-2 overflow-hidden opacity-0 md:max-h-none md:max-w-0 md:-translate-x-2 md:translate-y-0'
+                    }`}
+                >
+                  <div className={`w-full md:w-max ${imageSearchActive ? 'md:max-w-sm' : 'md:max-w-[48rem]'}`}>
+                    <AnimalFilterHeader
+                      filters={filters}
+                      onFilterChange={imageSearchActive ? handleAiFilterChange : handleFilterChange}
+                      onImageSearch={handleImageSearch}
+                      onTextSearch={handleTextSearch}
+                      textSearchLoading={textSearchLoading}
+                      showSearch={false}
+                      compactFilters
+                      aiFilterMode={imageSearchActive ? (aiSearchMode ?? 'text') : undefined}
+                    />
+                  </div>
                 </div>
                 {filterSummaryRows.length > 0 && (
                   <div className="flex min-w-0 flex-wrap items-center gap-1.5" role="list" aria-label={isEnglish ? 'Applied filters' : '적용된 필터'}>
@@ -1158,14 +1103,14 @@ export default function ShelterPostsClient({
                   onClick={() => setSortOpen((open) => !open)}
                   aria-haspopup="listbox"
                   aria-expanded={sortOpen}
-                  className="flex h-9 min-w-[112px] items-center justify-between gap-1.5 rounded-lg border border-[#eadfd7] bg-white px-2.5 text-xs font-medium text-[#332d2a] transition-colors hover:border-primary1/60 hover:bg-primary-soft sm:min-w-[132px] sm:text-sm"
+                  className={`${listingToolbarButtonClass} min-w-[112px] justify-between px-2.5 text-xs sm:min-w-[132px] sm:text-sm`}
                 >
                   <span>{filters.sortOrder === 'rescue' ? (isEnglish ? 'Newest rescues' : '구조 최신순') : (isEnglish ? 'Newest notices' : '공고 최신순')}</span>
                   <MdArrowDropDown className={`h-4 w-4 shrink-0 transition-transform ${sortOpen ? 'rotate-180' : ''}`} aria-hidden />
                 </button>
                 {sortOpen && <>
                   <button type="button" className="fixed inset-0 z-0 cursor-default" onClick={() => setSortOpen(false)} aria-label={isEnglish ? 'Close sort menu' : '정렬 메뉴 닫기'} />
-                  <div role="listbox" aria-label={isEnglish ? 'Sort adoption listings' : '공고 정렬'} className="absolute right-0 top-full z-10 mt-1 w-full min-w-[132px] rounded-2xl border border-gray-200/90 bg-white p-1.5 shadow-xl">
+                  <div role="listbox" aria-label={isEnglish ? 'Sort adoption listings' : '공고 정렬'} className="absolute right-0 top-full z-10 mt-2 w-full min-w-[160px] overflow-hidden rounded-xl border border-[#dedede] bg-white shadow-[0_8px_24px_rgba(51,45,42,0.14)] divide-y divide-[#ece8e5]">
                     {(['notice', 'rescue'] as const).map((sortOrder) => {
                       const selected = filters.sortOrder === sortOrder;
                       const label = sortOrder === 'notice'
@@ -1180,8 +1125,13 @@ export default function ShelterPostsClient({
                           setSortOpen(false);
                           handleFilterChange({ ...filters, sortOrder });
                         }}
-                        className={`block w-full cursor-pointer rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${selected ? 'bg-primary1 text-white' : 'text-[#332d2a] hover:bg-gray-100'}`}
-                      >{label}</button>;
+                        className={`flex min-h-10 w-full cursor-pointer items-center gap-3 px-4 py-2 text-left text-sm transition-colors ${selected ? 'bg-primary-soft/60 font-semibold text-primary1' : 'bg-white text-[#332d2a] hover:bg-[#faf8f7]'}`}
+                      >
+                        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${selected ? 'border-primary1 bg-primary1 text-white' : 'border-[#cfcac7] bg-white'}`}>
+                          {selected && <MdCheck className="h-3.5 w-3.5" aria-hidden />}
+                        </span>
+                        {label}
+                      </button>;
                     })}
                   </div>
                 </>}
@@ -1198,7 +1148,7 @@ export default function ShelterPostsClient({
               <div className="mx-auto w-full min-w-0 ">
                 {loading && shelterAnimalData.length === 0 ? (
                   <div
-                    className="grid grid-cols-2 justify-items-stretch gap-2 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5"
+                    className="grid grid-cols-2 justify-items-stretch gap-2 sm:gap-4 lg:grid-cols-4"
                     role="list"
                     aria-busy="true"
                     aria-label={isEnglish ? 'Loading adoption listings' : '입양 공고 목록 불러오는 중'}
@@ -1212,7 +1162,7 @@ export default function ShelterPostsClient({
                 ) : shelterAnimalData.length > 0 ? (
                   <>
                     <div
-                      className="grid grid-cols-2 justify-items-stretch gap-2 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5"
+                      className="grid grid-cols-2 justify-items-stretch gap-2 sm:gap-4 lg:grid-cols-4"
                       role="list"
                       aria-label={isEnglish ? 'Adoption listings' : '입양 공고 목록'}
                     >
@@ -1222,7 +1172,7 @@ export default function ShelterPostsClient({
                           role="listitem"
                           className="min-w-0"
                         >
-                          <AbandonedCard shelterAnimal={item} priority={index === 0} />
+                          <AbandonedCard shelterAnimal={item} priority={index === 0} aiResult={imageSearchActive} />
                         </div>
                       ))}
                     </div>

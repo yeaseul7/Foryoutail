@@ -9,7 +9,7 @@ export const revalidate = 30;
 
 export const metadata: Metadata = generateDefaultMetadata(
   '오순도순',
-  '반려동물과 입양 이야기를 함께 나누는 꼬순내 커뮤니티입니다.',
+  '반려동물과 입양 이야기를 함께 나누는 matchichi 커뮤니티입니다.',
   `${getBaseUrl().replace(/\/$/, '')}/community`,
   { includeCanonical: true },
 );

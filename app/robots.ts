@@ -4,11 +4,14 @@ import { getBaseUrl } from '@/packages/utils/metadata';
 export default function robots(): MetadataRoute.Robots {
   const baseUrl = getBaseUrl().replace(/\/$/, '');
   return {
-    rules: {
-      userAgent: '*',
-      allow: '/',
-      disallow: '/api/',
-    },
+    rules: [
+      {
+        userAgent: '*',
+        allow: '/',
+        disallow: ['/api/', '/admin/', '/mypage/'],
+      },
+    ],
+    host: baseUrl,
     sitemap: `${baseUrl}/sitemap.xml`,
   };
 }

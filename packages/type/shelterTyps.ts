@@ -29,6 +29,7 @@ export interface ShelterInfoItem {
     quarabtineCnt?: number;
     feedCnt?: number;
     dataStdDt?: string;
+    protectedAnimalCount?: number;
 }
 export interface SidoLocationItem {
     SIDO_CD: string;

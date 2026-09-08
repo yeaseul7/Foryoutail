@@ -245,7 +245,7 @@ export default function LoginModal({ onClose }: LoginModalProps) {
 
         {authMode === 'login' ? (
           <div className="mt-8 flex items-center justify-center gap-1 text-sm text-text3">
-            <span>{t('아직 회원이 아니신가요?', 'New to Kkosunnae?')}</span>
+            <span>{t('아직 회원이 아니신가요?', 'New to matchichi?')}</span>
             <button
               type="button"
               className="font-medium text-primary1 hover:text-primary2"

@@ -8,8 +8,50 @@ interface ShelterInfoParams {
   care_reg_no?: string;
   upr_cd?: string;
   org_cd?: string;
+  q?: string;
+  protected_status?: 'yes' | 'no';
+  district?: string;
+  lat?: number;
+  lng?: number;
   pageNo?: number;
   numOfRows?: number;
+}
+
+function distanceSquared(item: ShelterInfoItem, lat: number, lng: number): number {
+  if (typeof item.lat !== 'number' || typeof item.lng !== 'number') return Number.POSITIVE_INFINITY;
+  const latitudeScale = Math.cos((lat * Math.PI) / 180);
+  return ((item.lat - lat) ** 2) + (((item.lng - lng) * latitudeScale) ** 2);
+}
+
+async function getProtectedAnimalCounts(careRegNos: string[]): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  if (careRegNos.length === 0) return counts;
+
+  const supabaseAdmin = await createSupabaseAdminClient();
+  for (let index = 0; index < careRegNos.length; index += 100) {
+    const chunk = careRegNos.slice(index, index + 100);
+    let offset = 0;
+
+    while (true) {
+      const { data, error } = await supabaseAdmin
+        .from('animals')
+        .select('care_reg_no')
+        .in('care_reg_no', chunk)
+        .eq('process_state', 'protect')
+        .range(offset, offset + 999);
+
+      if (error) throw new Error(error.message);
+      const rows = data ?? [];
+      rows.forEach((row) => {
+        const careRegNo = String(row.care_reg_no ?? '').trim();
+        if (careRegNo) counts.set(careRegNo, (counts.get(careRegNo) ?? 0) + 1);
+      });
+
+      if (rows.length < 1000) break;
+      offset += 1000;
+    }
+  }
+  return counts;
 }
 
 interface ShelterRow {
@@ -115,11 +157,12 @@ function matchesSido(item: ShelterInfoItem, sidoName: string): boolean {
   return [orgNm, careAddr, jibunAddr].some((value) => value.startsWith(sidoName));
 }
 
-async function queryShelterDocs(params: ShelterInfoParams): Promise<ShelterInfoItem[]> {
-  const pageNo = params.pageNo ?? 1;
-  const numOfRows = params.numOfRows ?? 10;
-  const fetchLimit = Math.max(pageNo * numOfRows, numOfRows);
+function getDistrictName(item: ShelterInfoItem): string | null {
+  const address = (item.careAddr || item.jibunAddr || item.orgNm || '').trim();
+  return address.split(/\s+/)[1] || null;
+}
 
+async function queryShelterDocs(params: ShelterInfoParams): Promise<ShelterInfoItem[]> {
   const supabaseAdmin = await createSupabaseAdminClient();
   let query = supabaseAdmin
     .from('shelters')
@@ -127,7 +170,7 @@ async function queryShelterDocs(params: ShelterInfoParams): Promise<ShelterInfoI
       'id, care_reg_no, care_nm, care_addr, jibun_addr, lat, lng, care_tel, close_day, week_opr_stime, week_opr_etime, weekend_opr_stime, weekend_opr_etime, breed_cnt, vet_person_cnt, specs_person_cnt, medical_cnt, save_trgt_animal, division_nm, org_nm, shelter_migrated_data',
     )
     .order('care_nm', { ascending: true })
-    .limit(Math.min(fetchLimit * 3, 3000));
+    .limit(3000);
 
   if (params.care_reg_no?.trim()) {
     query = query.eq('care_reg_no', params.care_reg_no.trim());
@@ -164,8 +207,19 @@ async function queryShelterDocs(params: ShelterInfoParams): Promise<ShelterInfoI
   if (params.org_cd) {
     items = items.filter((item) => item.orgCd === params.org_cd);
   }
+  if (params.district?.trim()) {
+    const district = params.district.trim();
+    items = items.filter((item) => getDistrictName(item) === district);
+  }
+  if (params.q?.trim()) {
+    const keyword = params.q.trim().toLocaleLowerCase();
+    items = items.filter((item) =>
+      [item.careNm, item.careAddr, item.jibunAddr, item.orgNm]
+        .some((value) => value?.toLocaleLowerCase().includes(keyword)),
+    );
+  }
 
-  return items.slice(0, fetchLimit);
+  return items;
 }
 
 export async function GET(request: NextRequest) {
@@ -176,16 +230,54 @@ export async function GET(request: NextRequest) {
       care_reg_no: sp.get('care_reg_no') ?? undefined,
       upr_cd: sp.get('upr_cd') ?? undefined,
       org_cd: sp.get('org_cd') ?? undefined,
+      q: sp.get('q') ?? undefined,
+      protected_status: sp.get('protected_status') === 'yes' || sp.get('protected_status') === 'no'
+        ? sp.get('protected_status') as 'yes' | 'no'
+        : undefined,
+      district: sp.get('district') ?? undefined,
+      lat: sp.has('lat') && Number.isFinite(Number(sp.get('lat'))) ? Number(sp.get('lat')) : undefined,
+      lng: sp.has('lng') && Number.isFinite(Number(sp.get('lng'))) ? Number(sp.get('lng')) : undefined,
       pageNo: Math.max(parseInt(sp.get('pageNo') ?? '1', 10) || 1, 1),
       numOfRows: Math.max(parseInt(sp.get('numOfRows') ?? '10', 10) || 10, 1),
     };
 
-    const allMatches = await queryShelterDocs(params);
+    if (sp.get('districts') === '1') {
+      const districtItems = await queryShelterDocs({ upr_cd: params.upr_cd });
+      const districts = [...new Set(districtItems.map(getDistrictName).filter((name): name is string => Boolean(name)))].sort((a, b) => a.localeCompare(b, 'ko'));
+      return NextResponse.json({ districts });
+    }
+
+    let allMatches = await queryShelterDocs(params);
+    if (typeof params.lat === 'number' && typeof params.lng === 'number') {
+      allMatches.sort((a, b) => distanceSquared(a, params.lat!, params.lng!) - distanceSquared(b, params.lat!, params.lng!));
+    }
+    let protectedCounts: Map<string, number> | null = null;
+
+    if (params.protected_status) {
+      const allCareRegNos = allMatches
+        .map((item) => item.careRegNo)
+        .filter((careRegNo): careRegNo is string => Boolean(careRegNo));
+      protectedCounts = await getProtectedAnimalCounts(allCareRegNos);
+      allMatches = allMatches.filter((item) => {
+        const count = item.careRegNo ? protectedCounts?.get(item.careRegNo) ?? 0 : 0;
+        return params.protected_status === 'yes' ? count > 0 : count === 0;
+      });
+    }
     const totalCount = allMatches.length;
     const pageNo = params.pageNo ?? 1;
     const numOfRows = params.numOfRows ?? 10;
     const start = (pageNo - 1) * numOfRows;
     const pageItems = allMatches.slice(start, start + numOfRows);
+    const careRegNos = pageItems
+      .map((item) => item.careRegNo)
+      .filter((careRegNo): careRegNo is string => Boolean(careRegNo));
+
+    if (careRegNos.length > 0) {
+      const counts = protectedCounts ?? await getProtectedAnimalCounts(careRegNos);
+      pageItems.forEach((item) => {
+        item.protectedAnimalCount = item.careRegNo ? counts.get(item.careRegNo) ?? 0 : 0;
+      });
+    }
 
     return NextResponse.json({
       response: {

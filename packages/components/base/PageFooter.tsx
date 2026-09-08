@@ -1,7 +1,7 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useLanguage } from '@/lib/i18n/language';
 
 const FOOTER_LINKS = {
@@ -36,11 +36,11 @@ export default function PageFooter() {
           <div className="flex max-w-sm flex-col items-center gap-3 text-center sm:items-start sm:text-left">
             <Link href="/" className="flex items-center gap-2 rounded focus:outline-none focus:ring-2 focus:ring-primary1/30">
               <Image
-                src="/static/images/kkosunnae-header-logo.png"
-                alt={isEnglish ? 'Kkosunnae logo' : '꼬순내 로고'}
-                width={150}
-                height={32}
-                className="h-8 w-auto object-contain"
+                src="/static/images/matchichi-logo.png"
+                alt="matchichi logo"
+                width={168}
+                height={56}
+                className="-my-3 h-14 w-auto object-contain"
               />
             </Link>
             <p className="text-xs leading-6 text-gray-600">
@@ -51,14 +51,14 @@ export default function PageFooter() {
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 rounded text-gray-600 transition-colors hover:text-primary1 focus:outline-none focus:ring-2 focus:ring-primary1/30"
-              aria-label={isEnglish ? 'Kkosunnae Instagram' : 'Instagram 꼬순내 인스타그램'}
+              aria-label={isEnglish ? 'matchichi Instagram' : 'matchichi 인스타그램'}
             >
               <span className="text-xs">Instagram</span>
             </a>
             <a
               href="mailto:kkosunnaekr1@gmail.com"
               className="flex items-center gap-2 rounded text-gray-600 transition-colors hover:text-primary1 focus:outline-none focus:ring-2 focus:ring-primary1/30"
-              aria-label={isEnglish ? 'Email Kkosunnae' : 'kkosunnaekr1@gmail.com 꼬순내 이메일'}
+              aria-label={isEnglish ? 'Email matchichi' : 'matchichi 이메일'}
             >
               <span className="text-xs">kkosunnaekr1@gmail.com</span>
             </a>

@@ -6,7 +6,7 @@ import FeedbackPageContent from './FeedbackPageContent';
 
 export const metadata: Metadata = generateDefaultMetadata(
   '건의함',
-  '꼬순내 서비스 개선 의견과 오류를 접수합니다.',
+  'matchichi 서비스 개선 의견과 오류를 접수합니다.',
   `${getBaseUrl().replace(/\/$/, '')}/feedback`,
   { includeCanonical: true },
 );

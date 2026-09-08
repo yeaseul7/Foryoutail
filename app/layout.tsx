@@ -4,6 +4,7 @@ import Script from 'next/script';
 import './globals.css';
 import '@/styles/keyframe.css';
 import Providers from './providers';
+import { getBaseUrl } from '@/packages/utils/metadata';
 
 const pretendard = localFont({
   src: '../public/static/font/PretendardVariable.woff2',
@@ -14,14 +15,29 @@ const pretendard = localFont({
   fallback: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
 });
 
+const siteUrl = getBaseUrl().replace(/\/$/, '');
+const siteTitle = 'matchichi | 전국 유기동물 입양 공고·보호소 찾기';
+const siteDescription = '전국 유기견·유기묘와 기타 유기동물의 최신 입양 공고를 지역, 기간, 상태별로 검색하고 가까운 동물보호소 정보를 확인하세요.';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+  applicationName: 'matchichi',
   title: {
-    template: '%s | 꼬순내',
-    default: '꼬순내 | 유기동물 간편 검색',
+    template: '%s | matchichi',
+    default: siteTitle,
   },
-  description: '사진 및 필터로 간편하게 유기동물 검색하고 찾아보세요',
+  description: siteDescription,
+  authors: [{ name: 'matchichi', url: siteUrl }],
+  creator: 'matchichi',
+  publisher: 'matchichi',
+  category: '반려동물 입양',
+  classification: '유기동물 입양 정보 서비스',
+  referrer: 'origin-when-cross-origin',
+  alternates: {
+    canonical: '/',
+  },
   keywords: [
-    '꼬순내',
+    'matchichi',
     '유기동물 입양',
     '유기견 입양',
     '유기묘 입양',
@@ -37,34 +53,34 @@ export const metadata: Metadata = {
     '유기동물 정보',
   ],
   icons: {
-    icon: '/static/images/kkosunnae-app-icon.png',
-    shortcut: '/static/images/kkosunnae-app-icon.png',
-    apple: '/static/images/kkosunnae-app-icon.png',
+    icon: '/static/images/findme-app-icon.png',
+    shortcut: '/static/images/findme-app-icon.png',
+    apple: '/static/images/findme-app-icon.png',
   },
   verification: {
     google: 'WBwV06sSdVI6wLAiXlN3T32MSQlsqxdSv49eMBt7JWs',
   },
   openGraph: {
-    title: '꼬순내 | 유기동물 간편 검색',
-    description: '사진 및 필터로 간편하게 유기동물 검색하고 찾아보세요',
-    url: 'https://kkosunnae.com',
-    siteName: '꼬순내',
+    title: siteTitle,
+    description: siteDescription,
+    url: siteUrl,
+    siteName: 'matchichi',
     locale: 'ko_KR',
     type: 'website',
     images: [
       {
-        url: 'https://kkosunnae.com/static/images/kkosunnae-logo.png',
-        width: 1200,
-        height: 1200,
-        alt: '꼬순내 - 유기동물 입양 공고와 AI 검색',
+        url: `${siteUrl}/static/images/matchichi-social.png`,
+        width: 1731,
+        height: 909,
+        alt: 'matchichi - 유기동물 입양 공고와 AI 검색',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: '꼬순내 | 유기동물 간편 검색',
-    description: '사진 및 필터로 간편하게 유기동물 검색하고 찾아보세요',
-    images: ['https://kkosunnae.com/static/images/kkosunnae-logo.png'],
+    title: siteTitle,
+    description: siteDescription,
+    images: [`${siteUrl}/static/images/matchichi-social.png`],
   },
   robots: {
     index: true,
@@ -91,6 +107,52 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@graph': [
+                {
+                  '@type': 'Organization',
+                  '@id': `${siteUrl}/#organization`,
+                  name: 'matchichi',
+                  url: siteUrl,
+                  logo: `${siteUrl}/static/images/matchichi-logo.png`,
+                  sameAs: ['https://www.instagram.com/earlys_day/'],
+                },
+                {
+                  '@type': 'WebSite',
+                  '@id': `${siteUrl}/#website`,
+                  url: siteUrl,
+                  name: 'matchichi',
+                  alternateName: ['마치치', '전국 유기동물 입양 공고'],
+                  description: siteDescription,
+                  inLanguage: ['ko-KR', 'en'],
+                  publisher: { '@id': `${siteUrl}/#organization` },
+                  potentialAction: {
+                    '@type': 'SearchAction',
+                    target: {
+                      '@type': 'EntryPoint',
+                      urlTemplate: `${siteUrl}/?q={search_term_string}`,
+                    },
+                    'query-input': 'required name=search_term_string',
+                  },
+                },
+                {
+                  '@type': 'WebApplication',
+                  '@id': `${siteUrl}/#application`,
+                  name: 'matchichi',
+                  url: siteUrl,
+                  applicationCategory: 'LifestyleApplication',
+                  operatingSystem: 'Web',
+                  description: siteDescription,
+                  offers: { '@type': 'Offer', price: '0', priceCurrency: 'KRW' },
+                },
+              ],
+            }).replace(/</g, '\\u003c'),
+          }}
+        />
         <meta name="google-adsense-account" content="ca-pub-6471129158350904" />
         <meta
           name="naver-site-verification"

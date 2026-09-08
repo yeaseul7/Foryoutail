@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import Link from 'next/link';
 
 import PageTemplate from '@/packages/components/base/PageTemplate';
 import PageFooter from '@/packages/components/base/PageFooter';
@@ -47,9 +48,11 @@ function isoDate(value: string | undefined): string | undefined {
 export default function ShelterDetailPageContent({
   animalData,
   shelterInfo,
+  protectedAnimalCount,
 }: {
   animalData: ShelterAnimalItem;
   shelterInfo: ShelterInfoItem | null;
+  protectedAnimalCount: number;
 }) {
   const { isEnglish, t } = useLanguage();
   const images = animalImages(animalData);
@@ -111,7 +114,18 @@ export default function ShelterDetailPageContent({
                   breedText={animalBreedLabel(animalData.kindNm || animalData.kindFullNm, isEnglish) || t('품종 미상', 'Unknown breed')}
                   desertionNo={desertionNo}
                 />
-                <ShelterOperationInfoComponent shelterInfo={shelterInfo} animalData={animalData} />
+                <ShelterOperationInfoComponent shelterInfo={shelterInfo} animalData={animalData} protectedAnimalCount={protectedAnimalCount} />
+                <Link
+                  href={`/?q=${encodeURIComponent(animalData.careNm || shelterInfo?.careNm || '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-full items-center justify-center rounded-lg bg-primary1 px-4 py-3 text-sm font-bold text-white transition hover:bg-primary2"
+                >
+                  {t(
+                    `입양 가능한 동물 더보기 (${protectedAnimalCount}마리)`,
+                    `View adoptable animals (${protectedAnimalCount})`,
+                  )}
+                </Link>
               </div>
             </div>
           </article>
