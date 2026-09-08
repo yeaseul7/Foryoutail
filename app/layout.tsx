@@ -16,8 +16,8 @@ const pretendard = localFont({
 });
 
 const siteUrl = getBaseUrl().replace(/\/$/, '');
-const siteTitle = 'matchichi | 전국 유기동물 입양 공고·보호소 찾기';
-const siteDescription = '전국 유기견·유기묘와 기타 유기동물의 최신 입양 공고를 지역, 기간, 상태별로 검색하고 가까운 동물보호소 정보를 확인하세요.';
+const siteTitle = 'matchichi | 유기동물 입양·유기견보호소·유기묘보호소';
+const siteDescription = 'matchichi는 유기동물 입양 홈페이지입니다. 전국 유기견·유기묘·기타축종 공고를 AI로 빠르고 편하게 찾아보세요.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -38,18 +38,26 @@ export const metadata: Metadata = {
   },
   keywords: [
     'matchichi',
+    '매치치',
     '유기동물 입양',
+    '유기견',
+    '유기묘',
     '유기견 입양',
     '유기묘 입양',
+    '기타축종 입양',
     '유기동물 공고',
+    '반려동물',
     '유기견 공고',
     '유기묘 공고',
     '유기동물 보호소',
     '동물보호소',
+    '보호소',
     '보호소 찾기',
+    '유기동물 입양 사이트',
+    '입양 사이트',
     '강아지 입양',
     '고양이 입양',
-    '유기동물 AI 검색',
+    '유기동물 ai 검색',
     '유기동물 정보',
   ],
   icons: {

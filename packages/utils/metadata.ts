@@ -37,7 +37,7 @@ export function getBaseUrl(): string {
   }
 
   return process.env.NODE_ENV === 'production'
-    ? 'https://www.kkosunnae.com'
+    ? 'https://matchichi.com'
     : 'http://localhost:3003';
 }
 
@@ -105,13 +105,16 @@ export function generateMetadata(options: GenerateMetadataOptions): Metadata {
   const baseUrl = getBaseUrl();
   const normalizedImageUrl = normalizeImageUrl(imageUrl, baseUrl, defaultImagePath);
   const imageAltText = imageAlt || `${title} - matchichi`;
+  const fullTitle = title.toLocaleLowerCase().startsWith(`${siteName.toLocaleLowerCase()} |`)
+    ? title
+    : `${title} | ${siteName}`;
 
   // 160자 제한으로 설명문 최적화
   const truncatedDescription = extractText(description)?.substring(0, 160) || '';
 
   return {
     // 루트 layout의 title template과 중복으로 서비스명이 붙지 않도록 한다.
-    title: { absolute: `${title} | ${siteName}` },
+    title: { absolute: fullTitle },
     description: truncatedDescription,
     metadataBase: new URL(baseUrl),
     alternates: includeCanonical ? { canonical: url } : undefined,

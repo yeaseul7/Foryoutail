@@ -2,7 +2,7 @@
 
 전국 유기동물 입양 공고를 탐색하고 사진 기반 AI 검색을 이용할 수 있는 입양 정보 서비스입니다.
 
-서비스 URL: [https://www.kkosunnae.com](https://www.kkosunnae.com)
+서비스 URL: [https://matchichi.com](https://matchichi.com)
 
 ## 주요 기능
 

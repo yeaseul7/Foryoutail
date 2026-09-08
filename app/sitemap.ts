@@ -7,10 +7,10 @@ import { createShelterSlug } from '@/lib/shelter/shelterSlug';
 const baseUrl =
   process.env.NEXT_PUBLIC_BASE_URL ||
   (process.env.VERCEL_ENV === 'production'
-    ? 'https://www.kkosunnae.com'
+    ? 'https://matchichi.com'
     : process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
-      : 'https://www.kkosunnae.com');
+      : 'https://matchichi.com');
 
 export const revalidate = 600;
 

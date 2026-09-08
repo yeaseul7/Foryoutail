@@ -13,8 +13,8 @@ import { parseShelterUrlFilters, type ShelterSearchParams } from '@/lib/shelter/
 export const revalidate = 600;
 
 export const metadata: Metadata = generateDefaultMetadata(
-  '전국 유기동물 입양 공고',
-  '전국 유기견·유기묘 입양 공고를 지역과 상태별로 확인하고, 가족을 기다리는 아이들을 matchichi에서 찾아보세요.',
+  'matchichi | 유기동물 입양·유기견보호소·유기묘보호소',
+  '잃어버린 나의 반려동물 및 입양하고 싶은 유기동물을 AI로 빠르게 찾아보세요.',
   getBaseUrl().replace(/\/$/, ''),
   {
     defaultImagePath: '/static/images/matchichi-social.png',
