@@ -47,7 +47,7 @@ test('목록, 영문 전환, 로그인 UI가 브라우저에서 동작한다', a
   });
 
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await expect(page).toHaveTitle(/꼬순내/);
+  await expect(page).toHaveTitle(/findme/i);
   await expect(page.getByRole('button', { name: 'EN', exact: true })).toBeVisible();
 
   const englishButton = page.getByRole('button', { name: 'EN', exact: true });
