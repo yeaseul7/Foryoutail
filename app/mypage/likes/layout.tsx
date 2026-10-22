@@ -5,7 +5,7 @@ import { generateDefaultMetadata } from '@/packages/utils/metadata';
 const baseMetadata = generateDefaultMetadata(
   '찜한 동물',
   'matchichi에서 찜한 유기동물 공고를 확인하세요.',
-  'https://www.kkosunnae.com/mypage/likes',
+  'https://matchichi.com/mypage/likes',
 );
 
 export const metadata: Metadata = {

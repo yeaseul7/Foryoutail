@@ -5,7 +5,7 @@ import { generateDefaultMetadata } from '@/packages/utils/metadata';
 export const metadata: Metadata = generateDefaultMetadata(
   '서비스 이용약관',
   'matchichi 서비스 이용 조건, 회원의 권리와 의무 및 책임 범위를 안내합니다.',
-  'https://www.kkosunnae.com/terms',
+  'https://matchichi.com/terms',
   {
     includeCanonical: true,
   },

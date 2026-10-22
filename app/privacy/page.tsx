@@ -5,7 +5,7 @@ import { generateDefaultMetadata } from '@/packages/utils/metadata';
 export const metadata: Metadata = generateDefaultMetadata(
   '개인정보처리방침',
   'matchichi 서비스 운영 과정에서 수집되는 개인정보의 항목, 이용 목적, 보관 기간과 이용자 권리를 안내합니다.',
-  'https://www.kkosunnae.com/privacy',
+  'https://matchichi.com/privacy',
   {
     includeCanonical: true,
   },
