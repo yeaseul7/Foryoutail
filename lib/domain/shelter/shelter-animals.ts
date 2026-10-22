@@ -358,6 +358,19 @@ export async function queryShelterAnimals(
     query = query.ilike('care_addr', `%${params.orgNm.trim()}%`);
   }
 
+  const searchQuery = params.searchQuery?.trim();
+  if (searchQuery) {
+    // Filter in the database so count and pagination use matching animals.
+    // Quote the value to keep PostgREST filter syntax inside the search text.
+    const pattern = `%${searchQuery.replace(/[\\%_]/g, '\\$&')}%`;
+    const value = JSON.stringify(pattern);
+    query = query.or(
+      ['rfid_cd', 'happen_place', 'care_addr', 'care_nm', 'kind_nm', 'kind_full_nm', 'special_mark']
+        .map((column) => `${column}.ilike.${value}`)
+        .join(','),
+    );
+  }
+
   const states = stateQueryValues(params.state);
   if (states && states.length > 0) {
     query = query.in('process_state', states);
