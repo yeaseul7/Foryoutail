@@ -18,6 +18,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>('ko');
 
   useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get('lang');
+    if (requested === 'ko' || requested === 'en') {
+      document.documentElement.lang = requested;
+      window.localStorage.setItem(STORAGE_KEY, requested);
+      queueMicrotask(() => setLanguageState(requested));
+      return;
+    }
+
     const saved = window.localStorage.getItem(STORAGE_KEY);
     if (saved === 'ko' || saved === 'en') {
       document.documentElement.lang = saved;
